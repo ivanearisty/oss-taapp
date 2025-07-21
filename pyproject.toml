@@ -1,7 +1,62 @@
 [project]
 name = "ta-assignment"
 version = "0.1.0"
-description = "Add your description here"
+description = "Template repository for a mail client"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "google-api-python-client-stubs>=1.30.0",
+    "mkdocs-material>=9.6.15",
+    "mypy>=1.17.0",
+    "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
+    "ruff>=0.12.4",
+    "types-requests>=2.32.4.20250611",
+]
+
+[tool.uv.workspace]
+members = [
+  "src/mail_client_api",
+  "src/gmail_client_impl",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+  "D100", # Missing docstring in public module
+  "D104", # Missing docstring in public package
+  "ANN101", # Missing type annotation for self
+  "ANN401", # Dynamically typed expressions are disallowed
+]
+
+[tool.mypy]
+strict = true
+explicit_package_bases = true # Required for src layout
+mypy_path = ["src/mail_client_api/src", "src/mail_client_gmail_impl/src"]
+
+[tool.pytest.ini_options]
+pythonpath = [".", "src"]
+testpaths = ["tests", "src"] # Run tests in both top-level and component folders
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/tests/*", "*/__main__.py"]
+
+[tool.coverage.report]
+fail_under = 90 # Justification: A high threshold ensures most code is tested.
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]
