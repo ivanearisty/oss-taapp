@@ -20,9 +20,10 @@ theme:
 
 nav:
   - 'Overview': 'index.md'
-  - 'Architecture': 'architecture.md'
+  - 'Architecture': 'component.md'
   - 'API Reference':
     - 'Mail Client API': 'api/mail_client_api.md'
+    - 'Gmail Client Implementation': 'api/gmail_client_impl.md'
 
 markdown_extensions:
   - pymdownx.highlight:

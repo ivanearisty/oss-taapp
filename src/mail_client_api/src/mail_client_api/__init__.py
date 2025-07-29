@@ -4,7 +4,6 @@ This module defines the core protocols (interfaces) for the mail client system.
 It provides abstract contracts that concrete implementations must follow.
 
 The main protocols are:
-
 - Message: Defines the structure of an email message
 - Client: Defines the operations a mail client must support
 
@@ -12,7 +11,7 @@ Usage:
     from mail_client_api import get_client, Message, Client
     
     client = get_client()  # Returns concrete implementation
-
+    
     messages = client.get_messages()
 """
 
