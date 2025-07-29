@@ -4,7 +4,11 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "google-api-python-client>=2.177.0",
+    "google-auth>=2.40.3",
+    "mail-client-api",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -12,3 +16,6 @@ build-backend = "hatchling.build"
 
 [tool.ruff.lint]
 select = ["ALL"]
+
+[tool.uv.sources]
+mail-client-api = { workspace = true }

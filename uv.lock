@@ -219,6 +219,18 @@ wheels = [
 name = "gmail-client-impl"
 version = "0.1.0"
 source = { editable = "src/gmail_client_impl" }
+dependencies = [
+    { name = "google-api-python-client" },
+    { name = "google-auth" },
+    { name = "mail-client-api" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "google-api-python-client", specifier = ">=2.177.0" },
+    { name = "google-auth", specifier = ">=2.40.3" },
+    { name = "mail-client-api", editable = "src/mail_client_api" },
+]
 
 [[package]]
 name = "google-api-core"

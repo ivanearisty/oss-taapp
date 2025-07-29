@@ -47,6 +47,7 @@ mypy_path = ["src/mail_client_api/src", "src/mail_client_gmail_impl/src"]
 [tool.pytest.ini_options]
 pythonpath = [".", "src"]
 testpaths = ["tests", "src"] # Run tests in both top-level and component folders
+addopts = ["--cov", "--cov-report=term-missing"]
 
 [tool.coverage.run]
 source = ["src"]
