@@ -23,3 +23,6 @@ build/
 # IDE files
 .vscode/
 .idea/
+
+# MkDocs build artifacts
+site/
