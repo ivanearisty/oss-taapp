@@ -278,10 +278,29 @@ class GmailClient(mail_client_api.Client):
             A Message object containing the email data.
             
         Raises:
-            NotImplementedError: This method is not yet implemented.
+            Exception: If the message cannot be retrieved from the Gmail API.
 
         """
-        raise NotImplementedError
+        try:
+            msg_data = (
+                self.service.users() # type: ignore[no-untyped-call]
+                .messages()
+                .get(userId="me", id=message_id, format="raw")
+                .execute()
+            )
+            raw_content = msg_data.get("raw")
+            if not raw_content:
+                raise ValueError(f"No raw content found for message {message_id}")
+            
+            # Use the factory from the abstract `message` package.
+            # Do NOT call `GmailMessage()` directly.
+            # Dependency injection ensures this call is routed to `gmail_message_impl` at runtime.
+            return message.get_message(
+                msg_id=message_id, raw_data=raw_content
+            )
+        except Exception as e:
+            print(f"Error retrieving message {message_id}: {e}")
+            raise
 
     def delete_message(self, message_id: str) -> bool:
         """Delete a message from the mailbox.
@@ -292,11 +311,23 @@ class GmailClient(mail_client_api.Client):
         Returns:
             True if the message was successfully deleted, False otherwise.
             
-        Raises:
-            NotImplementedError: This method is not yet implemented.
+        Note:
+            This method permanently deletes the message from Gmail.
+            The message cannot be recovered after deletion.
 
         """
-        raise NotImplementedError
+        try:
+            (
+                self.service.users() # type: ignore[no-untyped-call]
+                .messages()
+                .delete(userId="me", id=message_id)
+                .execute()
+            )
+            print(f"Message {message_id} deleted successfully.")
+            return True
+        except Exception as e:
+            print(f"Error deleting message {message_id}: {e}")
+            return False
 
     def mark_as_read(self, message_id: str) -> bool:
         """Mark a message as read.
@@ -307,11 +338,27 @@ class GmailClient(mail_client_api.Client):
         Returns:
             True if the message was successfully marked as read, False otherwise.
             
-        Raises:
-            NotImplementedError: This method is not yet implemented.
+        Note:
+            This method removes the 'UNREAD' label from the message in Gmail,
+            effectively marking it as read.
 
         """
-        raise NotImplementedError
+        try:
+            (
+                self.service.users() # type: ignore[no-untyped-call]
+                .messages()
+                .modify(
+                    userId="me", 
+                    id=message_id, 
+                    body={"removeLabelIds": ["UNREAD"]}
+                )
+                .execute()
+            )
+            print(f"Message {message_id} marked as read successfully.")
+            return True
+        except Exception as e:
+            print(f"Error marking message {message_id} as read: {e}")
+            return False
 
     def get_messages(self, max_results: int = 10) -> Iterator[message.Message]:
         """
