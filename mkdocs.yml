@@ -36,4 +36,9 @@ plugins:
         python:
           options:
             # This helps mkdocstrings find packages in the src directory
-            search_paths: [src]
+            search_paths: 
+              - src/mail_client_api/src
+              - src/gmail_client_impl/src
+            show_source: false
+            docstring_section_style: spacy
+            members_order: source
