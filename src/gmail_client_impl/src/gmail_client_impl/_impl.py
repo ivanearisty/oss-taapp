@@ -41,11 +41,15 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import ClassVar
 
+# --- CORE IMPORTS ---
+# 1. Import the interfaces you are implementing and using.
 import mail_client_api
-from mail_client_api import Message
+import message  # <-- Import the message protocol package
+
+# 2. Import the Google libraries needed for the implementation.
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow  # type: ignore[import-untyped]
+from google_auth_oauthlib.flow import InstalledAppFlow # type: ignore[import-untyped]
 from googleapiclient.discovery import Resource, build
 
 class GmailClient(mail_client_api.Client):
@@ -264,7 +268,7 @@ class GmailClient(mail_client_api.Client):
             print(f"Error saving token to {token_path}: {e}")
             raise
 
-    def get_message(self, message_id: str) -> Message:
+    def get_message(self, message_id: str) -> message.Message:
         """Retrieve a specific message by its ID.
         
         Args:
@@ -309,21 +313,23 @@ class GmailClient(mail_client_api.Client):
         """
         raise NotImplementedError
 
-    def get_messages(self, max_results: int = 10) -> Iterator[mail_client_api.Message]:
-        """Retrieve all messages from the mailbox.
+    def get_messages(self, max_results: int = 10) -> Iterator[message.Message]:
+        """
+        Retrieve messages from the Gmail inbox.
+
+        This method fetches a list of message summaries from the Gmail API,
+        then retrieves the raw content for each message. It uses the
+        `message.get_message` factory function to construct and yield
+        a clean, protocol-compliant Message object for each email.
 
         Args:
-            max_results (int, optional): The maximum number of messages to return. Defaults to 10.
+            max_results: The maximum number of messages to retrieve.
 
-        Returns:
-            An iterator yielding Message objects for each email in the mailbox.
-
-        Raises:
-            NotImplementedError: This method is not yet implemented.
-
+        Yields:
+            An iterator of `message.Message` objects.
         """
         results = (
-            self.service.users()  # type: ignore[attr-defined]
+            self.service.users() # type: ignore[no-untyped-call]
             .messages()
             .list(userId="me", maxResults=max_results)
             .execute()
@@ -331,21 +337,21 @@ class GmailClient(mail_client_api.Client):
         messages_summary = results.get("messages", [])
 
         for msg_summary in messages_summary:
-            # Check if message has required id field
             if "id" not in msg_summary:
                 continue
-                
-            # Fetch raw message data needed by GmailMessage
+
             msg_data = (
-                self.service.users()  # type: ignore[attr-defined]
+                self.service.users() # type: ignore[no-untyped-call]
                 .messages()
                 .get(userId="me", id=msg_summary["id"], format="raw")
                 .execute()
             )
             raw_content = msg_data.get("raw")
             if raw_content:
-                yield Message.get_message(
+                # Use the factory from the abstract `message` package.
+                # Do NOT call `GmailMessage()` directly.
+                # Dependency injection ensures this call is routed to `gmail_message_impl` at runtime.
+                yield message.get_message(
                     msg_id=msg_summary["id"], raw_data=raw_content
                 )
-
 
