@@ -42,11 +42,11 @@ from pathlib import Path
 from typing import ClassVar
 
 import mail_client_api
+from mail_client_api import Message
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow  # type: ignore[import-untyped]
 from googleapiclient.discovery import Resource, build
-
 
 class GmailClient(mail_client_api.Client):
     """Concrete implementation of the Client protocol using Gmail API.
@@ -264,7 +264,7 @@ class GmailClient(mail_client_api.Client):
             print(f"Error saving token to {token_path}: {e}")
             raise
 
-    def get_message(self, message_id: str) -> mail_client_api.Message:
+    def get_message(self, message_id: str) -> Message:
         """Retrieve a specific message by its ID.
         
         Args:
@@ -309,16 +309,43 @@ class GmailClient(mail_client_api.Client):
         """
         raise NotImplementedError
 
-    def get_messages(self) -> Iterator[mail_client_api.Message]:
+    def get_messages(self, max_results: int = 10) -> Iterator[mail_client_api.Message]:
         """Retrieve all messages from the mailbox.
-        
+
+        Args:
+            max_results (int, optional): The maximum number of messages to return. Defaults to 10.
+
         Returns:
             An iterator yielding Message objects for each email in the mailbox.
-            
+
         Raises:
             NotImplementedError: This method is not yet implemented.
 
         """
-        raise NotImplementedError
+        results = (
+            self.service.users()  # type: ignore[attr-defined]
+            .messages()
+            .list(userId="me", maxResults=max_results)
+            .execute()
+        )
+        messages_summary = results.get("messages", [])
+
+        for msg_summary in messages_summary:
+            # Check if message has required id field
+            if "id" not in msg_summary:
+                continue
+                
+            # Fetch raw message data needed by GmailMessage
+            msg_data = (
+                self.service.users()  # type: ignore[attr-defined]
+                .messages()
+                .get(userId="me", id=msg_summary["id"], format="raw")
+                .execute()
+            )
+            raw_content = msg_data.get("raw")
+            if raw_content:
+                yield Message.get_message(
+                    msg_id=msg_summary["id"], raw_data=raw_content
+                )
 
 

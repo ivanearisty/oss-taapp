@@ -123,9 +123,12 @@ class Client(Protocol):
         """
         raise NotImplementedError
 
-    def get_messages(self) -> Iterator[Message]:
+    def get_messages(self, max_results: int = 10) -> Iterator[Message]:
         """Return an iterator of all messages in the inbox.
-        
+
+        Args:
+            max_results (int, optional): The maximum number of messages to return. Defaults to 10.
+
         Returns:
             Iterator[Message]: An iterator yielding Message objects from the inbox.
 

@@ -24,6 +24,8 @@ dev = [
 members = [
   "src/mail_client_api",
   "src/gmail_client_impl",
+  "src/message",
+  "src/message_impl",
 ]
 
 [tool.ruff]
