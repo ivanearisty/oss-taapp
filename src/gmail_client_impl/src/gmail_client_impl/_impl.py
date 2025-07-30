@@ -33,26 +33,24 @@ Example:
     ```python
     client = GmailClient(interactive=True)
     ```
+
 """
 
-from typing import ClassVar, Optional
-from collections.abc import Iterator
-
-from googleapiclient.discovery import build, Resource
-from google.auth.transport.requests import Request
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.oauth2.credentials import Credentials
-
-import base64
 import os
-import os.path
-import email  # Needed for sending
+from collections.abc import Iterator
+from pathlib import Path
+from typing import ClassVar
 
 import mail_client_api
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import Resource, build
+
 
 class GmailClient(mail_client_api.Client):
     """Concrete implementation of the Client protocol using Gmail API.
-    
+
     This class provides a complete implementation of the mail_client_api.Client protocol
     using Google's Gmail API. It handles OAuth2 authentication automatically and provides
     methods to interact with Gmail messages.
@@ -70,7 +68,7 @@ class GmailClient(mail_client_api.Client):
     
     Environment Variables:
         - GMAIL_CLIENT_ID: OAuth2 client ID
-        - GMAIL_CLIENT_SECRET: OAuth2 client secret  
+        - GMAIL_CLIENT_SECRET: OAuth2 client secret
         - GMAIL_REFRESH_TOKEN: OAuth2 refresh token
         - GMAIL_TOKEN_URI: OAuth2 token URI (optional, defaults to Google's endpoint)
     
@@ -94,17 +92,18 @@ class GmailClient(mail_client_api.Client):
         service = build('gmail', 'v1', credentials=my_creds)
         client = GmailClient(service=service)
         ```
+
     """
 
     SCOPES: ClassVar[list[str]] = [
-        "https://www.googleapis.com/auth/gmail.modify"
+        "https://www.googleapis.com/auth/gmail.modify",
     ]
     """OAuth2 scopes required for Gmail API access.
     
     The 'gmail.modify' scope allows reading, composing, and sending messages,
     as well as modifying labels and message metadata.
     """
-    
+
     FAILURE_TO_CRED = "Failed to obtain credentials. Please check your setup."
     """Error message displayed when authentication fails."""
 
@@ -118,7 +117,7 @@ class GmailClient(mail_client_api.Client):
         Args:
             service: An optional pre-configured Google API service resource.
                 If provided, authentication is skipped and this service is used directly.
-            interactive: If True, force interactive login, ignoring environment 
+            interactive: If True, force interactive login, ignoring environment
                 variables and existing token files. Useful for initial setup or
                 when credentials need to be refreshed manually.
 
@@ -129,13 +128,14 @@ class GmailClient(mail_client_api.Client):
         Note:
             The method will save credentials to 'token.json' for future use when
             authentication is successful through interactive flow or token refresh.
+
         """
         if service:
             self.service = service
             return # Skip auth if service is provided
 
         creds: Credentials | None = None
-        token_path = "token.json" 
+        token_path = "token.json"
         creds_path = "credentials.json"
 
         # 1. Force Interactive Flow if requested
@@ -159,7 +159,7 @@ class GmailClient(mail_client_api.Client):
                         token_uri=token_uri,
                         client_id=client_id,
                         client_secret=client_secret,
-                        scopes=self.SCOPES
+                        scopes=self.SCOPES,
                     )
                     creds.refresh(Request()) # type: ignore[no-untyped-call]
                     print("Authentication via environment variables successful.")
@@ -171,10 +171,10 @@ class GmailClient(mail_client_api.Client):
         # 3. Try Token File if not interactive and env vars failed
         if not creds and not interactive:
             print("Attempting to authenticate using local token file...")
-            if os.path.exists(token_path):
+            if Path(token_path).exists():
                 try:
                     creds = Credentials.from_authorized_user_file( # type: ignore[no-untyped-call]
-                        token_path, self.SCOPES
+                        token_path, self.SCOPES,
                     )
                     # Check if token needs refresh
                     if creds and not creds.valid and creds.refresh_token:
@@ -202,7 +202,7 @@ class GmailClient(mail_client_api.Client):
             raise RuntimeError(self.FAILURE_TO_CRED)
 
         # Save the token if it was obtained interactively or refreshed
-        if interactive or (creds.refresh_token and not os.path.exists(token_path)):
+        if interactive or (creds.refresh_token and not Path(token_path).exists()):
             self._save_token(creds, token_path)
 
         # Build the service object
@@ -227,18 +227,19 @@ class GmailClient(mail_client_api.Client):
             
         Raises:
             FileNotFoundError: If the credentials file doesn't exist.
+
         """
         print("Running interactive authentication flow...")
-        if not os.path.exists(creds_path):
+        if not Path(creds_path).exists():
             raise FileNotFoundError(f"'{creds_path}' not found. Cannot run interactive auth.") #noqa: EM102 TRY003
         try:
             flow = InstalledAppFlow.from_client_secrets_file(
-                creds_path, self.SCOPES
+                creds_path, self.SCOPES,
             )
             return flow.run_local_server(port=0) # type: ignore[no-any-return]
         except Exception as e:
              print(f"Error during interactive auth flow: {e}")
-             return None # Return None on failure
+             raise
 
     def _save_token(self, creds: Credentials, token_path: str) -> None:
         """Save the credentials token to a file.
@@ -253,13 +254,15 @@ class GmailClient(mail_client_api.Client):
         Note:
             The token file contains sensitive information and should be kept secure.
             It's automatically added to .gitignore in most project templates.
+
         """
         try:
-            with open(token_path, "w") as token:
+            with Path(token_path).open("w") as token:
                 token.write(creds.to_json()) # type: ignore[no-untyped-call]
             print(f"Credentials saved to {token_path}")
         except Exception as e:
-             print(f"Error saving token to {token_path}: {e}")
+            print(f"Error saving token to {token_path}: {e}")
+            raise
 
     def get_message(self, message_id: str) -> mail_client_api.Message:
         """Retrieve a specific message by its ID.
@@ -272,6 +275,7 @@ class GmailClient(mail_client_api.Client):
             
         Raises:
             NotImplementedError: This method is not yet implemented.
+
         """
         raise NotImplementedError
 
@@ -286,6 +290,7 @@ class GmailClient(mail_client_api.Client):
             
         Raises:
             NotImplementedError: This method is not yet implemented.
+
         """
         raise NotImplementedError
 
@@ -300,6 +305,7 @@ class GmailClient(mail_client_api.Client):
             
         Raises:
             NotImplementedError: This method is not yet implemented.
+
         """
         raise NotImplementedError
 
@@ -311,6 +317,7 @@ class GmailClient(mail_client_api.Client):
             
         Raises:
             NotImplementedError: This method is not yet implemented.
+
         """
         raise NotImplementedError
 

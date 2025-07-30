@@ -18,6 +18,7 @@ Example:
     client = GmailClient()
     messages = list(client.get_messages())
     ```
+
 """
 
 import mail_client_api
@@ -41,6 +42,7 @@ def get_client_impl(interactive: bool = False) -> mail_client_api.Client:
     Returns:
         mail_client_api.Client: A GmailClient instance implementing the
         mail_client_api.Client protocol.
+
     """
     return GmailClient(interactive=interactive)
 

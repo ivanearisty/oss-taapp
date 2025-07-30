@@ -15,7 +15,9 @@ Usage:
     messages = client.get_messages()
 """
 
-from typing import Iterator, Protocol, runtime_checkable
+from collections.abc import Iterator
+from typing import Protocol, runtime_checkable
+
 
 @runtime_checkable
 class Message(Protocol):
@@ -27,8 +29,9 @@ class Message(Protocol):
         
         Returns:
             str: The unique message identifier.
+
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def from_(self) -> str:
@@ -36,8 +39,9 @@ class Message(Protocol):
         
         Returns:
             str: The email address of the message sender.
+
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def to(self) -> str:
@@ -45,8 +49,9 @@ class Message(Protocol):
         
         Returns:
             str: The email address of the message recipient.
+
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def date(self) -> str:
@@ -54,8 +59,9 @@ class Message(Protocol):
         
         Returns:
             str: The date string when the message was sent.
+
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def subject(self) -> str:
@@ -63,8 +69,9 @@ class Message(Protocol):
         
         Returns:
             str: The message subject line.
+
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def body(self) -> str:
@@ -72,25 +79,26 @@ class Message(Protocol):
         
         Returns:
             str: The plain text body content of the message.
+
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class Client(Protocol):
     """A Mail Client used to fetch messages."""
 
     def get_message(self, message_id: str) -> Message:
-        """
-        Return a message by its ID.
+        """Return a message by its ID.
         
         Args:
             message_id (str): The ID of the message to retrieve.
         
         Returns:
             Message: The message object corresponding to the given ID.
+
         """
-        raise NotImplementedError()
-    
+        raise NotImplementedError
+
     def delete_message(self, message_id: str) -> bool:
         """Delete a message by its ID.
         
@@ -99,8 +107,9 @@ class Client(Protocol):
             
         Returns:
             bool: True if the message was successfully deleted, False otherwise.
+
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def mark_as_read(self, message_id: str) -> bool:
         """Mark a message as read by its ID.
@@ -110,16 +119,18 @@ class Client(Protocol):
             
         Returns:
             bool: True if the message was successfully marked as read, False otherwise.
+
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def get_messages(self) -> Iterator[Message]:
         """Return an iterator of all messages in the inbox.
         
         Returns:
             Iterator[Message]: An iterator yielding Message objects from the inbox.
+
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 def get_client(interactive: bool = False) -> Client:
@@ -139,5 +150,6 @@ def get_client(interactive: bool = False) -> Client:
         
     Raises:
         NotImplementedError: If no implementation has been registered.
+
     """
-    raise NotImplementedError()
+    raise NotImplementedError

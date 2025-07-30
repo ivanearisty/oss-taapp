@@ -16,7 +16,7 @@ dev = [
     "pymdown-extensions>=10.16.1",
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
-    "ruff>=0.12.4",
+    "ruff>=0.12.7",
     "types-requests>=2.32.4.20250611",
 ]
 
@@ -33,10 +33,11 @@ target-version = "py311"
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
-  "D100", # Missing docstring in public module
-  "D104", # Missing docstring in public package
-  "ANN101", # Missing type annotation for self
-  "ANN401", # Dynamically typed expressions are disallowed
+  "D100",  # Ignore missing module-level docstrings for a non-buildable module
+  "T201", # Print statements are fine
+  "D203", # `incorrect-blank-line-before-class` (D203) and `no-blank-line-before-class` (D211) are incompatible. Ignoring `incorrect-blank-line-before-class`.
+  "D213", # `multi-line-summary-first-line` (D212) and `multi-line-summary-second-line` (D213) are incompatible. Ignoring `multi-line-summary-second-line`.
+  
 ]
 
 [tool.mypy]

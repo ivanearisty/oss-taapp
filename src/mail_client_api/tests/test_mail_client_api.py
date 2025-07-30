@@ -1,9 +1,17 @@
+"""Tests for the mail client API protocols.
+
+This module contains unit tests that verify the contracts and behavior
+of the mail_client_api.Client and mail_client_api.Message protocols.
+These tests use mocks to demonstrate how implementations should behave
+and serve as documentation for the expected API contracts.
+"""
 from unittest.mock import Mock
+
 from mail_client_api import Client, Message
 
+
 def test_client_get_messages() -> None:
-    """
-    Verifies and demonstrates the contract for the `get_messages` method.
+    """Verifies and demonstrates the contract for the `get_messages` method.
 
     This test ensures that any implementation of the `Client` protocol
     must have a `get_messages` method that returns an iterator of `Message` objects.
@@ -28,16 +36,14 @@ def test_client_get_messages() -> None:
 
 
 def test_client_get_message() -> None:
-    """
-    Verifies and demonstrates the contract for the `get_message` method.
-    """
+    """Verifies and demonstrates the contract for the `get_message` method."""
     # ARRANGE
     mock_message = Mock(spec=Message)
     mock_message.id = "specific_msg_id"
 
     mock_client = Mock(spec=Client)
     mock_client.get_message.return_value = mock_message
-    
+
     # ACT
     retrieved_message = mock_client.get_message(message_id="specific_msg_id")
 
@@ -47,13 +53,11 @@ def test_client_get_message() -> None:
 
 
 def test_client_delete_message() -> None:
-    """
-    Verifies and demonstrates the contract for the `delete_message` method.
-    """
+    """Verifies and demonstrates the contract for the `delete_message` method."""
     # ARRANGE
     mock_client = Mock(spec=Client)
     mock_client.delete_message.return_value = True
-    
+
     # ACT
     success = mock_client.delete_message(message_id="msg_to_delete")
 
@@ -63,13 +67,11 @@ def test_client_delete_message() -> None:
 
 
 def test_client_mark_as_read() -> None:
-    """
-    Verifies and demonstrates the contract for the `mark_as_read` method.
-    """
+    """Verifies and demonstrates the contract for the `mark_as_read` method."""
     # ARRANGE
     mock_client = Mock(spec=Client)
     mock_client.mark_as_read.return_value = True
-    
+
     # ACT
     success = mock_client.mark_as_read(message_id="msg_to_mark_read")
 
