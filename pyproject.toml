@@ -52,8 +52,13 @@ pythonpath = [
     ".", 
     "src"
 ]
-testpaths = ["tests"]
+testpaths = ["tests", "src/*/tests"]
 addopts = ["--cov", "--cov-report=term-missing", "--import-mode=importlib"]
+markers = [
+    "unit: marks tests as unit tests (fast, isolated)",
+    "integration: marks tests as integration tests (medium speed, real dependencies)",
+    "e2e: marks tests as end-to-end tests (slow, full system)",
+]
 
 [tool.coverage.run]
 source = ["src"]
