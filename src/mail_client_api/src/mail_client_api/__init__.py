@@ -17,6 +17,7 @@ Usage:
 
 from typing import Iterator, Protocol, runtime_checkable
 
+@runtime_checkable
 class Message(Protocol):
     """A Mail Message."""
 
@@ -121,13 +122,18 @@ class Client(Protocol):
         raise NotImplementedError()
 
 
-def get_client() -> Client:
+def get_client(interactive: bool = False) -> Client:
     """Return an instance of a Mail Client.
     
     This is a factory function that returns a concrete implementation
     of the Client protocol. The actual implementation is injected
     by implementation packages.
-    
+
+    Args:
+        interactive (bool): If True, the client may prompt for user input
+        during initialization (e.g., for OAuth2 flow). If False, it will
+        use environment variables or other non-interactive methods.
+
     Returns:
         Client: A concrete mail client instance.
         

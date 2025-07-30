@@ -27,22 +27,22 @@ from ._impl import GmailClient
 # Export the main class so it's documented by mkdocstrings
 __all__ = ["GmailClient", "get_client_impl"]
 
-def get_client_impl() -> mail_client_api.Client:
+def get_client_impl(interactive: bool = False) -> mail_client_api.Client:
     """Get an instance of the GmailClient.
     
     This factory function creates and returns a new GmailClient instance
     with default authentication handling.
-    
+
+    Args:
+        interactive (bool): If True, the client may prompt for user input
+        during initialization (e.g., for OAuth2 flow). If False, it will
+        use environment variables or other non-interactive methods.
+
     Returns:
-        A GmailClient instance implementing the mail_client_api.Client protocol.
-    
-    Example:
-        ```python
-        client = get_client_impl()
-        messages = list(client.get_messages())
-        ```
+        mail_client_api.Client: A GmailClient instance implementing the
+        mail_client_api.Client protocol.
     """
-    return GmailClient()
+    return GmailClient(interactive=interactive)
 
 # --- Dependency Injection ---
 # Override the get_client function in the protocol package

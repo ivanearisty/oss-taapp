@@ -67,6 +67,51 @@ curl -LsSf https://astral.sh/uv/install.sh | sh # macOS/Linux
 4. Add `credentials.json` and `token.json` to your `.gitignore` file.
 5. For easier local development, create a `.env` file (also add to `.gitignore`) and store the `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, and `GMAIL_REFRESH_TOKEN` values (see `main.py` and `inbox_client_impl` for usage).
 
+#### Example Configuration Files
+
+##### credentials.json
+Download this from Google Cloud Console after enabling the Gmail API:
+```json
+{
+  "installed": {
+    "client_id": "your-client-id.apps.googleusercontent.com",
+    "project_id": "your-project-id",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_secret": "your-client-secret",
+    "redirect_uris": ["http://localhost"]
+  }
+}
+```
+
+##### token.json
+Generated automatically after the first OAuth flow:
+```json
+{
+  "token": "ya29.a0AS3H6Nz...",
+  "refresh_token": "1//05e_KXreZK368...",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "client_id": "your-client-id.apps.googleusercontent.com",
+  "client_secret": "your-client-secret",
+  "scopes": ["https://www.googleapis.com/auth/gmail.modify"],
+  "universe_domain": "googleapis.com",
+  "account": "",
+  "expiry": "2025-07-30T10:35:52Z"
+}
+```
+
+##### .env
+For easier local development (optional):
+```properties
+GMAIL_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GMAIL_CLIENT_SECRET=your-client-secret
+GMAIL_TOKEN_URI=https://oauth2.googleapis.com/token
+
+# From token.json
+GMAIL_REFRESH_TOKEN=1//05e_KXreZK368...
+```
+
 ### Install Dependencies
 
 ```bash

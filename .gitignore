@@ -26,3 +26,8 @@ build/
 
 # MkDocs build artifacts
 site/
+
+# Secrets
+token.json
+.env
+credentials.json
