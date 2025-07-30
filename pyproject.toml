@@ -25,7 +25,7 @@ members = [
   "src/mail_client_api",
   "src/gmail_client_impl",
   "src/message",
-  "src/message_impl",
+  "src/gmail_message_impl",
 ]
 
 [tool.ruff]
@@ -45,7 +45,7 @@ ignore = [
 [tool.mypy]
 strict = true
 explicit_package_bases = true # Required for src layout
-mypy_path = ["src/mail_client_api/src", "src/mail_client_gmail_impl/src"]
+mypy_path = ["src/mail_client_api/src", "src/mail_client_gmail_impl/src", "src/gmail_message_impl/src", "src/message/src"]
 
 [tool.pytest.ini_options]
 pythonpath = [

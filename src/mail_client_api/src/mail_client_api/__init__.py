@@ -1,91 +1,32 @@
 """Mail Client API - Core protocols and contracts.
 
 This module defines the core protocols (interfaces) for the mail client system.
-It provides abstract contracts that concrete implementations must follow.
-
-The main protocols are:
-- Message: Defines the structure of an email message
-- Client: Defines the operations a mail client must support
+It provides abstract contracts that concrete implementations must follow to
+enable email retrieval, message management, and client operations.
 
 Usage:
-    from mail_client_api import get_client, Message, Client
+    from mail_client_api import get_client, Client
     
+    # Get a client instance from an implementation
     client = get_client()  # Returns concrete implementation
     
+    # Use the client to fetch messages
     messages = client.get_messages()
+    for message in messages:
+        print(f"Subject: {message.subject}")
 """
 
 from collections.abc import Iterator
 from typing import Protocol, runtime_checkable
-
+from message import Message
 
 @runtime_checkable
-class Message(Protocol):
-    """A Mail Message."""
-
-    @property
-    def id(self) -> str:
-        """Return the unique identifier of the message.
-        
-        Returns:
-            str: The unique message identifier.
-
-        """
-        raise NotImplementedError
-
-    @property
-    def from_(self) -> str:
-        """Return the sender's email address.
-        
-        Returns:
-            str: The email address of the message sender.
-
-        """
-        raise NotImplementedError
-
-    @property
-    def to(self) -> str:
-        """Return the recipient's email address.
-        
-        Returns:
-            str: The email address of the message recipient.
-
-        """
-        raise NotImplementedError
-
-    @property
-    def date(self) -> str:
-        """Return the date the message was sent.
-        
-        Returns:
-            str: The date string when the message was sent.
-
-        """
-        raise NotImplementedError
-
-    @property
-    def subject(self) -> str:
-        """Return the subject line of the message.
-        
-        Returns:
-            str: The message subject line.
-
-        """
-        raise NotImplementedError
-
-    @property
-    def body(self) -> str:
-        """Return the plain text content of the message.
-        
-        Returns:
-            str: The plain text body content of the message.
-
-        """
-        raise NotImplementedError
-
-
 class Client(Protocol):
-    """A Mail Client used to fetch messages."""
+    """A protocol representing a mail client for email operations.
+    
+    This protocol defines the interface for mail client implementations
+    that can retrieve, delete, and manage email messages from a mail server.
+    """
 
     def get_message(self, message_id: str) -> Message:
         """Return a message by its ID.

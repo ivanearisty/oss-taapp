@@ -1,5 +1,5 @@
 [project]
-name = "mail-client-api"
+name = "gmail-message-impl"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -7,10 +7,6 @@ requires-python = ">=3.11"
 dependencies = [
     "message",
 ]
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
 
 [tool.ruff]
 line-length = 100  # Default formatting width
@@ -35,3 +31,7 @@ ignore = [
 
 [tool.uv.sources]
 message = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
