@@ -24,7 +24,7 @@ jobs:
             uv venv --python 3.11
             source .venv/bin/activate
             # Install all dependencies including dev/test extras
-            uv sync --all-packages --extra dev --verbose
+            uv sync --all-packages --verbose
       - run:
           name: "Verify Installation (Optional)"
           command: |
