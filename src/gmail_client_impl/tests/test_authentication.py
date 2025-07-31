@@ -88,6 +88,7 @@ class TestGmailClientAuthentication:
         mock_creds = Mock(spec=Credentials)
         mock_creds.valid = True
         mock_creds.refresh_token = "test_refresh_token"
+        mock_creds.to_json.return_value = '{"mock": "token_data"}'  # Fix: Return a proper JSON string
         mock_creds_class.return_value = mock_creds
         
         mock_service = Mock()
