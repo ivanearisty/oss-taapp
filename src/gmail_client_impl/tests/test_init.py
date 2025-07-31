@@ -5,9 +5,8 @@ covering all authentication scenarios and edge cases.
 """
 
 import os
-from pathlib import Path
 from typing import TYPE_CHECKING
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from google.auth.exceptions import RefreshError
@@ -34,8 +33,8 @@ class TestGmailClientInit:
     @patch("gmail_client_impl._impl.build")
     @patch.dict(os.environ, {
         "GMAIL_CLIENT_ID": "test_client_id",
-        "GMAIL_CLIENT_SECRET": "test_client_secret", 
-        "GMAIL_REFRESH_TOKEN": "test_refresh_token"
+        "GMAIL_CLIENT_SECRET": "test_client_secret",
+        "GMAIL_REFRESH_TOKEN": "test_refresh_token",
     })
     @patch("gmail_client_impl._impl.Request")
     def test_init_with_environment_variables(self, mock_request: Mock, mock_build: Mock) -> None:
@@ -80,7 +79,7 @@ class TestGmailClientInit:
         "GMAIL_CLIENT_ID": "test_client_id",
         "GMAIL_CLIENT_SECRET": "test_client_secret",
         "GMAIL_REFRESH_TOKEN": "test_refresh_token",
-        "GMAIL_TOKEN_URI": "https://custom.oauth.com/token"
+        "GMAIL_TOKEN_URI": "https://custom.oauth.com/token",
     })
     @patch("gmail_client_impl._impl.Request")
     def test_init_with_custom_token_uri(self, mock_request: Mock, mock_build: Mock) -> None:
@@ -93,7 +92,7 @@ class TestGmailClientInit:
         with patch("gmail_client_impl._impl.Credentials") as mock_creds_class:
             mock_creds_class.return_value = mock_creds
             
-            client = GmailClient()
+            GmailClient()
             
             # Verify custom token URI was used
             mock_creds_class.assert_called_once_with(
@@ -128,7 +127,7 @@ class TestGmailClientInit:
             
             # Verify token was loaded from file
             mock_creds_class.from_authorized_user_file.assert_called_once_with(
-                "token.json", GmailClient.SCOPES
+                "token.json", GmailClient.SCOPES,
             )
         
         # Verify service was built
@@ -180,7 +179,7 @@ class TestGmailClientInit:
             mock_creds = Mock(spec=Credentials)
             mock_creds.valid = False
             mock_creds.refresh_token = "refresh_token"
-            mock_creds.refresh.side_effect = RefreshError("Refresh failed")  # type: ignore[misc]
+            mock_creds.refresh.side_effect = RefreshError("Refresh failed")  # type: ignore[no-untyped-call]
             
             mock_creds_class.from_authorized_user_file.return_value = mock_creds
             
@@ -221,7 +220,7 @@ class TestGmailClientInit:
         
         # Verify interactive flow was used
         mock_flow_class.from_client_secrets_file.assert_called_once_with(
-            "credentials.json", GmailClient.SCOPES
+            "credentials.json", GmailClient.SCOPES,
         )
         mock_flow.run_local_server.assert_called_once_with(port=0)
         
@@ -261,14 +260,14 @@ class TestGmailClientInit:
     @patch.dict(os.environ, {
         "GMAIL_CLIENT_ID": "test_client_id",
         "GMAIL_CLIENT_SECRET": "test_client_secret",
-        "GMAIL_REFRESH_TOKEN": "test_refresh_token"
+        "GMAIL_REFRESH_TOKEN": "test_refresh_token",
     })
     @patch("gmail_client_impl._impl.Request")
     def test_init_env_vars_refresh_fails_fallback_to_interactive(self, mock_request: Mock) -> None:
         """Test that environment variable refresh failure raises error in non-interactive mode."""
         with patch("gmail_client_impl._impl.Credentials") as mock_creds_class:
             mock_creds = Mock(spec=Credentials)
-            mock_creds.refresh.side_effect = RefreshError("Refresh failed")  # type: ignore[misc]
+            mock_creds.refresh.side_effect = RefreshError("Refresh failed")  # type: ignore[no-untyped-call]
             mock_creds_class.return_value = mock_creds
             
             with patch("gmail_client_impl._impl.Path") as mock_path:
@@ -294,7 +293,7 @@ class TestGmailClientInit:
     @patch.dict(os.environ, {
         "GMAIL_CLIENT_ID": "test_client_id",
         "GMAIL_CLIENT_SECRET": "test_client_secret",
-        "GMAIL_REFRESH_TOKEN": "test_refresh_token"
+        "GMAIL_REFRESH_TOKEN": "test_refresh_token",
     })
     @patch("gmail_client_impl._impl.Request")
     def test_init_service_build_fails(self, mock_request: Mock, mock_build: Mock) -> None:
@@ -371,7 +370,7 @@ class TestGmailClientInit:
     @patch.dict(os.environ, {
         "GMAIL_CLIENT_ID": "",  # Empty string should be treated as missing
         "GMAIL_CLIENT_SECRET": "test_client_secret",
-        "GMAIL_REFRESH_TOKEN": "test_refresh_token"
+        "GMAIL_REFRESH_TOKEN": "test_refresh_token",
     })
     @patch("gmail_client_impl._impl.Path")
     def test_init_partial_env_vars_fallback(self, mock_path: Mock, mock_build: Mock) -> None:
@@ -437,6 +436,7 @@ class TestGetClientImpl:
     def test_dependency_injection(self) -> None:
         """Test that the dependency injection modifies mail_client_api.get_client."""
         import mail_client_api
+
         from gmail_client_impl import get_client_impl
         
         # Verify that mail_client_api.get_client is now our implementation

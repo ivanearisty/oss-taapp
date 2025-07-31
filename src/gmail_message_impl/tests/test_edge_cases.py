@@ -5,14 +5,14 @@ scenarios to ensure robust error handling.
 """
 
 import base64
-import pytest
+
 from gmail_message_impl._impl import GmailMessage
 
 
 class TestEdgeCases:
     """Test cases for edge cases and error conditions."""
 
-    def test_extremely_large_message_id(self):
+    def test_extremely_large_message_id(self) -> None:
         """Test with very long message ID."""
         long_id = "x" * 1000  # Very long ID
         simple_email = "Subject: Long ID Test\r\n\r\nBody"
@@ -22,7 +22,7 @@ class TestEdgeCases:
         assert msg.id == long_id
         assert msg.subject == "Long ID Test"
 
-    def test_unicode_in_message_content(self):
+    def test_unicode_in_message_content(self) -> None:
         """Test handling of Unicode characters in message content."""
         email_content = (
             "From: unicode@example.com\r\n"
@@ -31,14 +31,14 @@ class TestEdgeCases:
             "Unicode body: こんにちは 世界! 🌍 Café naïve résumé"
         )
         
-        encoded_data = base64.urlsafe_b64encode(email_content.encode('utf-8')).decode()
+        encoded_data = base64.urlsafe_b64encode(email_content.encode("utf-8")).decode()
         msg = GmailMessage(msg_id="unicode123", raw_data=encoded_data)
         
         assert "Unicode Test" in str(msg.subject)  # ASCII part should be preserved
         assert "こんにちは 世界! 🌍" in msg.body
         assert "Café naïve résumé" in msg.body
 
-    def test_very_long_subject_line(self):
+    def test_very_long_subject_line(self) -> None:
         """Test with extremely long subject line."""
         long_subject = "Very Long Subject " * 100  # ~1800 characters
         email_content = f"Subject: {long_subject}\r\n\r\nShort body"
@@ -49,7 +49,7 @@ class TestEdgeCases:
         assert msg.subject == long_subject
         assert len(msg.subject) > 1000
 
-    def test_very_long_message_body(self):
+    def test_very_long_message_body(self) -> None:
         """Test with extremely long message body."""
         long_body = "This is a very long message body. " * 1000  # ~35KB
         email_content = f"Subject: Long Body Test\r\n\r\n{long_body}"
@@ -61,7 +61,7 @@ class TestEdgeCases:
         assert len(msg.body) > 30000
         assert "This is a very long message body." in msg.body
 
-    def test_malformed_headers(self):
+    def test_malformed_headers(self) -> None:
         """Test with malformed email headers."""
         malformed_email = (
             "From sender@example.com\r\n"  # Missing colon
@@ -78,7 +78,7 @@ class TestEdgeCases:
         assert msg.id == "malformed123"
         assert msg.body == "Invalid-Header-Without-Value\r\n\r\nBody content"
 
-    def test_binary_data_in_raw_input(self):
+    def test_binary_data_in_raw_input(self) -> None:
         """Test with binary data that's not valid email."""
         binary_data = bytes(range(256))  # All possible byte values
         encoded_data = base64.urlsafe_b64encode(binary_data).decode()
@@ -89,7 +89,7 @@ class TestEdgeCases:
         # Should use error fallback values
         assert msg.subject == "Error Parsing Message"
 
-    def test_empty_raw_data(self):
+    def test_empty_raw_data(self) -> None:
         """Test with empty raw data."""
         msg = GmailMessage(msg_id="empty123", raw_data="")
         
@@ -97,7 +97,7 @@ class TestEdgeCases:
         assert msg.subject == "Error Parsing Message"
         assert msg.from_ == "Unknown Sender"
 
-    def test_whitespace_only_raw_data(self):
+    def test_whitespace_only_raw_data(self) -> None:
         """Test with whitespace-only raw data."""
         whitespace_data = base64.urlsafe_b64encode(b"   \r\n\t  ").decode()
         msg = GmailMessage(msg_id="whitespace123", raw_data=whitespace_data)
@@ -107,7 +107,7 @@ class TestEdgeCases:
         assert isinstance(msg.subject, str)
         assert isinstance(msg.body, str)
 
-    def test_non_ascii_message_id(self):
+    def test_non_ascii_message_id(self) -> None:
         """Test with non-ASCII characters in message ID."""
         unicode_id = "msg_测试_🎉_123"
         simple_email = "Subject: Unicode ID Test\r\n\r\nBody"
@@ -117,7 +117,7 @@ class TestEdgeCases:
         assert msg.id == unicode_id
         assert msg.subject == "Unicode ID Test"
 
-    def test_deeply_nested_multipart_message(self):
+    def test_deeply_nested_multipart_message(self) -> None:
         """Test with deeply nested multipart structure."""
         # Create a complex nested structure
         nested_email = (
@@ -150,7 +150,7 @@ class TestEdgeCases:
         assert msg.subject == "Nested Test"
         assert "Plain text in nested structure" in msg.body
 
-    def test_message_with_null_bytes(self):
+    def test_message_with_null_bytes(self) -> None:
         """Test message containing null bytes."""
         email_with_nulls = (
             "From: null@example.com\r\n"
@@ -159,7 +159,7 @@ class TestEdgeCases:
             "Body with\x00null\x00bytes"
         )
         
-        encoded_data = base64.urlsafe_b64encode(email_with_nulls.encode('utf-8', errors='replace')).decode()
+        encoded_data = base64.urlsafe_b64encode(email_with_nulls.encode("utf-8", errors="replace")).decode()
         msg = GmailMessage(msg_id="null123", raw_data=encoded_data)
         
         assert msg.id == "null123"
@@ -167,7 +167,7 @@ class TestEdgeCases:
         # Should handle null bytes gracefully
         assert "Body with" in msg.body
 
-    def test_repeated_property_access(self):
+    def test_repeated_property_access(self) -> None:
         """Test that property access is consistent on repeated calls."""
         email_content = (
             "From: repeat@example.com\r\n"
@@ -188,7 +188,7 @@ class TestEdgeCases:
             assert msg.date == "07/30/2025"
             assert msg.body == "Consistent body"
 
-    def test_message_with_only_headers_no_body(self):
+    def test_message_with_only_headers_no_body(self) -> None:
         """Test message with headers but no body."""
         headers_only = (
             "From: headeronly@example.com\r\n"

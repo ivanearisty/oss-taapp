@@ -1,6 +1,6 @@
 """Message Protocol - Core message representation.
 
-This module defines the Message protocol (interface) that represents 
+This module defines the Message protocol (interface) that represents
 an email message with its essential properties like sender, recipient,
 subject, content, and metadata.
 
@@ -18,6 +18,7 @@ Usage:
 
 
 from typing import Protocol, runtime_checkable
+
 
 @runtime_checkable
 class Message(Protocol):

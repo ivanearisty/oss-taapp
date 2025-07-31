@@ -22,6 +22,7 @@ import message
 
 from ._impl import GmailMessage
 
+
 def get_message_impl(msg_id: str, raw_data: str) -> message.Message:
     """Return an instance of the concrete GmailMessage implementation.
 
@@ -40,6 +41,7 @@ def get_message_impl(msg_id: str, raw_data: str) -> message.Message:
         >>> msg = get_message_impl("12345", "encoded_data...")
         >>> print(msg.subject)
         "Important Email Subject"
+
     """
     return GmailMessage(msg_id=msg_id, raw_data=raw_data)
 

@@ -7,8 +7,9 @@ and serve as documentation for the expected API contracts.
 """
 from unittest.mock import Mock
 
-from mail_client_api import Client
 from message import Message
+
+from mail_client_api import Client
 
 
 def test_client_get_messages() -> None:

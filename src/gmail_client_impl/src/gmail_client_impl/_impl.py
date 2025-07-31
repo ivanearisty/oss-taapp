@@ -49,7 +49,7 @@ import message  # <-- Import the message protocol package
 # 2. Import the Google libraries needed for the implementation.
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow # type: ignore[import-untyped]
+from google_auth_oauthlib.flow import InstalledAppFlow  # type: ignore[import-untyped]
 from googleapiclient.discovery import Resource, build
 
 # Try to load .env file if python-dotenv is available
@@ -211,13 +211,16 @@ class GmailClient(mail_client_api.Client):
         # 4. Fallback to Interactive Flow if all else fails (and not already done)
         if not creds or (creds and not creds.valid and not creds.refresh_token):
             if not interactive: # Non-interactive mode should never fall back to interactive
-                raise RuntimeError("No valid credentials found and interactive mode is disabled. "
-                                 "Please provide valid credentials via environment variables or token file.") #noqa: EM101 TRY003
-            else: # Interactive mode was requested but failed
-                print("No valid credentials found, running interactive login.")
-                creds = self._run_interactive_flow(creds_path)
-                if not creds:
-                    raise RuntimeError("Interactive authentication failed.") #noqa: EM101 TRY003
+                msg = (
+                    "No valid credentials found and interactive mode is disabled. "
+                                 "Please provide valid credentials via environment variables or token file."
+                )
+                raise RuntimeError(msg)
+            # Interactive mode was requested but failed
+            print("No valid credentials found, running interactive login.")
+            creds = self._run_interactive_flow(creds_path)
+            if not creds:
+                raise RuntimeError("Interactive authentication failed.") #noqa: EM101 TRY003
 
         # --- End Authentication Logic --- #
 
@@ -302,20 +305,21 @@ class GmailClient(mail_client_api.Client):
         """
         try:
             msg_data = (
-                self.service.users() # type: ignore[no-untyped-call]
+                self.service.users()  # type: ignore[attr-defined]
                 .messages()
                 .get(userId="me", id=message_id, format="raw")
                 .execute()
             )
             raw_content = msg_data.get("raw")
             if not raw_content:
-                raise ValueError(f"No raw content found for message {message_id}")
+                msg = f"No raw content found for message {message_id}"
+                raise ValueError(msg)
             
             # Use the factory from the abstract `message` package.
             # Do NOT call `GmailMessage()` directly.
             # Dependency injection ensures this call is routed to `gmail_message_impl` at runtime.
             return message.get_message(
-                msg_id=message_id, raw_data=raw_content
+                msg_id=message_id, raw_data=raw_content,
             )
         except Exception as e:
             print(f"Error retrieving message {message_id}: {e}")
@@ -337,7 +341,7 @@ class GmailClient(mail_client_api.Client):
         """
         try:
             (
-                self.service.users() # type: ignore[no-untyped-call]
+                self.service.users()  # type: ignore[attr-defined]
                 .messages()
                 .delete(userId="me", id=message_id)
                 .execute()
@@ -364,12 +368,12 @@ class GmailClient(mail_client_api.Client):
         """
         try:
             (
-                self.service.users() # type: ignore[no-untyped-call]
+                self.service.users()  # type: ignore[attr-defined]
                 .messages()
                 .modify(
-                    userId="me", 
-                    id=message_id, 
-                    body={"removeLabelIds": ["UNREAD"]}
+                    userId="me",
+                    id=message_id,
+                    body={"removeLabelIds": ["UNREAD"]},
                 )
                 .execute()
             )
@@ -380,8 +384,7 @@ class GmailClient(mail_client_api.Client):
             return False
 
     def get_messages(self, max_results: int = 10) -> Iterator[message.Message]:
-        """
-        Retrieve messages from the Gmail inbox.
+        """Retrieve messages from the Gmail inbox.
 
         This method fetches a list of message summaries from the Gmail API,
         then retrieves the raw content for each message. It uses the
@@ -393,9 +396,10 @@ class GmailClient(mail_client_api.Client):
 
         Yields:
             An iterator of `message.Message` objects.
+
         """
         results = (
-            self.service.users() # type: ignore[no-untyped-call]
+            self.service.users()  # type: ignore[attr-defined]
             .messages()
             .list(userId="me", maxResults=max_results)
             .execute()
@@ -407,7 +411,7 @@ class GmailClient(mail_client_api.Client):
                 continue
 
             msg_data = (
-                self.service.users() # type: ignore[no-untyped-call]
+                self.service.users()  # type: ignore[attr-defined]
                 .messages()
                 .get(userId="me", id=msg_summary["id"], format="raw")
                 .execute()
@@ -418,6 +422,6 @@ class GmailClient(mail_client_api.Client):
                 # Do NOT call `GmailMessage()` directly.
                 # Dependency injection ensures this call is routed to `gmail_message_impl` at runtime.
                 yield message.get_message(
-                    msg_id=msg_summary["id"], raw_data=raw_content
+                    msg_id=msg_summary["id"], raw_data=raw_content,
                 )
 

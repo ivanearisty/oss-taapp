@@ -15,9 +15,9 @@ build-backend = "hatchling.build"
 [tool.ruff]
 line-length = 100  # Default formatting width
 target-version = "py311"  # Adjust based on actual Python version
+extend = "../../pyproject.toml"
 
 [tool.ruff.lint]
-select = ["ALL"]
 ignore = [
     "W293", # Whitespaces are ok in documentation lines
     "T201", # Print statements are fine to use in this package

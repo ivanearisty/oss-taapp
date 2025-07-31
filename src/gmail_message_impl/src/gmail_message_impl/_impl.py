@@ -1,24 +1,4 @@
-"""Gmail Message Implementation - Concrete message implementat          try:
-            decoded_bytes = base64.urlsafe_b64decode(raw_data.encode("utf-8"))
-            self._parsed: EmailMessage = email.message_from_bytes(
-                decoded_bytes
-            )
-            
-            # Check if we have essentially empty or invalid email data
-            # email.message_from_bytes is very lenient and won't raise errors for invalid data
-            # but will create an EmailMessage with missing headers
-            if (not decoded_bytes or  # Empty decoded data
-                (not any(self._parsed.keys()) and not self._parsed.get_payload()) or  # No headers and no payload
-                self._is_binary_garbage(decoded_bytes)):  # Binary garbage that shouldn't be parsed as email
-                raise ValueError("Empty or invalid email data")Check if we have essentially empty or invalid email data
-            # email.message_from_bytes is very lenient and won't raise errors for invalid data
-            # but will create an EmailMessage with missing headers
-            payload = self._parsed.get_payload()
-            if (not decoded_bytes or  # Empty decoded data
-                (not any(self._parsed.keys()) and  # No headers AND
-                 (not payload or  # No payload OR
-                  (isinstance(payload, str) and not payload.strip().replace('\r', '').replace('\n', ''))))):  # Empty/whitespace-only payload
-                raise ValueError("Empty or invalid email data")r Gmail.
+r"""Gmail Message Implementation - Concrete message implementation for Gmail.
 
 This module provides the GmailMessage class, which implements the Message protocol
 for Gmail messages. It handles Gmail-specific message parsing, email decoding,
@@ -34,12 +14,13 @@ The implementation handles:
 
 import base64
 import email
+import email.header
 import email.utils
 from email.message import Message as EmailMessage
-from datetime import datetime
 
 # Import the protocol
 import message
+
 
 class GmailMessage(message.Message):
     """Concrete implementation of the Message protocol for Gmail messages.
@@ -60,11 +41,11 @@ class GmailMessage(message.Message):
         _id (str): The unique message identifier from Gmail
         _raw_data (str): The original base64url-encoded message data
         _parsed (EmailMessage): The parsed email message object
+
     """
 
     def __init__(self, msg_id: str, raw_data: str) -> None:
-        """
-        Initialize GmailMessage instance.
+        """Initialize GmailMessage instance.
 
         Args:
             msg_id: The unique ID of the message.
@@ -77,7 +58,7 @@ class GmailMessage(message.Message):
         try:
             decoded_bytes = base64.urlsafe_b64decode(raw_data.encode("utf-8"))
             self._parsed: EmailMessage = email.message_from_bytes(
-                decoded_bytes
+                decoded_bytes,
             )
             
             # Check if we have essentially empty or invalid email data
@@ -87,9 +68,10 @@ class GmailMessage(message.Message):
             if (not decoded_bytes or  # Empty decoded data
                 (not any(self._parsed.keys()) and  # No headers AND
                  (not payload or  # No payload OR
-                  (isinstance(payload, str) and not payload.startswith(('\r\n', '\n'))))) or  # Payload doesn't start with newlines (not proper email body)
+                  (isinstance(payload, str) and not payload.startswith(("\r\n", "\n"))))) or  # Payload doesn't start with newlines (not proper email body)
                 self._is_binary_garbage(decoded_bytes)):  # Binary garbage that shouldn't be parsed as email
-                raise ValueError("Empty or invalid email data")
+                msg = "Empty or invalid email data"
+                raise ValueError(msg)
                 
         except (TypeError, ValueError, Exception) as e:
             # Handle potential decoding or parsing errors gracefully
@@ -108,7 +90,7 @@ class GmailMessage(message.Message):
         
         # Try to decode as UTF-8 first - if it's valid UTF-8, it's probably text, not garbage
         try:
-            data.decode('utf-8')
+            data.decode("utf-8")
             # If UTF-8 decoding succeeds, it's likely text content, not binary garbage
             return False
         except UnicodeDecodeError:
@@ -121,9 +103,7 @@ class GmailMessage(message.Message):
         for byte_val in data:
             # Consider bytes outside of printable ASCII range as non-printable
             # Allow some common control chars like \r, \n, \t
-            if byte_val < 32 and byte_val not in (9, 10, 13):  # \t, \n, \r
-                non_printable_count += 1
-            elif byte_val > 126:  # Above printable ASCII
+            if (byte_val < 32 and byte_val not in (9, 10, 13)) or byte_val > 126:  # \t, \n, \r
                 non_printable_count += 1
         
         return (non_printable_count / len(data)) > 0.5  # Higher threshold for non-UTF-8 data
@@ -145,7 +125,7 @@ class GmailMessage(message.Message):
 
     @property
     def date(self) -> str:
-        """Returns the message date formatted as MM/DD/YYYY, or the raw date string if parsing fails.""" # noqa: E501
+        """Returns the message date formatted as MM/DD/YYYY, or the raw date string if parsing fails."""
         raw_date = self._parsed.get("Date", "")
         if not raw_date:
             return "Unknown Date"
@@ -166,7 +146,7 @@ class GmailMessage(message.Message):
             return ""
 
         # Convert Header object to string if necessary
-        if hasattr(subject_header, '__str__'):
+        if hasattr(subject_header, "__str__"):
             subject_header = str(subject_header)
 
         # Attempt to decode RFC 2047 encoded words
@@ -175,7 +155,7 @@ class GmailMessage(message.Message):
             if "=?" not in subject_header:
                  return subject_header # Return plain string directly
 
-            decoded_parts = email.header.decode_header(subject_header) # type: ignore
+            decoded_parts = email.header.decode_header(subject_header)
             subject_str = ""
             for part, encoding in decoded_parts:
                 if isinstance(part, bytes):

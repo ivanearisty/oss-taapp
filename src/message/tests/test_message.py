@@ -135,21 +135,21 @@ def test_message_protocol_comprehensive() -> None:
 
     # ACT: Access all properties
     properties = {
-        'id': mock_message.id,
-        'from_': mock_message.from_,
-        'to': mock_message.to,
-        'date': mock_message.date,
-        'subject': mock_message.subject,
-        'body': mock_message.body
+        "id": mock_message.id,
+        "from_": mock_message.from_,
+        "to": mock_message.to,
+        "date": mock_message.date,
+        "subject": mock_message.subject,
+        "body": mock_message.body,
     }
 
     # ASSERT: Verify all properties return expected values and types
-    assert properties['id'] == "msg_67890"
-    assert properties['from_'] == "alice@company.com"
-    assert properties['to'] == "bob@company.com"
-    assert properties['date'] == "2025-07-30 14:45:30"
-    assert properties['subject'] == "Project Update"
-    assert properties['body'] == "Here are the latest updates on our project progress."
+    assert properties["id"] == "msg_67890"
+    assert properties["from_"] == "alice@company.com"
+    assert properties["to"] == "bob@company.com"
+    assert properties["date"] == "2025-07-30 14:45:30"
+    assert properties["subject"] == "Project Update"
+    assert properties["body"] == "Here are the latest updates on our project progress."
 
     # Verify all properties return strings
     for prop_value in properties.values():

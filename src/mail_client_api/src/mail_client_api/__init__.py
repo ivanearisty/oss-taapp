@@ -18,7 +18,9 @@ Usage:
 
 from collections.abc import Iterator
 from typing import Protocol, runtime_checkable
+
 from message import Message
+
 
 @runtime_checkable
 class Client(Protocol):

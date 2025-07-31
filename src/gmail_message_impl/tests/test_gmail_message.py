@@ -5,21 +5,20 @@ covering message parsing, property access, error handling, and edge cases.
 """
 
 import base64
-import email
 from email.message import EmailMessage
-import pytest
+
 from gmail_message_impl._impl import GmailMessage
 
 
 class TestGmailMessage:
     """Test cases for the GmailMessage class."""
 
-    def test_basic_message_creation(self):
+    def test_basic_message_creation(self) -> None:
         """Test creating a GmailMessage with valid data."""
         # Create a simple email message
         email_content = (
             "From: sender@example.com\r\n"
-            "To: recipient@example.com\r\n" 
+            "To: recipient@example.com\r\n"
             "Subject: Test Subject\r\n"
             "Date: Wed, 30 Jul 2025 10:30:00 +0000\r\n"
             "\r\n"
@@ -40,7 +39,7 @@ class TestGmailMessage:
         assert message.date == "07/30/2025"
         assert message.body == "This is the message body."
 
-    def test_message_with_encoded_subject(self):
+    def test_message_with_encoded_subject(self) -> None:
         """Test message with RFC 2047 encoded subject."""
         email_content = (
             "From: sender@example.com\r\n"
@@ -56,7 +55,7 @@ class TestGmailMessage:
         
         assert message.subject == "Test Subject encoded"
 
-    def test_multipart_message(self):
+    def test_multipart_message(self) -> None:
         """Test parsing a multipart message."""
         # Create a multipart email
         email_msg = EmailMessage()
@@ -71,7 +70,7 @@ class TestGmailMessage:
         # Add HTML part
         email_msg.add_alternative(
             "<html><body><p>This is the HTML body.</p></body></html>",
-            subtype="html"
+            subtype="html",
         )
         
         # Encode the message
@@ -84,7 +83,7 @@ class TestGmailMessage:
         assert message.from_ == "sender@example.com"
         assert "This is the plain text body." in message.body
 
-    def test_invalid_base64_data(self):
+    def test_invalid_base64_data(self) -> None:
         """Test handling of invalid base64 data."""
         invalid_data = "This is not valid base64!"
         
@@ -95,7 +94,7 @@ class TestGmailMessage:
         assert message.subject == "Error Parsing Message"
         assert message.from_ == "Unknown Sender"
 
-    def test_empty_message_fields(self):
+    def test_empty_message_fields(self) -> None:
         """Test message with missing fields."""
         email_content = "\r\n\r\nJust a body, no headers."
         
@@ -109,7 +108,7 @@ class TestGmailMessage:
         assert message.date == "Unknown Date"
         assert message.body == "\r\nJust a body, no headers."
 
-    def test_date_parsing_fallback(self):
+    def test_date_parsing_fallback(self) -> None:
         """Test date parsing with invalid date format."""
         email_content = (
             "From: sender@example.com\r\n"
@@ -124,7 +123,7 @@ class TestGmailMessage:
         # Should fallback to raw date string
         assert message.date == "Invalid Date Format"
 
-    def test_subject_without_encoding(self):
+    def test_subject_without_encoding(self) -> None:
         """Test subject that doesn't need RFC 2047 decoding."""
         email_content = (
             "From: sender@example.com\r\n"
@@ -138,7 +137,7 @@ class TestGmailMessage:
         
         assert message.subject == "Plain Subject Line"
 
-    def test_message_with_attachment(self):
+    def test_message_with_attachment(self) -> None:
         """Test multipart message with attachment (should extract text body)."""
         # Create multipart message with attachment
         email_msg = EmailMessage()
@@ -154,7 +153,7 @@ class TestGmailMessage:
             b"fake attachment data",
             maintype="application",
             subtype="octet-stream",
-            filename="attachment.txt"
+            filename="attachment.txt",
         )
         
         raw_email = email_msg.as_bytes()
@@ -166,16 +165,16 @@ class TestGmailMessage:
         assert "This is the main message body." in message.body
         assert "fake attachment data" not in message.body
 
-    def test_message_body_encoding(self):
+    def test_message_body_encoding(self) -> None:
         """Test message body with non-UTF-8 encoding."""
         # Create message with Latin-1 encoding
         body_text = "Café and naïve"
         email_content = (
-            "From: sender@example.com\r\n"
-            "Subject: Encoding Test\r\n"
-            "Content-Type: text/plain; charset=iso-8859-1\r\n"
-            "\r\n"
-        ).encode('utf-8') + body_text.encode('iso-8859-1')
+            b"From: sender@example.com\r\n"
+            b"Subject: Encoding Test\r\n"
+            b"Content-Type: text/plain; charset=iso-8859-1\r\n"
+            b"\r\n"
+        ) + body_text.encode("iso-8859-1")
         
         encoded_data = base64.urlsafe_b64encode(email_content).decode()
         message = GmailMessage(msg_id="encoding123", raw_data=encoded_data)
@@ -186,7 +185,7 @@ class TestGmailMessage:
         # Body should be decoded (may have replacement characters for encoding issues)
         assert len(message.body) > 0
 
-    def test_completely_malformed_email(self):
+    def test_completely_malformed_email(self) -> None:
         """Test with completely malformed email data."""
         malformed_data = "Not an email at all!"
         encoded_data = base64.urlsafe_b64encode(malformed_data.encode()).decode()
@@ -198,7 +197,7 @@ class TestGmailMessage:
         assert message.subject == "Error Parsing Message"
         assert message.from_ == "Unknown Sender"
 
-    def test_message_without_plain_text_body(self):
+    def test_message_without_plain_text_body(self) -> None:
         """Test multipart message without plain text part."""
         email_msg = EmailMessage()
         email_msg["From"] = "sender@example.com"
@@ -207,7 +206,7 @@ class TestGmailMessage:
         # Add only HTML content, no plain text
         email_msg.set_content(
             "<html><body><h1>HTML Only Message</h1></body></html>",
-            subtype="html"
+            subtype="html",
         )
         
         raw_email = email_msg.as_bytes()
