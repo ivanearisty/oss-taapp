@@ -10,8 +10,8 @@ import gmail_client_impl
 import gmail_message_impl
 from gmail_message_impl._impl import GmailMessage
 
-# Mark all tests in this file as integration tests
-pytestmark = pytest.mark.integration
+# Mark all tests in this file as integration tests requiring local credentials
+pytestmark = [pytest.mark.integration, pytest.mark.local_credentials]
 
 
 def test_retrieve_and_parse_real_messages():
@@ -20,7 +20,7 @@ def test_retrieve_and_parse_real_messages():
     Requires at least one email in the test account's inbox.
     """
     try:
-        client = mail_client_api.get_client()
+        client = mail_client_api.get_client(interactive=False)
         messages = client.get_messages(max_results=1)
         
         first_message = next(messages, None)
@@ -61,7 +61,7 @@ def test_get_specific_message_by_id():
     Tests fetching a specific message by ID and parsing it.
     """
     try:
-        client = mail_client_api.get_client()
+        client = mail_client_api.get_client(interactive=False)
         
         # First, get a list of messages to get an ID
         messages = list(client.get_messages(max_results=1))
@@ -99,7 +99,7 @@ def test_mark_message_as_read_integration():
     This test is non-destructive but does modify message state.
     """
     try:
-        client = mail_client_api.get_client()
+        client = mail_client_api.get_client(interactive=False)
         
         # Get a message to work with
         messages = list(client.get_messages(max_results=1))
@@ -128,7 +128,7 @@ def test_multiple_messages_retrieval():
     Tests fetching multiple messages and verifying they're all parsed correctly.
     """
     try:
-        client = mail_client_api.get_client()
+        client = mail_client_api.get_client(interactive=False)
         
         # Fetch multiple messages
         messages = list(client.get_messages(max_results=3))
@@ -164,7 +164,7 @@ def test_message_protocol_compliance_with_real_data():
     Tests that real Gmail messages comply with the Message protocol.
     """
     try:
-        client = mail_client_api.get_client()
+        client = mail_client_api.get_client(interactive=False)
         
         messages = list(client.get_messages(max_results=1))
         
@@ -201,7 +201,7 @@ def test_error_handling_with_invalid_message_id():
     Tests error handling when trying to fetch a message with invalid ID.
     """
     try:
-        client = mail_client_api.get_client()
+        client = mail_client_api.get_client(interactive=False)
         
         # Try to fetch a message with obviously invalid ID
         invalid_id = "invalid_message_id_12345"

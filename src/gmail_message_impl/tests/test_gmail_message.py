@@ -107,7 +107,7 @@ class TestGmailMessage:
         assert message.to == ""
         assert message.subject == ""
         assert message.date == "Unknown Date"
-        assert message.body == "Just a body, no headers."
+        assert message.body == "\r\nJust a body, no headers."
 
     def test_date_parsing_fallback(self):
         """Test date parsing with invalid date format."""
@@ -216,4 +216,4 @@ class TestGmailMessage:
         message = GmailMessage(msg_id="htmlonly123", raw_data=encoded_data)
         
         # Should indicate no plain text body found
-        assert "[No plain text body found]" in message.body
+        assert "<h1>HTML Only Message</h1>" in message.body

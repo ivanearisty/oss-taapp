@@ -15,7 +15,7 @@ def main() -> None:
     print("Attempting to initialize Gmail client...")
     try:
         # Now, get_client() returns a GmailClient instance...
-        client = mail_client_api.get_client(interactive=False)
+        client = mail_client_api.get_client(interactive=True)
         print("\nSuccessfully authenticated and connected to the Gmail API.")
 
         # Test 1: Get messages (existing functionality)

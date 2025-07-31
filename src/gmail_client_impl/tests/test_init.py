@@ -110,24 +110,26 @@ class TestGmailClientInit:
     @patch("gmail_client_impl._impl.Credentials")
     def test_init_with_token_file_valid(self, mock_creds_class: Mock, mock_path: Mock, mock_build: Mock) -> None:
         """Test initialization with valid token file."""
-        mock_creds = Mock(spec=Credentials)
-        mock_creds.valid = True
-        mock_service = Mock(spec=Resource)
-        mock_build.return_value = mock_service
-        
-        # Mock Path.exists() to return True for token.json
-        mock_path_instance = Mock()
-        mock_path_instance.exists.return_value = True
-        mock_path.return_value = mock_path_instance
-        
-        mock_creds_class.from_authorized_user_file.return_value = mock_creds
-        
-        client = GmailClient()
-        
-        # Verify token was loaded from file
-        mock_creds_class.from_authorized_user_file.assert_called_once_with(
-            "token.json", GmailClient.SCOPES
-        )
+        # Clear environment variables to test token file path
+        with patch.dict(os.environ, {}, clear=True):
+            mock_creds = Mock(spec=Credentials)
+            mock_creds.valid = True
+            mock_service = Mock(spec=Resource)
+            mock_build.return_value = mock_service
+            
+            # Mock Path.exists() to return True for token.json
+            mock_path_instance = Mock()
+            mock_path_instance.exists.return_value = True
+            mock_path.return_value = mock_path_instance
+            
+            mock_creds_class.from_authorized_user_file.return_value = mock_creds
+            
+            client = GmailClient()
+            
+            # Verify token was loaded from file
+            mock_creds_class.from_authorized_user_file.assert_called_once_with(
+                "token.json", GmailClient.SCOPES
+            )
         
         # Verify service was built
         mock_build.assert_called_once_with("gmail", "v1", credentials=mock_creds)
@@ -139,60 +141,56 @@ class TestGmailClientInit:
     @patch("gmail_client_impl._impl.Request")
     def test_init_with_token_file_needs_refresh(self, mock_request: Mock, mock_creds_class: Mock, mock_path: Mock, mock_build: Mock) -> None:
         """Test initialization with token file that needs refresh."""
-        mock_creds = Mock(spec=Credentials)
-        mock_creds.valid = False
-        mock_creds.refresh_token = "refresh_token"
-        mock_service = Mock(spec=Resource)
-        mock_build.return_value = mock_service
-        
-        # Mock Path.exists() to return True for token.json
-        mock_path_instance = Mock()
-        mock_path_instance.exists.return_value = True
-        mock_path.return_value = mock_path_instance
-        
-        mock_creds_class.from_authorized_user_file.return_value = mock_creds
-        
-        # After refresh, make credentials valid
-        def make_valid(*args: object) -> None:
-            mock_creds.valid = True
-        mock_creds.refresh.side_effect = make_valid
-        
-        client = GmailClient()
-        
-        # Verify token was refreshed
-        mock_creds.refresh.assert_called_once()
-        
-        # Verify service was built
-        mock_build.assert_called_once_with("gmail", "v1", credentials=mock_creds)
-        assert client.service is mock_service
+        # Clear environment variables to test token file path
+        with patch.dict(os.environ, {}, clear=True):
+            mock_creds = Mock(spec=Credentials)
+            mock_creds.valid = False
+            mock_creds.refresh_token = "refresh_token"
+            mock_service = Mock(spec=Resource)
+            mock_build.return_value = mock_service
+            
+            # Mock Path.exists() to return True for token.json
+            mock_path_instance = Mock()
+            mock_path_instance.exists.return_value = True
+            mock_path.return_value = mock_path_instance
+            
+            mock_creds_class.from_authorized_user_file.return_value = mock_creds
+            
+            # After refresh, make credentials valid
+            def make_valid(*args: object) -> None:
+                mock_creds.valid = True
+            mock_creds.refresh.side_effect = make_valid
+            
+            client = GmailClient()
+            
+            # Verify token was refreshed
+            mock_creds.refresh.assert_called_once()
+            
+            # Verify service was built
+            mock_build.assert_called_once_with("gmail", "v1", credentials=mock_creds)
+            assert client.service is mock_service
 
     @patch("gmail_client_impl._impl.build")
     @patch("gmail_client_impl._impl.Credentials")
     @patch("gmail_client_impl._impl.Request")
     def test_init_with_token_file_refresh_fails(self, mock_request: Mock, mock_creds_class: Mock, mock_build: Mock) -> None:
         """Test initialization when token file refresh fails."""
-        mock_creds = Mock(spec=Credentials)
-        mock_creds.valid = False
-        mock_creds.refresh_token = "refresh_token"
-        mock_creds.refresh.side_effect = RefreshError("Refresh failed")  # type: ignore[misc]
-        
-        mock_creds_class.from_authorized_user_file.return_value = mock_creds
-        
-        with patch("gmail_client_impl._impl.Path") as mock_path:
-            # Mock Path.exists() to return True for token.json, False for credentials.json
-            def path_exists_side_effect(*args: object, **kwargs: object) -> bool:
-                path_str = str(args[0]) if args else str(kwargs.get('self', ''))
-                if "token.json" in path_str:
-                    return True
-                elif "credentials.json" in path_str:
-                    return False
-                return False
+        # Clear environment variables to test token file path
+        with patch.dict(os.environ, {}, clear=True):
+            mock_creds = Mock(spec=Credentials)
+            mock_creds.valid = False
+            mock_creds.refresh_token = "refresh_token"
+            mock_creds.refresh.side_effect = RefreshError("Refresh failed")  # type: ignore[misc]
             
-            mock_path.return_value.exists.side_effect = path_exists_side_effect
+            mock_creds_class.from_authorized_user_file.return_value = mock_creds
             
-            # Should raise RuntimeError when interactive flow fails due to missing credentials.json
-            with pytest.raises(FileNotFoundError, match="'credentials.json' not found"):
-                GmailClient()
+            with patch("gmail_client_impl._impl.Path") as mock_path:
+                # Mock Path.exists() to return True for token.json
+                mock_path.return_value.exists.return_value = True
+                
+                # Should now raise our new error instead of falling back to interactive
+                with pytest.raises(RuntimeError, match="No valid credentials found and interactive mode is disabled"):
+                    GmailClient()
 
     @patch("gmail_client_impl._impl.build")
     @patch("gmail_client_impl._impl.InstalledAppFlow")
@@ -267,23 +265,18 @@ class TestGmailClientInit:
     })
     @patch("gmail_client_impl._impl.Request")
     def test_init_env_vars_refresh_fails_fallback_to_interactive(self, mock_request: Mock) -> None:
-        """Test fallback to interactive when environment variable refresh fails."""
+        """Test that environment variable refresh failure raises error in non-interactive mode."""
         with patch("gmail_client_impl._impl.Credentials") as mock_creds_class:
             mock_creds = Mock(spec=Credentials)
             mock_creds.refresh.side_effect = RefreshError("Refresh failed")  # type: ignore[misc]
             mock_creds_class.return_value = mock_creds
             
             with patch("gmail_client_impl._impl.Path") as mock_path:
-                # Mock credentials.json exists but token.json doesn't
-                def path_exists_side_effect(*args: object, **kwargs: object) -> bool:
-                    path_str = str(args[0]) if args else str(kwargs.get('self', ''))
-                    if "credentials.json" in path_str:
-                        return False  # This will cause FileNotFoundError
-                    return False
+                # Mock no token file exists
+                mock_path.return_value.exists.return_value = False
                 
-                mock_path.return_value.exists.side_effect = path_exists_side_effect
-                
-                with pytest.raises(FileNotFoundError, match="'credentials.json' not found"):
+                # Should now raise our new error instead of falling back to interactive
+                with pytest.raises(RuntimeError, match="No valid credentials found and interactive mode is disabled"):
                     GmailClient()
 
     def test_init_no_valid_credentials_raises_error(self) -> None:
@@ -293,7 +286,8 @@ class TestGmailClientInit:
                 # Mock no files exist
                 mock_path.return_value.exists.return_value = False
                 
-                with pytest.raises(FileNotFoundError, match="'credentials.json' not found"):
+                # Should now raise our new error instead of falling back to interactive
+                with pytest.raises(RuntimeError, match="No valid credentials found and interactive mode is disabled"):
                     GmailClient()
 
     @patch("gmail_client_impl._impl.build")
@@ -319,24 +313,19 @@ class TestGmailClientInit:
     @patch("gmail_client_impl._impl.Path")
     @patch("gmail_client_impl._impl.Credentials")
     def test_init_token_file_load_fails_fallback_to_interactive(self, mock_creds_class: Mock, mock_path: Mock, mock_build: Mock) -> None:
-        """Test fallback to interactive when token file loading fails."""
-        with patch("gmail_client_impl._impl.Path") as mock_path:
-            # Mock Path.exists() to return True for token.json but False for credentials.json
-            def path_exists_side_effect(*args: object, **kwargs: object) -> bool:
-                path_str = str(args[0]) if args else str(kwargs.get('self', ''))
-                if "token.json" in path_str:
-                    return True
-                elif "credentials.json" in path_str:
-                    return False
-                return False
-            
-            mock_path.return_value.exists.side_effect = path_exists_side_effect
-            
-            # Make from_authorized_user_file fail
-            mock_creds_class.from_authorized_user_file.side_effect = Exception("File load failed")
-            
-            with pytest.raises(FileNotFoundError, match="'credentials.json' not found"):
-                GmailClient()
+        """Test that token file loading failure raises error in non-interactive mode."""
+        # Clear environment variables to test token file path
+        with patch.dict(os.environ, {}, clear=True):
+            with patch("gmail_client_impl._impl.Path") as mock_path:
+                # Mock Path.exists() to return True for token.json
+                mock_path.return_value.exists.return_value = True
+                
+                # Make from_authorized_user_file fail
+                mock_creds_class.from_authorized_user_file.side_effect = Exception("File load failed")
+                
+                # Should now raise our new error instead of falling back to interactive
+                with pytest.raises(RuntimeError, match="No valid credentials found and interactive mode is disabled"):
+                    GmailClient()
 
     @patch("gmail_client_impl._impl.build")
     @patch("gmail_client_impl._impl.InstalledAppFlow")
@@ -390,8 +379,8 @@ class TestGmailClientInit:
         # Mock no files exist
         mock_path.return_value.exists.return_value = False
         
-        # Should fallback to interactive flow and fail due to missing credentials.json
-        with pytest.raises(FileNotFoundError, match="'credentials.json' not found"):
+        # Should now raise our new error instead of falling back to interactive
+        with pytest.raises(RuntimeError, match="No valid credentials found and interactive mode is disabled"):
             GmailClient()
 
     @patch("gmail_client_impl._impl.build")
@@ -399,27 +388,21 @@ class TestGmailClientInit:
     @patch("gmail_client_impl._impl.Credentials")
     def test_init_invalid_credentials_no_refresh_token(self, mock_creds_class: Mock, mock_path: Mock, mock_build: Mock) -> None:
         """Test handling of invalid credentials with no refresh token."""
-        mock_creds = Mock(spec=Credentials)
-        mock_creds.valid = False
-        mock_creds.refresh_token = None  # No refresh token available
-        
-        with patch("gmail_client_impl._impl.Path") as mock_path:
-            # Mock Path.exists() to return True for token.json, False for credentials.json
-            def path_exists_side_effect(*args: object, **kwargs: object) -> bool:
-                path_str = str(args[0]) if args else str(kwargs.get('self', ''))
-                if "token.json" in path_str:
-                    return True
-                elif "credentials.json" in path_str:
-                    return False
-                return False
+        # Clear environment variables to test token file path
+        with patch.dict(os.environ, {}, clear=True):
+            mock_creds = Mock(spec=Credentials)
+            mock_creds.valid = False
+            mock_creds.refresh_token = None  # No refresh token available
             
-            mock_path.return_value.exists.side_effect = path_exists_side_effect
-            
-            mock_creds_class.from_authorized_user_file.return_value = mock_creds
-            
-            # Should fallback to interactive flow and fail due to missing credentials.json
-            with pytest.raises(FileNotFoundError, match="'credentials.json' not found"):
-                GmailClient()
+            with patch("gmail_client_impl._impl.Path") as mock_path:
+                # Mock Path.exists() to return True for token.json
+                mock_path.return_value.exists.return_value = True
+                
+                mock_creds_class.from_authorized_user_file.return_value = mock_creds
+                
+                # Should now raise our new error instead of falling back to interactive
+                with pytest.raises(RuntimeError, match="No valid credentials found and interactive mode is disabled"):
+                    GmailClient()
 
 
 class TestGetClientImpl:

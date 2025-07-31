@@ -1,4 +1,24 @@
-"""Gmail Message Implementation - Concrete message implementation for Gmail.
+"""Gmail Message Implementation - Concrete message implementat          try:
+            decoded_bytes = base64.urlsafe_b64decode(raw_data.encode("utf-8"))
+            self._parsed: EmailMessage = email.message_from_bytes(
+                decoded_bytes
+            )
+            
+            # Check if we have essentially empty or invalid email data
+            # email.message_from_bytes is very lenient and won't raise errors for invalid data
+            # but will create an EmailMessage with missing headers
+            if (not decoded_bytes or  # Empty decoded data
+                (not any(self._parsed.keys()) and not self._parsed.get_payload()) or  # No headers and no payload
+                self._is_binary_garbage(decoded_bytes)):  # Binary garbage that shouldn't be parsed as email
+                raise ValueError("Empty or invalid email data")Check if we have essentially empty or invalid email data
+            # email.message_from_bytes is very lenient and won't raise errors for invalid data
+            # but will create an EmailMessage with missing headers
+            payload = self._parsed.get_payload()
+            if (not decoded_bytes or  # Empty decoded data
+                (not any(self._parsed.keys()) and  # No headers AND
+                 (not payload or  # No payload OR
+                  (isinstance(payload, str) and not payload.strip().replace('\r', '').replace('\n', ''))))):  # Empty/whitespace-only payload
+                raise ValueError("Empty or invalid email data")r Gmail.
 
 This module provides the GmailMessage class, which implements the Message protocol
 for Gmail messages. It handles Gmail-specific message parsing, email decoding,
@@ -59,6 +79,18 @@ class GmailMessage(message.Message):
             self._parsed: EmailMessage = email.message_from_bytes(
                 decoded_bytes
             )
+            
+            # Check if we have essentially empty or invalid email data
+            # email.message_from_bytes is very lenient and won't raise errors for invalid data
+            # but will create an EmailMessage with missing headers
+            payload = self._parsed.get_payload()
+            if (not decoded_bytes or  # Empty decoded data
+                (not any(self._parsed.keys()) and  # No headers AND
+                 (not payload or  # No payload OR
+                  (isinstance(payload, str) and not payload.startswith(('\r\n', '\n'))))) or  # Payload doesn't start with newlines (not proper email body)
+                self._is_binary_garbage(decoded_bytes)):  # Binary garbage that shouldn't be parsed as email
+                raise ValueError("Empty or invalid email data")
+                
         except (TypeError, ValueError, Exception) as e:
             # Handle potential decoding or parsing errors gracefully
             print(f"Error parsing message {msg_id}: {e}")
@@ -68,6 +100,33 @@ class GmailMessage(message.Message):
             self._parsed["From"] = "Unknown Sender"
             self._parsed["To"] = "Unknown Recipient"
             self._parsed["Date"] = "Unknown Date"
+
+    def _is_binary_garbage(self, data: bytes) -> bool:
+        """Check if data appears to be binary garbage rather than text/email content."""
+        if not data:
+            return False
+        
+        # Try to decode as UTF-8 first - if it's valid UTF-8, it's probably text, not garbage
+        try:
+            data.decode('utf-8')
+            # If UTF-8 decoding succeeds, it's likely text content, not binary garbage
+            return False
+        except UnicodeDecodeError:
+            pass
+        
+        # If UTF-8 decoding fails, check for binary patterns
+        # If the data contains a lot of non-printable characters, it's likely binary garbage
+        # Use a higher threshold since we're now only checking non-UTF-8 data
+        non_printable_count = 0
+        for byte_val in data:
+            # Consider bytes outside of printable ASCII range as non-printable
+            # Allow some common control chars like \r, \n, \t
+            if byte_val < 32 and byte_val not in (9, 10, 13):  # \t, \n, \r
+                non_printable_count += 1
+            elif byte_val > 126:  # Above printable ASCII
+                non_printable_count += 1
+        
+        return (non_printable_count / len(data)) > 0.5  # Higher threshold for non-UTF-8 data
 
     @property
     def id(self) -> str:
@@ -105,6 +164,10 @@ class GmailMessage(message.Message):
         subject_header = self._parsed.get("Subject", "")
         if not subject_header:
             return ""
+
+        # Convert Header object to string if necessary
+        if hasattr(subject_header, '__str__'):
+            subject_header = str(subject_header)
 
         # Attempt to decode RFC 2047 encoded words
         try:

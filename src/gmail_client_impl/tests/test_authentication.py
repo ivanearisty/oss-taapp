@@ -43,26 +43,33 @@ class TestGmailClientAuthentication:
         mock_creds = Mock(spec=Credentials)
         mock_creds.valid = True
         mock_creds.refresh_token = "test_refresh_token"
+        mock_creds.to_json.return_value = '{"token": "test"}'  # Mock to_json method
         mock_creds_class.return_value = mock_creds
         
         mock_service = Mock()
         mock_build.return_value = mock_service
         
         # ACT
-        client = GmailClient()
+        with patch.object(GmailClient, '_save_token') as mock_save:
+            with patch("gmail_client_impl._impl.Path") as mock_path:
+                # Mock token.json doesn't exist so _save_token will be called
+                mock_path.return_value.exists.return_value = False
+                
+                client = GmailClient()
         
-        # ASSERT
-        assert client.service is mock_service
-        mock_creds_class.assert_called_once_with(
-            None,
-            refresh_token="test_refresh_token",
-            token_uri="https://oauth2.googleapis.com/token",
-            client_id="test_client_id",
-            client_secret="test_client_secret",
-            scopes=GmailClient.SCOPES,
-        )
-        mock_creds.refresh.assert_called_once()
-        mock_build.assert_called_once_with("gmail", "v1", credentials=mock_creds)
+                # ASSERT
+                assert client.service is mock_service
+                mock_creds_class.assert_called_once_with(
+                    None,
+                    refresh_token="test_refresh_token",
+                    token_uri="https://oauth2.googleapis.com/token",
+                    client_id="test_client_id",
+                    client_secret="test_client_secret",
+                    scopes=GmailClient.SCOPES,
+                )
+                mock_creds.refresh.assert_called_once()
+                mock_build.assert_called_once_with("gmail", "v1", credentials=mock_creds)
+                mock_save.assert_called_once_with(mock_creds, "token.json")
 
     @patch("gmail_client_impl._impl.build")
     @patch("gmail_client_impl._impl.Credentials")
@@ -98,6 +105,7 @@ class TestGmailClientAuthentication:
         )
 
     @patch("gmail_client_impl._impl.build")
+    @patch("gmail_client_impl._impl.Path")  # Add this patch
     @patch("gmail_client_impl._impl.Credentials")
     @patch("gmail_client_impl._impl.Request")
     @patch.dict(os.environ, {
@@ -105,7 +113,7 @@ class TestGmailClientAuthentication:
         "GMAIL_CLIENT_SECRET": "test_client_secret",
         "GMAIL_REFRESH_TOKEN": "test_refresh_token"
     })
-    def test_init_env_vars_refresh_failure(self, mock_request, mock_creds_class, mock_build):
+    def test_init_env_vars_refresh_failure(self, mock_request, mock_creds_class, mock_path, mock_build):
         """Test handling of refresh failure with environment variables."""
         # ARRANGE
         mock_creds = Mock(spec=Credentials)
@@ -115,21 +123,12 @@ class TestGmailClientAuthentication:
         mock_service = Mock()
         mock_build.return_value = mock_service
         
-        # Mock fallback to interactive flow
-        with patch.object(GmailClient, '_run_interactive_flow') as mock_interactive:
-            mock_interactive_creds = Mock(spec=Credentials)
-            mock_interactive_creds.valid = True
-            mock_interactive_creds.refresh_token = "new_token"
-            mock_interactive.return_value = mock_interactive_creds
-            
-            with patch.object(GmailClient, '_save_token') as mock_save:
-                # ACT
-                client = GmailClient()
-                
-                # ASSERT
-                mock_interactive.assert_called_once_with("credentials.json")
-                mock_save.assert_called_once_with(mock_interactive_creds, "token.json")
-                assert client.service is mock_service
+        # Mock Path to prevent finding local token file
+        mock_path.return_value.exists.return_value = False  # Add this line
+        
+        # ACT & ASSERT - Should now raise error instead of falling back to interactive
+        with pytest.raises(RuntimeError, match="No valid credentials found and interactive mode is disabled"):
+            GmailClient()
 
     @patch("gmail_client_impl._impl.build")
     @patch("gmail_client_impl._impl.Path")
@@ -226,7 +225,7 @@ class TestGmailClientAuthentication:
                     mock_interactive.return_value = None
                     
                     # ACT & ASSERT
-                    with pytest.raises(RuntimeError, match=GmailClient.FAILURE_TO_CRED):
+                    with pytest.raises(RuntimeError, match="No valid credentials found and interactive mode is disabled"):
                         GmailClient()
 
     @patch("gmail_client_impl._impl.build")
@@ -238,6 +237,7 @@ class TestGmailClientAuthentication:
         with patch.object(GmailClient, '_run_interactive_flow') as mock_interactive:
             mock_creds = Mock(spec=Credentials)
             mock_creds.valid = True
+            mock_creds.to_json.return_value = '{"fake": "token"}'  # Add this line
             mock_interactive.return_value = mock_creds
             
             # ACT & ASSERT
@@ -309,22 +309,20 @@ class TestGmailClientHelperMethods:
     def test_save_token_success(self, mock_path):
         """Test successful token saving."""
         # ARRANGE
-        mock_token_path = Mock()
-        mock_token_file = Mock()
-        mock_token_path.open.return_value.__enter__.return_value = mock_token_file
-        mock_path.return_value = mock_token_path
-        
+        mock_token_path = mock_path.return_value
+        mock_file_handle = MagicMock()
+        mock_token_path.open.return_value.__enter__.return_value = mock_file_handle
+
+        client = GmailClient(service=Mock()) # A dummy client to call the method on
         mock_creds = Mock(spec=Credentials)
-        mock_creds.to_json.return_value = '{"token": "data"}'
-        
-        client = GmailClient(service=Mock())  # Skip normal init
-        
+        mock_creds.to_json.return_value = '{"fake": "token"}'
+
         # ACT
         client._save_token(mock_creds, "token.json")
-        
+
         # ASSERT
         mock_token_path.open.assert_called_once_with("w")
-        mock_token_file.write.assert_called_once_with('{"token": "data"}')
+        mock_file_handle.write.assert_called_once_with('{"fake": "token"}')
 
     @patch("gmail_client_impl._impl.Path")
     def test_save_token_exception(self, mock_path):

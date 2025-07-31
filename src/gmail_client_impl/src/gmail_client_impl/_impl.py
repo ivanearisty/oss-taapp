@@ -52,6 +52,22 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow # type: ignore[import-untyped]
 from googleapiclient.discovery import Resource, build
 
+# Try to load .env file if python-dotenv is available
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # If python-dotenv is not available, check if .env file exists
+    # and manually load it
+    env_path = Path(".env")
+    if env_path.exists():
+        with env_path.open() as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, value = line.split("=", 1)
+                    os.environ[key.strip()] = value.strip()
+
 class GmailClient(mail_client_api.Client):
     """Concrete implementation of the Client protocol using Gmail API.
 
@@ -194,11 +210,14 @@ class GmailClient(mail_client_api.Client):
 
         # 4. Fallback to Interactive Flow if all else fails (and not already done)
         if not creds or (creds and not creds.valid and not creds.refresh_token):
-            if not interactive: # Only run if not explicitly forced earlier
-                print("No valid credentials found, falling back to interactive login.")
+            if not interactive: # Non-interactive mode should never fall back to interactive
+                raise RuntimeError("No valid credentials found and interactive mode is disabled. "
+                                 "Please provide valid credentials via environment variables or token file.") #noqa: EM101 TRY003
+            else: # Interactive mode was requested but failed
+                print("No valid credentials found, running interactive login.")
                 creds = self._run_interactive_flow(creds_path)
-            elif not creds: # If interactive was forced but failed
-                raise RuntimeError("Interactive authentication failed.") #noqa: EM101 TRY003
+                if not creds:
+                    raise RuntimeError("Interactive authentication failed.") #noqa: EM101 TRY003
 
         # --- End Authentication Logic --- #
 

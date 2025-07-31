@@ -9,6 +9,9 @@ import pytest
 from gmail_message_impl import get_message_impl
 from gmail_message_impl._impl import GmailMessage
 
+# Mark all tests in this file as suitable for CI
+pytestmark = [pytest.mark.integration, pytest.mark.circleci]
+
 
 class TestMessageFactory:
     """Test cases for the message factory function."""
