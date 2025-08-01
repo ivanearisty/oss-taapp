@@ -24,11 +24,11 @@ import message
 
 class GmailMessage(message.Message):
     """Concrete implementation of the Message protocol for Gmail messages.
-    
+
     This class provides a complete implementation of the Message protocol specifically
     designed to work with Gmail API message data. It handles the parsing and decoding
     of Gmail messages from their raw base64url-encoded format.
-    
+
     Features:
         - Decodes base64url-encoded Gmail message data
         - Parses RFC 2822 email format
@@ -36,7 +36,7 @@ class GmailMessage(message.Message):
         - Extracts plain text body from multipart messages
         - Formats dates in MM/DD/YYYY format
         - Provides graceful error handling for malformed data
-        
+
     Attributes:
         _id (str): The unique message identifier from Gmail
         _raw_data (str): The original base64url-encoded message data
@@ -60,19 +60,25 @@ class GmailMessage(message.Message):
             self._parsed: EmailMessage = email.message_from_bytes(
                 decoded_bytes,
             )
-            
+
             # Check if we have essentially empty or invalid email data
             # email.message_from_bytes is very lenient and won't raise errors for invalid data
             # but will create an EmailMessage with missing headers
             payload = self._parsed.get_payload()
-            if (not decoded_bytes or  # Empty decoded data
-                (not any(self._parsed.keys()) and  # No headers AND
-                 (not payload or  # No payload OR
-                  (isinstance(payload, str) and not payload.startswith(("\r\n", "\n"))))) or  # Payload doesn't start with newlines (not proper email body)
-                self._is_binary_garbage(decoded_bytes)):  # Binary garbage that shouldn't be parsed as email
+            if (
+                not decoded_bytes  # Empty decoded data
+                or (
+                    not any(self._parsed.keys())  # No headers AND
+                    and (
+                        not payload  # No payload OR
+                        or (isinstance(payload, str) and not payload.startswith(("\r\n", "\n")))
+                    )
+                )  # Payload doesn't start with newlines (not proper email body)
+                or self._is_binary_garbage(decoded_bytes)
+            ):  # Binary garbage that shouldn't be parsed as email
                 msg = "Empty or invalid email data"
                 raise ValueError(msg)
-                
+
         except (TypeError, ValueError, Exception) as e:
             # Handle potential decoding or parsing errors gracefully
             print(f"Error parsing message {msg_id}: {e}")
@@ -87,7 +93,7 @@ class GmailMessage(message.Message):
         """Check if data appears to be binary garbage rather than text/email content."""
         if not data:
             return False
-        
+
         # Try to decode as UTF-8 first - if it's valid UTF-8, it's probably text, not garbage
         try:
             data.decode("utf-8")
@@ -95,7 +101,7 @@ class GmailMessage(message.Message):
             return False
         except UnicodeDecodeError:
             pass
-        
+
         # If UTF-8 decoding fails, check for binary patterns
         # If the data contains a lot of non-printable characters, it's likely binary garbage
         # Use a higher threshold since we're now only checking non-UTF-8 data
@@ -105,7 +111,7 @@ class GmailMessage(message.Message):
             # Allow some common control chars like \r, \n, \t
             if (byte_val < 32 and byte_val not in (9, 10, 13)) or byte_val > 126:  # \t, \n, \r
                 non_printable_count += 1
-        
+
         return (non_printable_count / len(data)) > 0.5  # Higher threshold for non-UTF-8 data
 
     @property
@@ -153,7 +159,7 @@ class GmailMessage(message.Message):
         try:
             # Check if it looks like an encoded header to avoid unnecessary processing
             if "=?" not in subject_header:
-                 return subject_header # Return plain string directly
+                return subject_header  # Return plain string directly
 
             decoded_parts = email.header.decode_header(subject_header)
             subject_str = ""
@@ -161,7 +167,7 @@ class GmailMessage(message.Message):
                 if isinstance(part, bytes):
                     subject_str += part.decode(encoding or "utf-8", errors="replace")
                 else:
-                    subject_str += part # Append decoded string part
+                    subject_str += part  # Append decoded string part
 
             return subject_str if subject_str else subject_header
         except Exception:

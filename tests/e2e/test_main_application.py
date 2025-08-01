@@ -78,10 +78,7 @@ def test_main_script_runs_and_fetches_messages() -> None:
     except subprocess.CalledProcessError as e:
         # If the script fails, print its output for easier debugging
         pytest.fail(
-            f"E2E test failed when running main.py.\n"
-            f"Exit Code: {e.returncode}\n"
-            f"Stdout: {e.stdout}\n"
-            f"Stderr: {e.stderr}",
+            f"E2E test failed when running main.py.\nExit Code: {e.returncode}\nStdout: {e.stdout}\nStderr: {e.stderr}",
         )
     except FileNotFoundError:
         pytest.fail("Python interpreter or main.py not found")
@@ -105,7 +102,7 @@ def test_main_script_with_env_vars_only() -> None:
 
     if missing_vars:
         pytest.skip(f"Missing required environment variables for CI test: {missing_vars}")
-    else :
+    else:
         print("All required environment variables are set for CI test.")
     # Create a temporary main.py that uses interactive=False
     ci_main_content = """
@@ -235,10 +232,7 @@ if __name__ == "__main__":
         pytest.fail("CI E2E test timed out")
     except subprocess.CalledProcessError as e:
         pytest.fail(
-            f"CI E2E test failed when running main_ci.py.\n"
-            f"Exit Code: {e.returncode}\n"
-            f"Stdout: {e.stdout}\n"
-            f"Stderr: {e.stderr}",
+            f"CI E2E test failed when running main_ci.py.\nExit Code: {e.returncode}\nStdout: {e.stdout}\nStderr: {e.stderr}",
         )
     finally:
         # Clean up temporary file
@@ -248,8 +242,7 @@ if __name__ == "__main__":
 
 @pytest.mark.local_credentials
 def test_main_script_handles_no_credentials_gracefully() -> None:
-    """Tests that main.py handles missing credentials gracefully.
-    """
+    """Tests that main.py handles missing credentials gracefully."""
     main_script = Path(__file__).parent.parent.parent / "main.py"
 
     if not main_script.exists():
@@ -278,7 +271,8 @@ def test_main_script_handles_no_credentials_gracefully() -> None:
         # Run without credentials - should handle gracefully
         result = subprocess.run(
             command,
-            check=False, capture_output=True,
+            check=False,
+            capture_output=True,
             text=True,
             timeout=60,
             cwd=str(main_script.parent),
@@ -290,8 +284,7 @@ def test_main_script_handles_no_credentials_gracefully() -> None:
         assert "Attempting to initialize Gmail client..." in output
 
         # Should mention credential issues
-        credentials_mentioned = any(word in output.lower() for word in
-                                  ["credentials", "token", "auth", "login"])
+        credentials_mentioned = any(word in output.lower() for word in ["credentials", "token", "auth", "login"])
         assert credentials_mentioned, "Error output should mention credential issues"
 
     finally:

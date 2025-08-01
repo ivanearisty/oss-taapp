@@ -1,9 +1,3 @@
-Of course. Based on all the information, the project's structure, the professor's ideals, and the tooling you've set up, here is a comprehensive and professional `README.md` file.
-
-This new `README.md` is clean, consolidates all the necessary information, clarifies the setup and usage of the toolchain, and explains the architectural principles at play.
-
----
-
 # Python Application Template: A Component-Based Mail Client
 
 This repository serves as a professional-grade template for a modern Python project. It demonstrates a robust, component-based architecture by building the core components for an AI-powered email assistant that interacts with the Gmail API.
@@ -84,7 +78,9 @@ ta-assignment/
 4.  **Create and Sync the Virtual Environment:**
     This single command creates a `.venv` folder and installs all packages (including workspace members and development tools) defined in `uv.lock`.
     ```bash
-    uv sync --all-packages --extra dev
+    uv sync --all-packages --dev
+    # or 
+    uv sync --dev
     ```
 
 5.  **Activate the Virtual Environment:**
@@ -134,6 +130,9 @@ python main.py
     ```
 
 -   **Testing (Pytest):**
+
+    I'd recommend only running: `pytest src/ tests/ -m "not local_credentials" -v` for simplicity.
+
     The project uses a comprehensive testing strategy with different test categories.
     ```bash
     # Run all tests (includes unit, integration, and e2e tests)
@@ -211,7 +210,7 @@ See `docs/circleci-setup.md` for detailed CI/CD setup instructions.
 
 ### Quick Start
 1. **Install dependencies**: `uv sync`
-2. **Run tests**: `uv run pytest tests/ -v`
+2. **Run tests**: `uv run pytest tests/ -v` or `pytest src/ tests/ -m "not local_credentials" -v`
 3. **Check code quality**: `uv run ruff check . && uv run ruff format --check .`
 4. **Fix formatting**: `uv run ruff format .`
 5. **View documentation**: `uv run mkdocs serve`

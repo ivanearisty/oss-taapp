@@ -6,10 +6,10 @@ enable email retrieval, message management, and client operations.
 
 Usage:
     from mail_client_api import get_client, Client
-    
+
     # Get a client instance from an implementation
     client = get_client()  # Returns concrete implementation
-    
+
     # Use the client to fetch messages
     messages = client.get_messages()
     for message in messages:
@@ -25,17 +25,17 @@ from message import Message
 @runtime_checkable
 class Client(Protocol):
     """A protocol representing a mail client for email operations.
-    
+
     This protocol defines the interface for mail client implementations
     that can retrieve, delete, and manage email messages from a mail server.
     """
 
     def get_message(self, message_id: str) -> Message:
         """Return a message by its ID.
-        
+
         Args:
             message_id (str): The ID of the message to retrieve.
-        
+
         Returns:
             Message: The message object corresponding to the given ID.
 
@@ -44,10 +44,10 @@ class Client(Protocol):
 
     def delete_message(self, message_id: str) -> bool:
         """Delete a message by its ID.
-        
+
         Args:
             message_id (str): The ID of the message to delete.
-            
+
         Returns:
             bool: True if the message was successfully deleted, False otherwise.
 
@@ -56,10 +56,10 @@ class Client(Protocol):
 
     def mark_as_read(self, message_id: str) -> bool:
         """Mark a message as read by its ID.
-        
+
         Args:
             message_id (str): The ID of the message to mark as read.
-            
+
         Returns:
             bool: True if the message was successfully marked as read, False otherwise.
 
@@ -81,7 +81,7 @@ class Client(Protocol):
 
 def get_client(interactive: bool = False) -> Client:
     """Return an instance of a Mail Client.
-    
+
     This is a factory function that returns a concrete implementation
     of the Client protocol. The actual implementation is injected
     by implementation packages.
@@ -93,7 +93,7 @@ def get_client(interactive: bool = False) -> Client:
 
     Returns:
         Client: A concrete mail client instance.
-        
+
     Raises:
         NotImplementedError: If no implementation has been registered.
 

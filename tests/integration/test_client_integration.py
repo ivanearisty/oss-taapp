@@ -69,8 +69,7 @@ def test_dependency_injection_works() -> None:
 
 @pytest.mark.circleci
 def test_message_dependency_injection() -> None:
-    """Tests that importing gmail_message_impl overrides message.get_message.
-    """
+    """Tests that importing gmail_message_impl overrides message.get_message."""
     import base64
 
     import message
@@ -78,12 +77,7 @@ def test_message_dependency_injection() -> None:
     # Import should have already happened in the test setup
     # Verify that message.get_message now points to our implementation
 
-    email_content = (
-        "From: di@example.com\r\n"
-        "Subject: Dependency Injection Test\r\n"
-        "\r\n"
-        "DI test body"
-    )
+    email_content = "From: di@example.com\r\nSubject: Dependency Injection Test\r\n\r\nDI test body"
     encoded_data = base64.urlsafe_b64encode(email_content.encode()).decode()
 
     # Call the protocol function - should use our implementation
@@ -91,6 +85,7 @@ def test_message_dependency_injection() -> None:
 
     # Verify it returns our GmailMessage implementation
     from gmail_message_impl._impl import GmailMessage
+
     assert isinstance(msg, GmailMessage)
     assert msg.id == "di123"
     assert msg.from_ == "di@example.com"

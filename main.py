@@ -90,5 +90,6 @@ def main() -> None:
         print(f"\nAn error occurred: {e}")
         raise
 
+
 if __name__ == "__main__":
     main()

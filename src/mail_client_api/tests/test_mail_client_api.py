@@ -5,6 +5,7 @@ of the mail_client_api.Client and mail_client_api.Message protocols.
 These tests use mocks to demonstrate how implementations should behave
 and serve as documentation for the expected API contracts.
 """
+
 from unittest.mock import Mock
 
 from message import Message

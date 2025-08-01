@@ -6,10 +6,10 @@ Gmail API message data.
 
 Usage:
     from gmail_message_impl import get_message_impl
-    
+
     # Create a message instance from Gmail data
     message = get_message_impl(msg_id="12345", raw_data="base64_encoded_data")
-    
+
     # Access message properties
     print(f"From: {message.from_}")
     print(f"Subject: {message.subject}")
