@@ -83,9 +83,7 @@ ta-assignment/
 4.  **Create and Sync the Virtual Environment:**
     This single command creates a `.venv` folder and installs all packages (including workspace members and development tools) defined in `uv.lock`.
     ```bash
-    uv sync --all-packages --dev
-    # or 
-    uv sync --dev
+    uv sync --all-packages --extra dev
     ```
 
 5.  **Activate the Virtual Environment:**
@@ -99,7 +97,7 @@ ta-assignment/
 6.  **Perform Initial Authentication:**
     Run the main application once to perform the interactive OAuth flow. This will open a browser window for you to grant permission.
     ```bash
-    python main.py
+    uv run python main.py
     ```
     After you approve, a `token.json` file will be created. This file is also ignored by `.gitignore` and will be used for authentication in subsequent runs.
 
@@ -111,7 +109,7 @@ All commands should be run from the project root with the virtual environment ac
 
 To run the main demonstration script:
 ```bash
-python main.py
+uv run python main.py
 ```
 
 ### Running the Toolchain
@@ -120,46 +118,46 @@ python main.py
     The project uses Ruff with comprehensive rules configured in `pyproject.toml`.
     ```bash
     # Check for issues
-    ruff check .
+    uv run ruff check .
     # Automatically fix issues
-    ruff check . --fix
+    uv run ruff check . --fix
     # Check formatting
-    ruff format --check .
+    uv run ruff format --check .
     # Apply formatting
-    ruff format .
+    uv run ruff format .
     ```
 
 -   **Static Type Checking (MyPy):**
     ```bash
-    mypy src tests
+    uv run mypy src tests
     ```
 
 -   **Testing (Pytest):**
 
-    I'd recommend only running: `pytest src/ tests/ -m "not local_credentials" -v` for simplicity.
+    I'd recommend only running: `uv run pytest src/ tests/ -m "not local_credentials" -v` for simplicity.
 
     The project uses a comprehensive testing strategy with different test categories.
     ```bash
     # Run all tests (includes unit, integration, and e2e tests)
-    pytest
+    uv run pytest
 
     # Run only unit tests (fast, no external dependencies - from src/ directories)
-    pytest src/
+    uv run pytest src/
 
     # Run all tests except those requiring local credential files
-    pytest src/ tests/ -m "not local_credentials"
+    uv run pytest src/ tests/ -m "not local_credentials"
 
     # Run only integration tests (requires environment variables or credentials)
-    pytest -m integration
+    uv run pytest -m integration
 
     # Run only end-to-end tests (requires credentials)
-    pytest -m e2e
+    uv run pytest -m e2e
 
     # Run only CircleCI-compatible tests (CI/CD environment)
-    pytest -m circleci
+    uv run pytest -m circleci
 
     # Run tests with coverage reporting
-    pytest --cov=src --cov-report=term-missing
+    uv run pytest --cov=src --cov-report=term-missing
     ```
 
 ### Viewing Documentation
@@ -167,7 +165,7 @@ python main.py
 This project uses MkDocs for documentation.
 ```bash
 # Start the live-reloading documentation server
-mkdocs serve
+uv run mkdocs serve
 ```
 Open your browser to `http://127.0.0.1:8000` to view the site.
 
@@ -214,14 +212,14 @@ See `docs/circleci-setup.md` for detailed CI/CD setup instructions.
 ## Development Workflow
 
 ### Quick Start
-1. **Install dependencies**: `uv sync`
-2. **Run tests**: `uv run pytest tests/ -v` or `pytest src/ tests/ -m "not local_credentials" -v`
+1. **Install dependencies**: `uv sync --all-packages --extra dev`
+2. **Run tests**: `uv run pytest tests/ -v` or `uv run pytest src/ tests/ -m "not local_credentials" -v`
 3. **Check code quality**: `uv run ruff check . && uv run ruff format --check .`
 4. **Fix formatting**: `uv run ruff format .`
 5. **View documentation**: `uv run mkdocs serve`
 
 ### Best Practices
-- Run unit tests (`pytest src/`) during development for fast feedback
-- Use integration tests (`pytest -m integration`) to verify component interactions
-- Run full test suite (`pytest`) before pushing to ensure CI compatibility
+- Run unit tests (`uv run pytest src/`) during development for fast feedback
+- Use integration tests (`uv run pytest -m integration`) to verify component interactions
+- Run full test suite (`uv run pytest`) before pushing to ensure CI compatibility
 - The CircleCI pipeline provides automated validation on every push

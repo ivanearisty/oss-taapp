@@ -19,32 +19,32 @@ The project uses pytest markers to categorize tests based on their requirements 
 
 ### All Unit Tests (Fast)
 ```bash
-pytest src/ --cov=src --cov-fail-under=90
+uv run pytest src/ --cov=src --cov-fail-under=90
 ```
 
 ### CircleCI-Compatible Tests Only
 ```bash
-pytest -m circleci
+uv run pytest -m circleci
 ```
 
 ### Local Tests Only (Requires Credentials)
 ```bash
-pytest -m local_credentials
+uv run pytest -m local_credentials
 ```
 
 ### Integration Tests
 ```bash
-pytest -m integration
+uv run pytest -m integration
 ```
 
 ### E2E Tests
 ```bash
-pytest -m e2e
+uv run pytest -m e2e
 ```
 
 ### Exclude Credential-Dependent Tests
 ```bash
-pytest -m "not local_credentials"
+uv run pytest -m "not local_credentials"
 ```
 
 ## Test Categories by Environment
@@ -61,7 +61,7 @@ Tests marked with `@pytest.mark.circleci` can run in CI environments:
 
 Example CircleCI command:
 ```bash
-pytest -m circleci --tb=short
+uv run pytest -m circleci --tb=short
 ```
 
 ### Local Development
@@ -105,19 +105,19 @@ The application supports two authentication modes:
 ### Running Tests Without Network Calls
 ```bash
 # Only run tests that don't make real API calls
-pytest -m "unit or (circleci and not local_credentials)"
+uv run pytest -m "unit or (circleci and not local_credentials)"
 ```
 
 ### Running Full Local Test Suite
 ```bash
 # Run all tests including those requiring real credentials
-pytest
+uv run pytest
 ```
 
 ### Debugging Authentication Issues
 ```bash
 # Run only authentication-related tests
-pytest -k "auth" -v
+uv run pytest -k "auth" -v
 ```
 
 ## Expected Behavior in Different Environments
