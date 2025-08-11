@@ -1,15 +1,21 @@
-"""Gmail Message Implementation Package.
+"""Gmail Message Implementation - Concrete implementation of the Message protocol.
 
-This module handles the dependency injection for the Gmail message implementation
-and exposes the concrete `GmailMessage` class for direct use if needed.
+This package provides a concrete implementation of the Message protocol specifically
+for Gmail messages. It includes the GmailMessage class that can parse and decode
+Gmail API message data.
 
-Upon import, this module overrides the `get_message` factory function in the
-`message` package, making `GmailMessage` the default implementation for all
-code that uses `message.get_message()`.
+Usage:
+    from gmail_message_impl import get_message_impl
 
-Exports:
-    GmailMessage: The concrete Gmail message implementation.
-    get_message_impl: Factory function for creating GmailMessage instances.
+    # Create a message instance from Gmail data
+    message = get_message_impl(msg_id="12345", raw_data="base64_encoded_data")
+
+    # Access message properties
+    print(f"From: {message.from_}")
+    print(f"Subject: {message.subject}")
+
+The package automatically registers itself as the implementation for the
+message.get_message() factory function through dependency injection.
 """
 
 import message

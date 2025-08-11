@@ -992,7 +992,7 @@ name = "ta-assignment"
 version = "0.1.0"
 source = { virtual = "." }
 
-[package.dev-dependencies]
+[package.optional-dependencies]
 dev = [
     { name = "google-api-python-client-stubs" },
     { name = "mkdocs" },
@@ -1007,20 +1007,19 @@ dev = [
 ]
 
 [package.metadata]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "google-api-python-client-stubs", specifier = ">=1.30.0" },
-    { name = "mkdocs", specifier = ">=1.6.1" },
-    { name = "mkdocs-material", specifier = ">=9.6.15" },
-    { name = "mkdocstrings-python", specifier = ">=1.16.12" },
-    { name = "mypy", specifier = ">=1.17.0" },
-    { name = "pymdown-extensions", specifier = ">=10.16.1" },
-    { name = "pytest", specifier = ">=8.4.1" },
-    { name = "pytest-cov", specifier = ">=6.2.1" },
-    { name = "ruff", specifier = ">=0.12.7" },
-    { name = "types-requests", specifier = ">=2.32.4.20250611" },
+requires-dist = [
+    { name = "google-api-python-client-stubs", marker = "extra == 'dev'", specifier = ">=1.30.0" },
+    { name = "mkdocs", marker = "extra == 'dev'", specifier = ">=1.6.1" },
+    { name = "mkdocs-material", marker = "extra == 'dev'", specifier = ">=9.6.15" },
+    { name = "mkdocstrings-python", marker = "extra == 'dev'", specifier = ">=1.16.12" },
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.17.0" },
+    { name = "pymdown-extensions", marker = "extra == 'dev'", specifier = ">=10.16.1" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.4.1" },
+    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=6.2.1" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.12.7" },
+    { name = "types-requests", marker = "extra == 'dev'", specifier = ">=2.32.4.20250611" },
 ]
+provides-extras = ["dev"]
 
 [[package]]
 name = "tomli"

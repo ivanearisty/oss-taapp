@@ -1,15 +1,24 @@
 """Gmail Client Implementation Package.
 
-This module handles the dependency injection for the Gmail client
-and exposes the concrete `GmailClient` class for direct use if needed.
+This package provides a concrete implementation of the mail client API using the Gmail API.
+It handles OAuth2 authentication and provides methods to interact with Gmail messages.
 
-Upon import, this module overrides the `get_client` factory function in the
-`mail_client_api` package, making `GmailClient` the default implementation
-for all code that uses `mail_client_api.get_client()`.
+The main class `GmailClient` implements the `mail_client_api.Client` protocol and supports
+multiple authentication modes for different environments.
 
-Exports:
-    GmailClient: The concrete Gmail client implementation.
-    get_client_impl: Factory function for creating GmailClient instances.
+Classes:
+    GmailClient: Main client class implementing the mail_client_api.Client protocol.
+
+Functions:
+    get_client_impl: Factory function to create a GmailClient instance.
+
+Example:
+    ```python
+    from gmail_client_impl import GmailClient
+    client = GmailClient()
+    messages = list(client.get_messages())
+    ```
+
 """
 
 import mail_client_api
