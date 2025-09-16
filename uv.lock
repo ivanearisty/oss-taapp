@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.13'",
@@ -12,7 +12,7 @@ members = [
     "gmail-message-impl",
     "mail-client-api",
     "message",
-    "ta-assignment",
+    "open-source",
 ]
 
 [[package]]
@@ -681,6 +681,40 @@ wheels = [
 ]
 
 [[package]]
+name = "open-source"
+version = "0.1.0"
+source = { virtual = "." }
+
+[package.optional-dependencies]
+dev = [
+    { name = "google-api-python-client-stubs" },
+    { name = "mkdocs" },
+    { name = "mkdocs-material" },
+    { name = "mkdocstrings-python" },
+    { name = "mypy" },
+    { name = "pymdown-extensions" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "ruff" },
+    { name = "types-requests" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "google-api-python-client-stubs", marker = "extra == 'dev'", specifier = ">=1.30.0" },
+    { name = "mkdocs", marker = "extra == 'dev'", specifier = ">=1.6.1" },
+    { name = "mkdocs-material", marker = "extra == 'dev'", specifier = ">=9.6.15" },
+    { name = "mkdocstrings-python", marker = "extra == 'dev'", specifier = ">=1.16.12" },
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.17.0" },
+    { name = "pymdown-extensions", marker = "extra == 'dev'", specifier = ">=10.16.1" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.4.1" },
+    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=6.2.1" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.12.7" },
+    { name = "types-requests", marker = "extra == 'dev'", specifier = ">=2.32.4.20250611" },
+]
+provides-extras = ["dev"]
+
+[[package]]
 name = "packaging"
 version = "25.0"
 source = { registry = "https://pypi.org/simple" }
@@ -986,40 +1020,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/94/e7/b2c673351809dca68
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274", size = 11050, upload-time = "2024-12-04T17:35:26.475Z" },
 ]
-
-[[package]]
-name = "ta-assignment"
-version = "0.1.0"
-source = { virtual = "." }
-
-[package.optional-dependencies]
-dev = [
-    { name = "google-api-python-client-stubs" },
-    { name = "mkdocs" },
-    { name = "mkdocs-material" },
-    { name = "mkdocstrings-python" },
-    { name = "mypy" },
-    { name = "pymdown-extensions" },
-    { name = "pytest" },
-    { name = "pytest-cov" },
-    { name = "ruff" },
-    { name = "types-requests" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "google-api-python-client-stubs", marker = "extra == 'dev'", specifier = ">=1.30.0" },
-    { name = "mkdocs", marker = "extra == 'dev'", specifier = ">=1.6.1" },
-    { name = "mkdocs-material", marker = "extra == 'dev'", specifier = ">=9.6.15" },
-    { name = "mkdocstrings-python", marker = "extra == 'dev'", specifier = ">=1.16.12" },
-    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.17.0" },
-    { name = "pymdown-extensions", marker = "extra == 'dev'", specifier = ">=10.16.1" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.4.1" },
-    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=6.2.1" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.12.7" },
-    { name = "types-requests", marker = "extra == 'dev'", specifier = ">=2.32.4.20250611" },
-]
-provides-extras = ["dev"]
 
 [[package]]
 name = "tomli"
