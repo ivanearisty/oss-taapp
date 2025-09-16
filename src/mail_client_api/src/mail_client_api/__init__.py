@@ -20,7 +20,7 @@ from collections.abc import Iterator
 from typing import Protocol, runtime_checkable
 
 from message import Message
-
+import gmail_client_impl
 
 @runtime_checkable
 class Client(Protocol):
@@ -98,4 +98,5 @@ def get_client(interactive: bool = False) -> Client:
         NotImplementedError: If no implementation has been registered.
 
     """
-    raise NotImplementedError
+
+    return gmail_client_impl.get_client_impl(interactive=interactive)
