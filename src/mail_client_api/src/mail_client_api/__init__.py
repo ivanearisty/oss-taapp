@@ -19,7 +19,6 @@ Usage:
 from collections.abc import Iterator
 from typing import Protocol, runtime_checkable
 
-import gmail_client_impl
 from message import Message
 
 
