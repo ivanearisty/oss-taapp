@@ -17,8 +17,7 @@ pytestmark = pytest.mark.e2e
 
 @pytest.mark.local_credentials
 def test_main_script_runs_and_fetches_messages() -> None:
-    """Tests that the main.py script can be executed and successfully
-    prints output indicating it has fetched messages.
+    """Tests that the main.py script can be executed and successfully prints output indicating it has fetched messages.
 
     This test requires real credentials and a live internet connection.
     Only runs locally with credentials.json or token.json files.
@@ -44,7 +43,7 @@ def test_main_script_runs_and_fetches_messages() -> None:
     try:
         # Run the command and capture the output
         # We need to be in the right directory for the script to find its dependencies
-        result = subprocess.run(
+        result = subprocess.run( # noqa: S603
             command,
             capture_output=True,
             text=True,
@@ -71,7 +70,7 @@ def test_main_script_runs_and_fetches_messages() -> None:
             lines = output.split("\n")
             found_line = next((line for line in lines if "Found" in line and "messages:" in line), None)
             if found_line:
-                print(f"E2E test verified: {found_line}")
+                pass
 
     except subprocess.TimeoutExpired:
         pytest.fail("E2E test timed out - main.py took too long to execute")
@@ -85,10 +84,10 @@ def test_main_script_runs_and_fetches_messages() -> None:
 
 
 @pytest.mark.circleci
-def test_main_script_with_env_vars_only() -> None:
-    """Tests that main.py works correctly in CI/CD environments using only
-    environment variables for authentication (no token.json or credentials.json).
+def test_main_script_with_env_vars_only() -> None: # noqa: PLR0915, PLR0912, C901
+    """Tests that main.py works correctly in CI/CD environments.
 
+    Uses only environment variables for authentication (no token.json or credentials.json).
     This test simulates CircleCI where only environment variables are available.
     """
     main_script = Path(__file__).parent.parent.parent / "main.py"
@@ -103,7 +102,7 @@ def test_main_script_with_env_vars_only() -> None:
     if missing_vars:
         pytest.skip(f"Missing required environment variables for CI test: {missing_vars}")
     else:
-        print("All required environment variables are set for CI test.")
+        pass
     # Create a temporary main.py that uses interactive=False
     ci_main_content = """
 # ta-assignment/main.py (CI/CD version)
@@ -195,7 +194,7 @@ if __name__ == "__main__":
             command = [sys.executable, str(ci_main_script)]
 
             # Run the CI version
-            result = subprocess.run(
+            result = subprocess.run( # noqa: S603
                 command,
                 capture_output=True,
                 text=True,
@@ -220,7 +219,7 @@ if __name__ == "__main__":
                 lines = output.split("\n")
                 found_line = next((line for line in lines if "Found" in line and "messages:" in line), None)
                 if found_line:
-                    print(f"CI E2E test verified: {found_line}")
+                    pass
 
         finally:
             # Restore backup files
@@ -269,7 +268,7 @@ def test_main_script_handles_no_credentials_gracefully() -> None:
         command = [sys.executable, str(main_script)]
 
         # Run without credentials - should handle gracefully
-        result = subprocess.run(
+        result = subprocess.run( # noqa: S603
             command,
             check=False,
             capture_output=True,
@@ -297,6 +296,7 @@ def test_main_script_handles_no_credentials_gracefully() -> None:
 @pytest.mark.circleci
 def test_main_script_syntax_is_valid() -> None:
     """Tests that main.py has valid Python syntax.
+
     This can run in any environment.
     """
     main_script = Path(__file__).parent.parent.parent / "main.py"
@@ -308,7 +308,7 @@ def test_main_script_syntax_is_valid() -> None:
     command = [sys.executable, "-m", "py_compile", str(main_script)]
 
     try:
-        subprocess.run(
+        subprocess.run( # noqa: S603
             command,
             capture_output=True,
             text=True,
@@ -317,7 +317,6 @@ def test_main_script_syntax_is_valid() -> None:
         )
 
         # If we get here, syntax is valid
-        print("main.py syntax is valid")
 
     except subprocess.CalledProcessError as e:
         pytest.fail(f"main.py has syntax errors:\n{e.stderr}")
@@ -326,6 +325,7 @@ def test_main_script_syntax_is_valid() -> None:
 @pytest.mark.circleci
 def test_main_script_imports_work() -> None:
     """Tests that main.py can import all required modules.
+
     This can run in any environment.
     """
     main_script = Path(__file__).parent.parent.parent / "main.py"
@@ -349,7 +349,7 @@ except ImportError as e:
     command = [sys.executable, "-c", import_test_code]
 
     try:
-        result = subprocess.run(
+        result = subprocess.run( # noqa: S603
             command,
             capture_output=True,
             text=True,
@@ -367,6 +367,7 @@ except ImportError as e:
 @pytest.mark.circleci
 def test_application_structure_integrity() -> None:
     """Tests that the application has the expected file structure.
+
     This can run in any environment.
     """
     workspace_root = Path(__file__).parent.parent.parent
@@ -392,4 +393,3 @@ def test_application_structure_integrity() -> None:
     if missing_files:
         pytest.fail(f"Missing required files: {missing_files}")
 
-    print("Application structure integrity verified")

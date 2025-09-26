@@ -29,7 +29,7 @@ from ._impl import GmailClient
 __all__ = ["GmailClient", "get_client_impl"]
 
 
-def get_client_impl(interactive: bool = False) -> mail_client_api.Client:
+def get_client_impl(*, interactive: bool = False) -> mail_client_api.Client:
     """Get an instance of the GmailClient.
 
     This factory function creates and returns a new GmailClient instance

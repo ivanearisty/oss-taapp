@@ -79,7 +79,7 @@ class Client(Protocol):
         raise NotImplementedError
 
 
-def get_client(interactive: bool = False) -> Client:
+def get_client(*, interactive: bool = False) -> Client:
     """Return an instance of a Mail Client.
 
     This is a factory function that returns a concrete implementation

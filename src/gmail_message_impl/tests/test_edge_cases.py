@@ -12,6 +12,10 @@ from gmail_message_impl._impl import GmailMessage
 class TestEdgeCases:
     """Test cases for edge cases and error conditions."""
 
+    # Constants for magic values in tests
+    VERY_LONG_SUBJECT_MIN_LENGTH = 1000
+    VERY_LONG_BODY_MIN_LENGTH = 30000
+
     def test_extremely_large_message_id(self) -> None:
         """Test with very long message ID."""
         long_id = "x" * 1000  # Very long ID
@@ -47,7 +51,7 @@ class TestEdgeCases:
         msg = GmailMessage(msg_id="longsubj123", raw_data=encoded_data)
 
         assert msg.subject == long_subject
-        assert len(msg.subject) > 1000
+        assert len(msg.subject) > self.VERY_LONG_SUBJECT_MIN_LENGTH
 
     def test_very_long_message_body(self) -> None:
         """Test with extremely long message body."""
@@ -58,7 +62,7 @@ class TestEdgeCases:
         msg = GmailMessage(msg_id="longbody123", raw_data=encoded_data)
 
         assert msg.subject == "Long Body Test"
-        assert len(msg.body) > 30000
+        assert len(msg.body) > self.VERY_LONG_BODY_MIN_LENGTH
         assert "This is a very long message body." in msg.body
 
     def test_malformed_headers(self) -> None:

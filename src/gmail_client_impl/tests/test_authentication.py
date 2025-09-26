@@ -43,7 +43,7 @@ class TestGmailClientAuthentication:
         },
     )
     def test_init_with_env_vars_success(
-        self, mock_request: Any, mock_creds_class: Any, mock_build: Any
+        self, mock_request: Any, mock_creds_class: Any, mock_build: Any,
     ) -> None:
         """Test successful initialization with environment variables."""
         # ARRANGE
@@ -57,26 +57,25 @@ class TestGmailClientAuthentication:
         mock_build.return_value = mock_service
 
         # ACT
-        with patch.object(GmailClient, "_save_token") as mock_save:
-            with patch("gmail_client_impl._impl.Path") as mock_path:
-                # Mock token.json doesn't exist so _save_token will be called
-                mock_path.return_value.exists.return_value = False
+        with patch.object(GmailClient, "_save_token") as mock_save, patch("gmail_client_impl._impl.Path") as mock_path:
+            # Mock token.json doesn't exist so _save_token will be called
+            mock_path.return_value.exists.return_value = False
 
-                client = GmailClient()
+            client = GmailClient()
 
-                # ASSERT
-                assert client.service is mock_service
-                mock_creds_class.assert_called_once_with(
-                    None,
-                    refresh_token="test_refresh_token",
-                    token_uri="https://oauth2.googleapis.com/token",
-                    client_id="test_client_id",
-                    client_secret="test_client_secret",
-                    scopes=GmailClient.SCOPES,
-                )
-                mock_creds.refresh.assert_called_once()
-                mock_build.assert_called_once_with("gmail", "v1", credentials=mock_creds)
-                mock_save.assert_called_once_with(mock_creds, "token.json")
+            # ASSERT
+            assert client.service is mock_service
+            mock_creds_class.assert_called_once_with(
+                None,
+                refresh_token="test_refresh_token",
+                token_uri="https://oauth2.googleapis.com/token",
+                client_id="test_client_id",
+                client_secret="test_client_secret",
+                scopes=GmailClient.SCOPES,
+            )
+            mock_creds.refresh.assert_called_once()
+            mock_build.assert_called_once_with("gmail", "v1", credentials=mock_creds)
+            mock_save.assert_called_once_with(mock_creds, "token.json")
 
     @patch("gmail_client_impl._impl.build")
     @patch("gmail_client_impl._impl.Credentials")
@@ -91,7 +90,7 @@ class TestGmailClientAuthentication:
         },
     )
     def test_init_with_custom_token_uri(
-        self, mock_request: Any, mock_creds_class: Any, mock_build: Any
+        self, mock_request: Any, mock_creds_class: Any, mock_build: Any,
     ) -> None:
         """Test initialization with custom token URI from environment."""
         # ARRANGE
@@ -132,7 +131,7 @@ class TestGmailClientAuthentication:
         },
     )
     def test_init_env_vars_refresh_failure(
-        self, mock_request: Any, mock_creds_class: Any, mock_path: Any, mock_build: Any
+        self, mock_request: Any, mock_creds_class: Any, mock_path: Any, mock_build: Any,
     ) -> None:
         """Test handling of refresh failure with environment variables."""
         # ARRANGE
@@ -148,7 +147,7 @@ class TestGmailClientAuthentication:
 
         # ACT & ASSERT - Should now raise error instead of falling back to interactive
         with pytest.raises(
-            RuntimeError, match="No valid credentials found and interactive mode is disabled"
+            RuntimeError, match="No valid credentials found and interactive mode is disabled",
         ):
             GmailClient()
 
@@ -156,7 +155,7 @@ class TestGmailClientAuthentication:
     @patch("gmail_client_impl._impl.Path")
     @patch("gmail_client_impl._impl.Credentials")
     def test_init_with_token_file_success(
-        self, mock_creds_class: Any, mock_path: Any, mock_build: Any
+        self, mock_creds_class: Any, mock_path: Any, mock_build: Any,
     ) -> None:
         """Test successful initialization with token file."""
         # ARRANGE
@@ -189,7 +188,7 @@ class TestGmailClientAuthentication:
     @patch("gmail_client_impl._impl.Credentials")
     @patch("gmail_client_impl._impl.Request")
     def test_init_token_file_needs_refresh(
-        self, mock_request: Any, mock_creds_class: Any, mock_path: Any, mock_build: Any
+        self, mock_request: Any, mock_creds_class: Any, mock_path: Any, mock_build: Any,
     ) -> None:
         """Test token file that needs refresh."""
         # ARRANGE
@@ -243,21 +242,20 @@ class TestGmailClientAuthentication:
     def test_init_no_valid_credentials_raises_error(self) -> None:
         """Test that initialization raises error when no valid credentials found."""
         # ARRANGE
-        with patch.dict(os.environ, {}, clear=True):
-            with patch("gmail_client_impl._impl.Path") as mock_path:
-                mock_token_path = Mock()
-                mock_token_path.exists.return_value = False
-                mock_path.return_value = mock_token_path
+        with patch.dict(os.environ, {}, clear=True), patch("gmail_client_impl._impl.Path") as mock_path:
+            mock_token_path = Mock()
+            mock_token_path.exists.return_value = False
+            mock_path.return_value = mock_token_path
 
-                with patch.object(GmailClient, "_run_interactive_flow") as mock_interactive:
-                    mock_interactive.return_value = None
+            with patch.object(GmailClient, "_run_interactive_flow") as mock_interactive:
+                mock_interactive.return_value = None
 
-                    # ACT & ASSERT
-                    with pytest.raises(
-                        RuntimeError,
-                        match="No valid credentials found and interactive mode is disabled",
-                    ):
-                        GmailClient()
+                # ACT & ASSERT
+                with pytest.raises(
+                    RuntimeError,
+                    match="No valid credentials found and interactive mode is disabled",
+                ):
+                    GmailClient()
 
     @patch("gmail_client_impl._impl.build")
     def test_build_service_failure(self, mock_build: Any) -> None:
@@ -317,7 +315,7 @@ class TestGmailClientHelperMethods:
         client = GmailClient(service=Mock())  # Skip normal init
 
         # ACT & ASSERT
-        with pytest.raises(FileNotFoundError, match="'credentials.json' not found"):
+        with pytest.raises(FileNotFoundError, match=r"'credentials.json' not found"):
             client._run_interactive_flow("credentials.json")
 
     @patch("gmail_client_impl._impl.InstalledAppFlow")

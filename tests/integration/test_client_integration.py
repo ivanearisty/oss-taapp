@@ -4,6 +4,8 @@ This module tests that the dependency injection works correctly and that
 the client can authenticate and make real API calls to Gmail.
 """
 
+import logging
+
 import pytest
 
 import gmail_client_impl  # Import to trigger dependency injection
@@ -12,10 +14,13 @@ import mail_client_api
 # Mark all tests in this file as integration tests
 pytestmark = pytest.mark.integration
 
+# Set up logger for this module
+logger = logging.getLogger(__name__)
 
 @pytest.mark.circleci
 def test_get_client_and_authenticate() -> None:
     """Tests that the factory provides a real, authenticated GmailClient.
+
     This test requires real credentials (via .env or credentials.json)
     and makes a live, read-only call to the Gmail API.
     """
@@ -34,17 +39,17 @@ def test_get_client_and_authenticate() -> None:
         assert "emailAddress" in profile
         assert "@" in profile["emailAddress"]
 
-        print(f"Successfully authenticated as: {profile['emailAddress']}")
 
     except FileNotFoundError:
         pytest.skip("Skipping integration test: credentials.json not found.")
-    except Exception as e:
+    except (RuntimeError, ValueError, ConnectionError) as e:
         pytest.fail(f"Integration test failed during authentication or API call: {e}")
 
 
 @pytest.mark.circleci
 def test_dependency_injection_works() -> None:
-    """Tests that importing the implementation packages correctly overrides
+    """Tests that importing the implementation packages correctly overrides.
+
     the factory functions in the protocol packages.
     This test doesn't require credentials, only tests imports and factory setup.
     """
@@ -62,7 +67,7 @@ def test_dependency_injection_works() -> None:
     except RuntimeError as e:
         if "No valid credentials found" in str(e):
             # This is expected in CI without credentials - the factory works, just can't authenticate
-            print("Factory works correctly - authentication failed as expected without credentials")
+            pass
         else:
             raise
 
@@ -70,9 +75,9 @@ def test_dependency_injection_works() -> None:
 @pytest.mark.circleci
 def test_message_dependency_injection() -> None:
     """Tests that importing gmail_message_impl overrides message.get_message."""
-    import base64
+    import base64  #noqa: PLC0415
 
-    import message
+    import message  #noqa: PLC0415
 
     # Import should have already happened in the test setup
     # Verify that message.get_message now points to our implementation
@@ -84,7 +89,7 @@ def test_message_dependency_injection() -> None:
     msg = message.get_message(msg_id="di123", raw_data=encoded_data)
 
     # Verify it returns our GmailMessage implementation
-    from gmail_message_impl._impl import GmailMessage
+    from gmail_message_impl._impl import GmailMessage  #noqa: PLC0415
 
     assert isinstance(msg, GmailMessage)
     assert msg.id == "di123"
@@ -96,10 +101,11 @@ def test_message_dependency_injection() -> None:
 @pytest.mark.circleci
 def test_factory_functions_work_together() -> None:
     """Tests that both factory functions work together correctly.
+
     This test only checks imports and factory setup, no credentials needed.
     """
-    import mail_client_api
-    from gmail_client_impl import get_client_impl
+    import mail_client_api  #noqa: PLC0415
+    from gmail_client_impl import get_client_impl  #noqa: PLC0415
 
     # Verify that mail_client_api.get_client is now our implementation
     assert mail_client_api.get_client is get_client_impl
@@ -107,9 +113,7 @@ def test_factory_functions_work_together() -> None:
 
 @pytest.mark.circleci
 def test_client_scope_permissions() -> None:
-    """Tests that the client has the necessary OAuth scopes for the operations
-    we want to perform.
-    """
+    """Tests that the client has the necessary OAuth scopes for the operations we want to perform."""
     try:
         client = mail_client_api.get_client(interactive=False)
 
@@ -129,11 +133,10 @@ def test_client_scope_permissions() -> None:
         assert isinstance(messages_result, dict)
         assert "messages" in messages_result or messages_result.get("resultSizeEstimate", 0) == 0
 
-        print(f"Messages in inbox: {messages_result.get('resultSizeEstimate', 'unknown')}")
 
     except FileNotFoundError:
         pytest.skip("Skipping integration test: credentials.json not found.")
-    except Exception as e:
+    except (RuntimeError, ValueError, ConnectionError) as e:
         # If we get a 403 error, it's likely a scope issue
         if "403" in str(e) or "insufficient" in str(e).lower():
             pytest.fail(f"OAuth scope issue - client may not have required permissions: {e}")
@@ -144,6 +147,7 @@ def test_client_scope_permissions() -> None:
 @pytest.mark.circleci
 def test_client_initialization_modes() -> None:
     """Tests that the client can be initialized in different modes.
+
     This test checks initialization behavior, not actual authentication.
     """
     try:
@@ -160,11 +164,8 @@ def test_client_initialization_modes() -> None:
 
     except RuntimeError as e:
         if "No valid credentials found" in str(e):
-            # This is expected in CI without credentials
-            print("Client initialization works correctly - authentication failed as expected without credentials")
+            logger.debug("Client initialization works correctly - authentication failed as expected without credentials")
         else:
             pytest.fail(f"Unexpected error during client initialization: {e}")
     except FileNotFoundError:
         pytest.skip("Skipping integration test: credentials.json not found.")
-    except Exception as e:
-        pytest.fail(f"Client initialization test failed: {e}")

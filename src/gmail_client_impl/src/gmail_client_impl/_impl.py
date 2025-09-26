@@ -63,8 +63,8 @@ except ImportError:
     env_path = Path(".env")
     if env_path.exists():
         with env_path.open() as f:
-            for line in f:
-                line = line.strip()
+            for raw_line in f:
+                line = raw_line.strip()
                 if line and not line.startswith("#") and "=" in line:
                     key, value = line.split("=", 1)
                     os.environ[key.strip()] = value.strip()
@@ -117,11 +117,14 @@ class GmailClient(mail_client_api.Client):
 
     """
 
+    TOKEN_PATH: ClassVar[str] = "token.json" #noqa: S105
+    CREDENTIALS_PATH: ClassVar[str] = "credentials.json"
+
     SCOPES: ClassVar[list[str]] = [
         "https://www.googleapis.com/auth/gmail.modify",
     ]
     """OAuth2 scopes required for Gmail API access.
-    
+
     The 'gmail.modify' scope allows reading, composing, and sending messages,
     as well as modifying labels and message metadata.
     """
@@ -129,7 +132,7 @@ class GmailClient(mail_client_api.Client):
     FAILURE_TO_CRED = "Failed to obtain credentials. Please check your setup."
     """Error message displayed when authentication fails."""
 
-    def __init__(self, service: Resource | None = None, interactive: bool = False) -> None:
+    def __init__(self, service: Resource | None = None, *, interactive: bool = False) -> None:
         """Initialize the GmailClient, handling authentication.
 
         This method handles the complete authentication flow for accessing the Gmail API.
@@ -157,75 +160,32 @@ class GmailClient(mail_client_api.Client):
             return  # Skip auth if service is provided
 
         creds: Credentials | None = None
-        token_path = "token.json"
-        creds_path = "credentials.json"
+        token_path = self.TOKEN_PATH
+        creds_path = self.CREDENTIALS_PATH
 
-        # 1. Force Interactive Flow if requested
+        # Prefer explicit interactive flow when requested
         if interactive:
-            print("Interactive login requested, skipping environment variables and token file.")
             creds = self._run_interactive_flow(creds_path)
 
-        # 2. Try Environment Variables (CI Mode) if not interactive
+        # Attempt non-interactive approaches when interactive mode isn't used
         if not creds and not interactive:
-            client_id = os.environ.get("GMAIL_CLIENT_ID")
-            client_secret = os.environ.get("GMAIL_CLIENT_SECRET")
-            refresh_token = os.environ.get("GMAIL_REFRESH_TOKEN")
-            token_uri = os.environ.get("GMAIL_TOKEN_URI", "https://oauth2.googleapis.com/token")
+            creds = self._auth_from_env()
 
-            if client_id and client_secret and refresh_token:
-                print("Attempting to authenticate using environment variables (CI mode)...")
-                try:
-                    creds = Credentials(  # type: ignore[no-untyped-call]
-                        None,
-                        refresh_token=refresh_token,
-                        token_uri=token_uri,
-                        client_id=client_id,
-                        client_secret=client_secret,
-                        scopes=self.SCOPES,
-                    )
-                    creds.refresh(Request())  # type: ignore[no-untyped-call]
-                    print("Authentication via environment variables successful.")
-                except Exception as e:
-                    print(f"Error refreshing token from environment variables: {e}")
-                    creds = None  # Ensure creds is None if refresh fails
-                    # Don't raise here, allow fallback to file/interactive
-
-        # 3. Try Token File if not interactive and env vars failed
         if not creds and not interactive:
-            print("Attempting to authenticate using local token file...")
-            if Path(token_path).exists():
-                try:
-                    creds = Credentials.from_authorized_user_file(  # type: ignore[no-untyped-call]
-                        token_path,
-                        self.SCOPES,
-                    )
-                    # Check if token needs refresh
-                    if creds and not creds.valid and creds.refresh_token:
-                        print("Refreshing token from file...")
-                        try:
-                            creds.refresh(Request())  # type: ignore[no-untyped-call]
-                        except Exception as e:
-                            print(f"Error refreshing token from file: {e}")
-                            creds = None  # Force re-auth if refresh fails
-                except Exception as e:
-                    print(f"Error loading token from {token_path}: {e}")
-                    creds = None  # Ensure creds is None if loading fails
+            creds = self._auth_from_token_file(token_path)
 
-        # 4. Fallback to Interactive Flow if all else fails (and not already done)
+        # If still no usable credentials, decide whether to fail or fall back
         if not creds or (creds and not creds.valid and not creds.refresh_token):
-            if not interactive:  # Non-interactive mode should never fall back to interactive
+            if not interactive:
                 msg = (
                     "No valid credentials found and interactive mode is disabled. "
                     "Please provide valid credentials via environment variables or token file."
                 )
                 raise RuntimeError(msg)
-            # Interactive mode was requested but failed
-            print("No valid credentials found, running interactive login.")
+
             creds = self._run_interactive_flow(creds_path)
             if not creds:
                 raise RuntimeError("Interactive authentication failed.")  # noqa: EM101 TRY003
-
-        # --- End Authentication Logic --- #
 
         if not creds or not creds.valid:
             raise RuntimeError(self.FAILURE_TO_CRED)
@@ -235,12 +195,7 @@ class GmailClient(mail_client_api.Client):
             self._save_token(creds, token_path)
 
         # Build the service object
-        try:
-            self.service = build("gmail", "v1", credentials=creds)
-            print("Gmail service built successfully.")
-        except Exception as e:
-            print(f"Error building Gmail service: {e}")
-            raise  # Re-raise the exception
+        self.service = build("gmail", "v1", credentials=creds)
 
     def _run_interactive_flow(self, creds_path: str) -> Credentials | None:
         """Run the interactive OAuth flow.
@@ -258,18 +213,75 @@ class GmailClient(mail_client_api.Client):
             FileNotFoundError: If the credentials file doesn't exist.
 
         """
-        print("Running interactive authentication flow...")
         if not Path(creds_path).exists():
             raise FileNotFoundError(f"'{creds_path}' not found. Cannot run interactive auth.")  # noqa: EM102 TRY003
+        flow = InstalledAppFlow.from_client_secrets_file(
+            creds_path,
+            self.SCOPES,
+        )
+        return flow.run_local_server(port=0)  # type: ignore[no-any-return]
+
+    def _auth_from_env(self) -> Credentials | None:
+        """Attempt to authenticate using environment variables.
+
+        Expected environment variables:
+            GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN
+            optional: GMAIL_TOKEN_URI
+
+        Returns:
+            A refreshed Credentials object on success, or None on failure.
+
+        """
+        client_id = os.environ.get("GMAIL_CLIENT_ID")
+        client_secret = os.environ.get("GMAIL_CLIENT_SECRET")
+        refresh_token = os.environ.get("GMAIL_REFRESH_TOKEN")
+        token_uri = os.environ.get("GMAIL_TOKEN_URI", "https://oauth2.googleapis.com/token")
+
+        if not (client_id and client_secret and refresh_token):
+            return None
+
         try:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                creds_path,
+            creds = Credentials(  # type: ignore[no-untyped-call]
+                None,
+                refresh_token=refresh_token,
+                token_uri=token_uri,
+                client_id=client_id,
+                client_secret=client_secret,
+                scopes=self.SCOPES,
+            )
+            creds.refresh(Request())  # type: ignore[no-untyped-call]
+            return creds # noqa: TRY300
+        except (OSError, ValueError, KeyError):
+            return None
+
+    def _auth_from_token_file(self, token_path: str) -> Credentials | None:
+        """Attempt to load credentials from a token file and refresh if needed.
+
+        Args:
+            token_path: Path to token file.
+
+        Returns:
+            A valid Credentials object or None if loading/refresh fails.
+
+        """
+        try:
+            if not Path(token_path).exists():
+                return None
+
+            creds = Credentials.from_authorized_user_file( # type: ignore[no-untyped-call]
+                token_path,
                 self.SCOPES,
             )
-            return flow.run_local_server(port=0)  # type: ignore[no-any-return]
-        except Exception as e:
-            print(f"Error during interactive auth flow: {e}")
-            raise
+
+            if creds and not creds.valid and creds.refresh_token:
+                try:
+                    creds.refresh(Request())  # type: ignore[no-untyped-call]
+                except (OSError, ValueError, KeyError):
+                    return None
+        except (OSError, ValueError, KeyError):
+            return None
+
+        return creds # type: ignore[no-any-return]
 
     def _save_token(self, creds: Credentials, token_path: str) -> None:
         """Save the credentials token to a file.
@@ -286,13 +298,8 @@ class GmailClient(mail_client_api.Client):
             It's automatically added to .gitignore in most project templates.
 
         """
-        try:
-            with Path(token_path).open("w") as token:
-                token.write(creds.to_json())  # type: ignore[no-untyped-call]
-            print(f"Credentials saved to {token_path}")
-        except Exception as e:
-            print(f"Error saving token to {token_path}: {e}")
-            raise
+        with Path(token_path).open("w") as token:
+            token.write(creds.to_json())  # type: ignore[no-untyped-call]
 
     def get_message(self, message_id: str) -> message.Message:
         """Retrieve a specific message by its ID.
@@ -307,28 +314,25 @@ class GmailClient(mail_client_api.Client):
             Exception: If the message cannot be retrieved from the Gmail API.
 
         """
-        try:
-            msg_data = (
-                self.service.users()  # type: ignore[attr-defined]
-                .messages()
-                .get(userId="me", id=message_id, format="raw")
-                .execute()
-            )
-            raw_content = msg_data.get("raw")
-            if not raw_content:
-                msg = f"No raw content found for message {message_id}"
-                raise ValueError(msg)
+        msg_data = (
+            self.service.users()  # type: ignore[attr-defined]
+            .messages()
+            .get(userId="me", id=message_id, format="raw")
+            .execute()
+        )
 
-            # Use the factory from the abstract `message` package.
-            # Do NOT call `GmailMessage()` directly.
-            # Dependency injection ensures this call is routed to `gmail_message_impl` at runtime.
-            return message.get_message(
-                msg_id=message_id,
-                raw_data=raw_content,
-            )
-        except Exception as e:
-            print(f"Error retrieving message {message_id}: {e}")
-            raise
+        raw_content = msg_data.get("raw")
+        if not raw_content:
+            msg = f"No raw content found for message {message_id}"
+            raise ValueError(msg)
+
+        # Use the factory from the abstract `message` package.
+        # Do NOT call `GmailMessage()` directly.
+        # Dependency injection ensures this call is routed to `gmail_message_impl` at runtime.
+        return message.get_message(
+            msg_id=message_id,
+            raw_data=raw_content,
+        )
 
     def delete_message(self, message_id: str) -> bool:
         """Delete a message from the mailbox.
@@ -351,11 +355,10 @@ class GmailClient(mail_client_api.Client):
                 .delete(userId="me", id=message_id)
                 .execute()
             )
-            print(f"Message {message_id} deleted successfully.")
-            return True
-        except Exception as e:
-            print(f"Error deleting message {message_id}: {e}")
+        except (OSError, ValueError, KeyError):
             return False
+        else:
+            return True
 
     def mark_as_read(self, message_id: str) -> bool:
         """Mark a message as read.
@@ -382,11 +385,10 @@ class GmailClient(mail_client_api.Client):
                 )
                 .execute()
             )
-            print(f"Message {message_id} marked as read successfully.")
-            return True
-        except Exception as e:
-            print(f"Error marking message {message_id} as read: {e}")
+        except (OSError, ValueError, KeyError):
             return False
+        else:
+            return True
 
     def get_messages(self, max_results: int = 10) -> Iterator[message.Message]:
         """Retrieve messages from the Gmail inbox.
@@ -425,7 +427,8 @@ class GmailClient(mail_client_api.Client):
             if raw_content:
                 # Use the factory from the abstract `message` package.
                 # Do NOT call `GmailMessage()` directly.
-                # Dependency injection ensures this call is routed to `gmail_message_impl` at runtime.
+                # Dependency injection ensures this call is routed to
+                # `gmail_message_impl` at runtime.
                 yield message.get_message(
                     msg_id=msg_summary["id"],
                     raw_data=raw_content,
