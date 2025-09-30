@@ -12,13 +12,13 @@ import pytest
 from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 
-from gmail_client_impl._impl import GmailClient
+from gmail_client_impl.gmail_impl import GmailClient
 
 
 class TestGmailClientAuthentication:
     """Test cases for GmailClient authentication logic."""
 
-    @patch("gmail_client_impl._impl.build")
+    @patch("gmail_client_impl.gmail_impl.build")
     def test_init_with_provided_service_skips_auth(self, mock_build: Any) -> None:
         """Test that providing a service skips authentication."""
         # ARRANGE
@@ -31,9 +31,9 @@ class TestGmailClientAuthentication:
         assert client.service is mock_service
         mock_build.assert_not_called()
 
-    @patch("gmail_client_impl._impl.build")
-    @patch("gmail_client_impl._impl.Credentials")
-    @patch("gmail_client_impl._impl.Request")
+    @patch("gmail_client_impl.gmail_impl.build")
+    @patch("gmail_client_impl.gmail_impl.Credentials")
+    @patch("gmail_client_impl.gmail_impl.Request")
     @patch.dict(
         os.environ,
         {
@@ -57,7 +57,7 @@ class TestGmailClientAuthentication:
         mock_build.return_value = mock_service
 
         # ACT
-        with patch.object(GmailClient, "_save_token") as mock_save, patch("gmail_client_impl._impl.Path") as mock_path:
+        with patch.object(GmailClient, "_save_token") as mock_save, patch("gmail_client_impl.gmail_impl.Path") as mock_path:
             # Mock token.json doesn't exist so _save_token will be called
             mock_path.return_value.exists.return_value = False
 
@@ -77,9 +77,9 @@ class TestGmailClientAuthentication:
             mock_build.assert_called_once_with("gmail", "v1", credentials=mock_creds)
             mock_save.assert_called_once_with(mock_creds, "token.json")
 
-    @patch("gmail_client_impl._impl.build")
-    @patch("gmail_client_impl._impl.Credentials")
-    @patch("gmail_client_impl._impl.Request")
+    @patch("gmail_client_impl.gmail_impl.build")
+    @patch("gmail_client_impl.gmail_impl.Credentials")
+    @patch("gmail_client_impl.gmail_impl.Request")
     @patch.dict(
         os.environ,
         {
@@ -118,10 +118,10 @@ class TestGmailClientAuthentication:
             scopes=GmailClient.SCOPES,
         )
 
-    @patch("gmail_client_impl._impl.build")
-    @patch("gmail_client_impl._impl.Path")  # Add this patch
-    @patch("gmail_client_impl._impl.Credentials")
-    @patch("gmail_client_impl._impl.Request")
+    @patch("gmail_client_impl.gmail_impl.build")
+    @patch("gmail_client_impl.gmail_impl.Path")  # Add this patch
+    @patch("gmail_client_impl.gmail_impl.Credentials")
+    @patch("gmail_client_impl.gmail_impl.Request")
     @patch.dict(
         os.environ,
         {
@@ -151,9 +151,9 @@ class TestGmailClientAuthentication:
         ):
             GmailClient()
 
-    @patch("gmail_client_impl._impl.build")
-    @patch("gmail_client_impl._impl.Path")
-    @patch("gmail_client_impl._impl.Credentials")
+    @patch("gmail_client_impl.gmail_impl.build")
+    @patch("gmail_client_impl.gmail_impl.Path")
+    @patch("gmail_client_impl.gmail_impl.Credentials")
     def test_init_with_token_file_success(
         self, mock_creds_class: Any, mock_path: Any, mock_build: Any,
     ) -> None:
@@ -183,10 +183,10 @@ class TestGmailClientAuthentication:
             )
             assert client.service is mock_service
 
-    @patch("gmail_client_impl._impl.build")
-    @patch("gmail_client_impl._impl.Path")
-    @patch("gmail_client_impl._impl.Credentials")
-    @patch("gmail_client_impl._impl.Request")
+    @patch("gmail_client_impl.gmail_impl.build")
+    @patch("gmail_client_impl.gmail_impl.Path")
+    @patch("gmail_client_impl.gmail_impl.Credentials")
+    @patch("gmail_client_impl.gmail_impl.Request")
     def test_init_token_file_needs_refresh(
         self, mock_request: Any, mock_creds_class: Any, mock_path: Any, mock_build: Any,
     ) -> None:
@@ -218,7 +218,7 @@ class TestGmailClientAuthentication:
             mock_creds.refresh.assert_called_once()
             assert client.service is mock_service
 
-    @patch("gmail_client_impl._impl.build")
+    @patch("gmail_client_impl.gmail_impl.build")
     def test_init_interactive_mode_forces_flow(self, mock_build: Any) -> None:
         """Test that interactive=True forces interactive flow."""
         # ARRANGE
@@ -242,7 +242,7 @@ class TestGmailClientAuthentication:
     def test_init_no_valid_credentials_raises_error(self) -> None:
         """Test that initialization raises error when no valid credentials found."""
         # ARRANGE
-        with patch.dict(os.environ, {}, clear=True), patch("gmail_client_impl._impl.Path") as mock_path:
+        with patch.dict(os.environ, {}, clear=True), patch("gmail_client_impl.gmail_impl.Path") as mock_path:
             mock_token_path = Mock()
             mock_token_path.exists.return_value = False
             mock_path.return_value = mock_token_path
@@ -257,7 +257,7 @@ class TestGmailClientAuthentication:
                 ):
                     GmailClient()
 
-    @patch("gmail_client_impl._impl.build")
+    @patch("gmail_client_impl.gmail_impl.build")
     def test_build_service_failure(self, mock_build: Any) -> None:
         """Test handling of build service failure."""
         # ARRANGE
@@ -277,8 +277,8 @@ class TestGmailClientAuthentication:
 class TestGmailClientHelperMethods:
     """Test cases for GmailClient helper methods."""
 
-    @patch("gmail_client_impl._impl.InstalledAppFlow")
-    @patch("gmail_client_impl._impl.Path")
+    @patch("gmail_client_impl.gmail_impl.InstalledAppFlow")
+    @patch("gmail_client_impl.gmail_impl.Path")
     def test_run_interactive_flow_success(self, mock_path: Any, mock_flow_class: Any) -> None:
         """Test successful interactive OAuth flow."""
         # ARRANGE
@@ -304,7 +304,7 @@ class TestGmailClientHelperMethods:
         )
         mock_flow.run_local_server.assert_called_once_with(port=0)
 
-    @patch("gmail_client_impl._impl.Path")
+    @patch("gmail_client_impl.gmail_impl.Path")
     def test_run_interactive_flow_missing_credentials(self, mock_path: Any) -> None:
         """Test interactive flow with missing credentials file."""
         # ARRANGE
@@ -318,8 +318,8 @@ class TestGmailClientHelperMethods:
         with pytest.raises(FileNotFoundError, match=r"'credentials.json' not found"):
             client._run_interactive_flow("credentials.json")
 
-    @patch("gmail_client_impl._impl.InstalledAppFlow")
-    @patch("gmail_client_impl._impl.Path")
+    @patch("gmail_client_impl.gmail_impl.InstalledAppFlow")
+    @patch("gmail_client_impl.gmail_impl.Path")
     def test_run_interactive_flow_exception(self, mock_path: Any, mock_flow_class: Any) -> None:
         """Test interactive flow with exception during flow."""
         # ARRANGE
@@ -335,7 +335,7 @@ class TestGmailClientHelperMethods:
         with pytest.raises(Exception, match="Flow failed"):
             client._run_interactive_flow("credentials.json")
 
-    @patch("gmail_client_impl._impl.Path")
+    @patch("gmail_client_impl.gmail_impl.Path")
     def test_save_token_success(self, mock_path: Any) -> None:
         """Test successful token saving."""
         # ARRANGE
@@ -354,7 +354,7 @@ class TestGmailClientHelperMethods:
         mock_token_path.open.assert_called_once_with("w")
         mock_file_handle.write.assert_called_once_with('{"fake": "token"}')
 
-    @patch("gmail_client_impl._impl.Path")
+    @patch("gmail_client_impl.gmail_impl.Path")
     def test_save_token_exception(self, mock_path: Any) -> None:
         """Test token saving with exception."""
         # ARRANGE

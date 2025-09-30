@@ -1,8 +1,6 @@
 # Gmail Message Implementation
 
-This documentation is auto-generated from the docstrings in the `gmail_message_impl` package.
-
-The Gmail Message Implementation provides a concrete implementation of the Message Protocol for Gmail messages, handling Gmail-specific message parsing, decoding, and content extraction.
+`gmail_message_impl` provides the Gmail-specific `Message` implementation, including decoding and body extraction. The details below come straight from package docstrings.
 
 ## Package Overview
 

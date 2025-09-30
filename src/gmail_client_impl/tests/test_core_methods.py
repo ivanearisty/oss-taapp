@@ -7,8 +7,9 @@ of the GmailClient class, mocking all external dependencies.
 from unittest.mock import Mock, patch
 
 import pytest
+from googleapiclient.errors import HttpError
 
-from gmail_client_impl._impl import GmailClient
+from gmail_client_impl.gmail_impl import GmailClient
 
 # Constants for Gmail API values
 GMAIL_USER_ID = "me"
@@ -46,7 +47,7 @@ class TestGmailClientCoreMethods:
         # Mock the message factory
         mock_message = Mock()
         with patch(
-            "gmail_client_impl._impl.message.get_message", return_value=mock_message,
+            "gmail_client_impl.gmail_impl.message.get_message", return_value=mock_message,
         ) as mock_factory:
             # ACT
             result = self.client.get_message(message_id)
@@ -129,7 +130,8 @@ class TestGmailClientCoreMethods:
         self.mock_service.users.return_value = mock_users
         mock_users.messages.return_value = mock_messages
         mock_messages.delete.return_value = mock_delete
-        mock_delete.execute.side_effect = Exception("Delete failed")
+        error_response = Mock(status=500, reason="Internal Server Error")
+        mock_delete.execute.side_effect = HttpError(error_response, b"Delete failed")
 
         # ACT
         result = self.client.delete_message(message_id)
@@ -175,7 +177,8 @@ class TestGmailClientCoreMethods:
         self.mock_service.users.return_value = mock_users
         mock_users.messages.return_value = mock_messages
         mock_messages.modify.return_value = mock_modify
-        mock_modify.execute.side_effect = Exception("Modify failed")
+        error_response = Mock(status=500, reason="Internal Server Error")
+        mock_modify.execute.side_effect = HttpError(error_response, b"Modify failed")
 
         # ACT
         result = self.client.mark_as_read(message_id)
@@ -218,7 +221,7 @@ class TestGmailClientCoreMethods:
         mock_message_3 = Mock()
 
         with patch(
-            "gmail_client_impl._impl.message.get_message",
+            "gmail_client_impl.gmail_impl.message.get_message",
             side_effect=[
                 mock_message_1,
                 mock_message_2,
@@ -321,7 +324,7 @@ class TestGmailClientCoreMethods:
         mock_message_3 = Mock()
 
         with patch(
-            "gmail_client_impl._impl.message.get_message",
+            "gmail_client_impl.gmail_impl.message.get_message",
             side_effect=[
                 mock_message_1,
                 mock_message_3,
@@ -362,7 +365,7 @@ class TestGmailClientCoreMethods:
         mock_message_1 = Mock()
 
         with patch(
-            "gmail_client_impl._impl.message.get_message", return_value=mock_message_1,
+            "gmail_client_impl.gmail_impl.message.get_message", return_value=mock_message_1,
         ) as mock_factory:
             # ACT
             messages = list(self.client.get_messages())

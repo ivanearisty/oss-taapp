@@ -10,7 +10,6 @@ dependencies = [
     "google-auth>=2.40.3",
     "google-auth-oauthlib>=1.2.2",
     "mail-client-api",
-    "message",
 ]
 
 [project.optional-dependencies]
@@ -50,4 +49,3 @@ ignore = []
 
 [tool.uv.sources]
 mail-client-api = { workspace = true }
-message = { workspace = true }

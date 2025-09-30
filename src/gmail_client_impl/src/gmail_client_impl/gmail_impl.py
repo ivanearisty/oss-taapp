@@ -7,33 +7,6 @@ The implementation supports multiple authentication modes:
     - Environment variables (for CI/CD environments)
     - Local token file (for development)
     - Interactive OAuth flow (for initial setup)
-
-Classes:
-    GmailClient: Main client class implementing the mail_client_api.Client protocol.
-
-Example:
-    Basic usage:
-
-    ```python
-    from gmail_client_impl import GmailClient
-    client = GmailClient()
-    messages = client.get_messages()
-    ```
-
-    With custom service:
-
-    ```python
-    from googleapiclient.discovery import build
-    service = build('gmail', 'v1', credentials=creds)
-    client = GmailClient(service=service)
-    ```
-
-    Force interactive authentication:
-
-    ```python
-    client = GmailClient(interactive=True)
-    ```
-
 """
 
 import os
@@ -41,16 +14,14 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import ClassVar
 
-# --- CORE IMPORTS ---
-# 1. Import the interfaces you are implementing and using.
 import mail_client_api
-import message  # <-- Import the message protocol package
-
-# 2. Import the Google libraries needed for the implementation.
+from google.auth.exceptions import GoogleAuthError, RefreshError
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow  # type: ignore[import-untyped]
 from googleapiclient.discovery import Resource, build
+from googleapiclient.errors import HttpError
+from mail_client_api import message
 
 # Try to load .env file if python-dotenv is available
 try:
@@ -94,67 +65,17 @@ class GmailClient(mail_client_api.Client):
         - GMAIL_REFRESH_TOKEN: OAuth2 refresh token
         - GMAIL_TOKEN_URI: OAuth2 token URI (optional, defaults to Google's endpoint)
 
-    Example:
-        Basic usage:
-
-        ```python
-        client = GmailClient()
-        messages = list(client.get_messages())
-        ```
-
-        Force interactive login:
-
-        ```python
-        client = GmailClient(interactive=True)
-        ```
-
-        With pre-configured service:
-
-        ```python
-        service = build('gmail', 'v1', credentials=my_creds)
-        client = GmailClient(service=service)
-        ```
-
     """
 
     TOKEN_PATH: ClassVar[str] = "token.json" #noqa: S105
     CREDENTIALS_PATH: ClassVar[str] = "credentials.json"
-
     SCOPES: ClassVar[list[str]] = [
         "https://www.googleapis.com/auth/gmail.modify",
     ]
-    """OAuth2 scopes required for Gmail API access.
-
-    The 'gmail.modify' scope allows reading, composing, and sending messages,
-    as well as modifying labels and message metadata.
-    """
-
     FAILURE_TO_CRED = "Failed to obtain credentials. Please check your setup."
-    """Error message displayed when authentication fails."""
 
     def __init__(self, service: Resource | None = None, *, interactive: bool = False) -> None:
-        """Initialize the GmailClient, handling authentication.
-
-        This method handles the complete authentication flow for accessing the Gmail API.
-        It supports multiple authentication methods and will automatically choose the
-        best available option based on the environment and parameters.
-
-        Args:
-            service: An optional pre-configured Google API service resource.
-                If provided, authentication is skipped and this service is used directly.
-            interactive: If True, force interactive login, ignoring environment
-                variables and existing token files. Useful for initial setup or
-                when credentials need to be refreshed manually.
-
-        Raises:
-            RuntimeError: If authentication fails after trying all available methods.
-            FileNotFoundError: If interactive mode is requested but credentials.json is missing.
-
-        Note:
-            The method will save credentials to 'token.json' for future use when
-            authentication is successful through interactive flow or token refresh.
-
-        """
+        """Initialize the GmailClient, handling authentication."""
         if service:
             self.service = service
             return  # Skip auth if service is provided
@@ -163,18 +84,15 @@ class GmailClient(mail_client_api.Client):
         token_path = self.TOKEN_PATH
         creds_path = self.CREDENTIALS_PATH
 
-        # Prefer explicit interactive flow when requested
         if interactive:
             creds = self._run_interactive_flow(creds_path)
 
-        # Attempt non-interactive approaches when interactive mode isn't used
         if not creds and not interactive:
             creds = self._auth_from_env()
 
         if not creds and not interactive:
             creds = self._auth_from_token_file(token_path)
 
-        # If still no usable credentials, decide whether to fail or fall back
         if not creds or (creds and not creds.valid and not creds.refresh_token):
             if not interactive:
                 msg = (
@@ -185,16 +103,15 @@ class GmailClient(mail_client_api.Client):
 
             creds = self._run_interactive_flow(creds_path)
             if not creds:
-                raise RuntimeError("Interactive authentication failed.")  # noqa: EM101 TRY003
+                msg = "Interactive authentication failed."
+                raise RuntimeError(msg)
 
         if not creds or not creds.valid:
             raise RuntimeError(self.FAILURE_TO_CRED)
 
-        # Save the token if it was obtained interactively or refreshed
         if interactive or (creds.refresh_token and not Path(token_path).exists()):
             self._save_token(creds, token_path)
 
-        # Build the service object
         self.service = build("gmail", "v1", credentials=creds)
 
     def _run_interactive_flow(self, creds_path: str) -> Credentials | None:
@@ -202,16 +119,6 @@ class GmailClient(mail_client_api.Client):
 
         This method launches a local web server to handle the OAuth2 flow,
         opening the user's browser to complete authentication with Google.
-
-        Args:
-            creds_path: Path to the credentials.json file containing OAuth2 client configuration.
-
-        Returns:
-            Credentials object if authentication is successful, None if it fails.
-
-        Raises:
-            FileNotFoundError: If the credentials file doesn't exist.
-
         """
         if not Path(creds_path).exists():
             raise FileNotFoundError(f"'{creds_path}' not found. Cannot run interactive auth.")  # noqa: EM102 TRY003
@@ -251,7 +158,7 @@ class GmailClient(mail_client_api.Client):
             )
             creds.refresh(Request())  # type: ignore[no-untyped-call]
             return creds # noqa: TRY300
-        except (OSError, ValueError, KeyError):
+        except (GoogleAuthError, RefreshError, OSError, ValueError):
             return None
 
     def _auth_from_token_file(self, token_path: str) -> Credentials | None:
@@ -276,9 +183,9 @@ class GmailClient(mail_client_api.Client):
             if creds and not creds.valid and creds.refresh_token:
                 try:
                     creds.refresh(Request())  # type: ignore[no-untyped-call]
-                except (OSError, ValueError, KeyError):
+                except (GoogleAuthError, RefreshError, OSError, ValueError):
                     return None
-        except (OSError, ValueError, KeyError):
+        except (GoogleAuthError, RefreshError, OSError, ValueError):
             return None
 
         return creds # type: ignore[no-any-return]
@@ -326,9 +233,6 @@ class GmailClient(mail_client_api.Client):
             msg = f"No raw content found for message {message_id}"
             raise ValueError(msg)
 
-        # Use the factory from the abstract `message` package.
-        # Do NOT call `GmailMessage()` directly.
-        # Dependency injection ensures this call is routed to `gmail_message_impl` at runtime.
         return message.get_message(
             msg_id=message_id,
             raw_data=raw_content,
@@ -355,25 +259,13 @@ class GmailClient(mail_client_api.Client):
                 .delete(userId="me", id=message_id)
                 .execute()
             )
-        except (OSError, ValueError, KeyError):
+        except (HttpError, OSError, ValueError):
             return False
         else:
             return True
 
     def mark_as_read(self, message_id: str) -> bool:
-        """Mark a message as read.
-
-        Args:
-            message_id: The unique identifier of the message to mark as read.
-
-        Returns:
-            True if the message was successfully marked as read, False otherwise.
-
-        Note:
-            This method removes the 'UNREAD' label from the message in Gmail,
-            effectively marking it as read.
-
-        """
+        """Mark a message as read."""
         try:
             (
                 self.service.users()  # type: ignore[attr-defined]
@@ -385,7 +277,7 @@ class GmailClient(mail_client_api.Client):
                 )
                 .execute()
             )
-        except (OSError, ValueError, KeyError):
+        except (HttpError, OSError, ValueError):
             return False
         else:
             return True
@@ -425,11 +317,17 @@ class GmailClient(mail_client_api.Client):
             )
             raw_content = msg_data.get("raw")
             if raw_content:
-                # Use the factory from the abstract `message` package.
-                # Do NOT call `GmailMessage()` directly.
-                # Dependency injection ensures this call is routed to
-                # `gmail_message_impl` at runtime.
                 yield message.get_message(
                     msg_id=msg_summary["id"],
                     raw_data=raw_content,
                 )
+
+
+def get_client_impl(*, interactive: bool = False) -> mail_client_api.Client:
+    """Return a configured :class:`GmailClient` instance."""
+    return GmailClient(interactive=interactive)
+
+
+def register() -> None:
+    """Register the Gmail client implementation with the mail client API."""
+    mail_client_api.get_client = get_client_impl

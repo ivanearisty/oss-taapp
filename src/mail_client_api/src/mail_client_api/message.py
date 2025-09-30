@@ -1,31 +1,11 @@
-"""Message Protocol - Core message representation.
-
-This module defines the Message protocol (interface) that represents
-an email message with its essential properties like sender, recipient,
-subject, content, and metadata.
-
-Usage:
-    from message import Message, get_message
-
-    # Get a message instance from an implementation
-    msg = get_message(msg_id="123", raw_data="...")
-
-    # Access message properties
-    print(f"From: {msg.from_}")
-    print(f"Subject: {msg.subject}")
-    print(f"Body: {msg.body}")
-"""
+"""Message Protocol - Core message representation."""
 
 from typing import Protocol, runtime_checkable
 
 
 @runtime_checkable
 class Message(Protocol):
-    """A protocol representing an email message.
-
-    This protocol defines the interface for accessing email message
-    properties such as sender, recipient, subject, and content.
-    """
+    """A protocol representing an email message."""
 
     @property
     def id(self) -> str:

@@ -4,9 +4,7 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = [
-    "message",
-]
+dependencies = []
 
 [build-system]
 requires = ["hatchling"]
@@ -20,5 +18,3 @@ extend = "../../pyproject.toml"
 [tool.ruff.lint]
 ignore = []
 
-[tool.uv.sources]
-message = { workspace = true }

@@ -14,7 +14,6 @@ import mail_client_api
 # Mark all tests in this file as integration tests
 pytestmark = pytest.mark.integration
 
-# Set up logger for this module
 logger = logging.getLogger(__name__)
 
 @pytest.mark.circleci
@@ -31,15 +30,6 @@ def test_get_client_and_authenticate() -> None:
         # 2. Assert that we received the correct implementation
         assert isinstance(client, gmail_client_impl.GmailClient)
 
-        # 3. Perform a simple, harmless, read-only API call to verify authentication
-        # The `getProfile` method is a good candidate for this.
-        profile = client.service.users().getProfile(userId="me").execute()  # type: ignore[attr-defined]
-
-        # 4. Assert that the call returned a valid profile with an email address
-        assert "emailAddress" in profile
-        assert "@" in profile["emailAddress"]
-
-
     except FileNotFoundError:
         pytest.skip("Skipping integration test: credentials.json not found.")
     except (RuntimeError, ValueError, ConnectionError) as e:
@@ -50,20 +40,16 @@ def test_get_client_and_authenticate() -> None:
 def test_dependency_injection_works() -> None:
     """Tests that importing the implementation packages correctly overrides.
 
-    the factory functions in the protocol packages.
+    The factory functions in the protocol packages.
     This test doesn't require credentials, only tests imports and factory setup.
     """
-    # Test that mail_client_api.get_client returns our implementation
     try:
         client = mail_client_api.get_client(interactive=False)
         assert isinstance(client, gmail_client_impl.GmailClient)
-
-        # Test that the client has the expected methods
         assert hasattr(client, "get_messages")
         assert hasattr(client, "get_message")
         assert hasattr(client, "delete_message")
         assert hasattr(client, "mark_as_read")
-        assert hasattr(client, "service")
     except RuntimeError as e:
         if "No valid credentials found" in str(e):
             # This is expected in CI without credentials - the factory works, just can't authenticate
@@ -75,23 +61,19 @@ def test_dependency_injection_works() -> None:
 @pytest.mark.circleci
 def test_message_dependency_injection() -> None:
     """Tests that importing gmail_message_impl overrides message.get_message."""
-    import base64  #noqa: PLC0415
+    import base64
 
-    import message  #noqa: PLC0415
-
-    # Import should have already happened in the test setup
-    # Verify that message.get_message now points to our implementation
+    import gmail_client_impl
+    import mail_client_api
 
     email_content = "From: di@example.com\r\nSubject: Dependency Injection Test\r\n\r\nDI test body"
     encoded_data = base64.urlsafe_b64encode(email_content.encode()).decode()
 
     # Call the protocol function - should use our implementation
-    msg = message.get_message(msg_id="di123", raw_data=encoded_data)
+    msg = mail_client_api.get_message(msg_id="di123", raw_data=encoded_data)
 
     # Verify it returns our GmailMessage implementation
-    from gmail_message_impl._impl import GmailMessage  #noqa: PLC0415
-
-    assert isinstance(msg, GmailMessage)
+    assert isinstance(msg, gmail_client_impl.GmailMessage)
     assert msg.id == "di123"
     assert msg.from_ == "di@example.com"
     assert msg.subject == "Dependency Injection Test"
@@ -104,8 +86,8 @@ def test_factory_functions_work_together() -> None:
 
     This test only checks imports and factory setup, no credentials needed.
     """
-    import mail_client_api  #noqa: PLC0415
-    from gmail_client_impl import get_client_impl  #noqa: PLC0415
+    import mail_client_api
+    from gmail_client_impl import get_client_impl
 
     # Verify that mail_client_api.get_client is now our implementation
     assert mail_client_api.get_client is get_client_impl

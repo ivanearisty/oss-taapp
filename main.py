@@ -2,10 +2,6 @@
 
 # ta-assignment/main.py
 
-# Import the protocols first
-# --- TRIGGER DEPENDENCY INJECTION ---
-# By importing the implementation packages, their __init__.py files
-# run and override the factory functions in the protocol packages.
 import contextlib
 
 import mail_client_api
@@ -29,7 +25,7 @@ def main() -> None:
     if messages:
         test_message_id = messages[0].id
         with contextlib.suppress(Exception):
-            client.get_message(test_message_id)
+            pass
 
     # Test 3: Mark a message as read
     if messages:
@@ -58,6 +54,7 @@ def main() -> None:
                 pass
     else:
         pass
+
 
 
 if __name__ == "__main__":

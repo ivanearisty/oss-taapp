@@ -24,8 +24,6 @@ dev = [
 members = [
   "src/mail_client_api",
   "src/gmail_client_impl",
-  "src/message",
-  "src/gmail_message_impl",
 ]
 
 [tool.ruff]
@@ -39,12 +37,12 @@ ignore = [
   "D213", # `multi-line-summary-first-line` (D212) and `multi-line-summary-second-line` (D213) are incompatible. Ignoring `multi-line-summary-second-line`.
   "S101", # Use of `assert` detected --> Asserts are good in our opinion. Tests use asserts profusely.
 ]
-per-file-ignores = { "**/test_*.py" = ["TRY300", "BLE001", "ANN401", "SLF001", "E501", "S105", "ARG001", "ARG002", "S106"] }
+per-file-ignores = { "**/test_*.py" = ["TRY300", "BLE001", "ANN401", "SLF001", "E501", "S105", "ARG001", "ARG002", "S106", "INP001", "PLC0415"] }
 
 [tool.mypy]
 strict = true
 explicit_package_bases = true # Required for src layout
-mypy_path = ["src/mail_client_api/src", "src/mail_client_gmail_impl/src", "src/gmail_message_impl/src", "src/message/src"]
+mypy_path = ["src/mail_client_api/src", "src/mail_client_gmail_impl/src"]
 ignore_missing_imports = false
 warn_unused_ignores = false
 
@@ -54,9 +52,7 @@ module = [
     "google.*",
     "googleapiclient.*",
     "gmail_client_impl.*",
-    "message.*",
     "mail_client_api.*",
-    "gmail_message_impl.*"
 ]
 ignore_missing_imports = true
 

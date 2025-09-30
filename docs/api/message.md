@@ -1,8 +1,6 @@
 # Message Protocol Reference
 
-This documentation is auto-generated from the docstrings in the `message` package.
-
-The Message Protocol defines the core interface for email message objects, providing access to essential message properties like sender, recipient, subject, and content.
+`message` defines the protocol that all message implementations satisfy. Explore the generated API details below.
 
 ## Package Overview
 
