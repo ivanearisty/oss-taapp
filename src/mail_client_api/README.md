@@ -1,7 +1,7 @@
 # Mail Client API
 
 ## Overview
-`mail_client_api` defines the `Client` protocol that every mail client must implement. The package contains the protocol, a factory hook, and no concrete logic.
+`mail_client_api` defines the `Client` abstract base class that every mail client must implement. The package contains the abstraction, a factory hook, and no concrete logic.
 
 ## Purpose
 - Document the operations available to consumers.
@@ -11,9 +11,9 @@
 ## Architecture
 
 ### Component Design
-The package exposes one protocol focused on mailbox operations—fetch, delete, mark-as-read, and iterate. It depends only on the `Message` protocol.
+The package exposes one abstract base class focused on mailbox operations—fetch, delete, mark-as-read, and iterate. It depends only on the `Message` abstraction.
 
-### Protocol Integration
+### API Integration
 ```python
 from mail_client_api import Client, get_client
 from mail_client_api.message import Message
@@ -34,10 +34,9 @@ client = get_client(interactive=False)
 
 ## API Reference
 
-### Client Protocol
+### Client Abstract Base Class
 ```python
-@runtime_checkable
-class Client(Protocol):
+class Client(ABC):
     ...
 ```
 
@@ -71,7 +70,7 @@ client.mark_as_read(important.id)
 ```
 
 ## Implementation Checklist
-1. Implement every method in the protocol.
+1. Implement every method in the abstract base class.
 2. Return objects compatible with `mail_client_api.message.Message`.
 3. Publish a factory (`get_client_impl`) and assign it to `mail_client_api.get_client`.
 4. Honour the `interactive` flag (prompting only when `True`).
@@ -81,8 +80,3 @@ client.mark_as_read(important.id)
 uv run pytest src/mail_client_api/tests/ -q
 uv run pytest src/mail_client_api/tests/ --cov=src/mail_client_api --cov-report=term-missing
 ```
-
-## Related Components
-- `mail_client_api.message`: message protocol referenced here.
-- `gmail_client_impl`: Gmail-backed implementation overriding the factory.
-- `gmail_message_impl`: Gmail message implementation paired with the Gmail client.

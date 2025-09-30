@@ -146,9 +146,13 @@ class TestEdgeCases:
 
     def test_message_with_null_bytes(self) -> None:
         """Test message containing null bytes in headers and body."""
-        email_with_nulls = "From: null@example.com\r\nSubject: Null Test\r\n\r\nBody with\x00null\x00bytes"
+        email_with_nulls = (
+            "From: null@example.com\r\nSubject: Null Test\r\n\r\nBody with\x00null\x00bytes"
+        )
 
-        encoded_data = base64.urlsafe_b64encode(email_with_nulls.encode("utf-8", errors="replace")).decode()
+        encoded_data = base64.urlsafe_b64encode(
+            email_with_nulls.encode("utf-8", errors="replace"),
+        ).decode()
         msg = GmailMessage(msg_id="null123", raw_data=encoded_data)
 
         assert msg.id == "null123"
@@ -157,9 +161,7 @@ class TestEdgeCases:
 
     def test_repeated_property_access(self) -> None:
         """Test that accessing properties multiple times yields consistent results."""
-        email_content = (
-            "From: repeat@example.com\r\nSubject: Repeat Test\r\nDate: Wed, 30 Jul 2025 10:30:00 +0000\r\n\r\nConsistent body"
-        )
+        email_content = "From: repeat@example.com\r\nSubject: Repeat Test\r\nDate: Wed, 30 Jul 2025 10:30:00 +0000\r\n\r\nConsistent body"
 
         encoded_data = base64.urlsafe_b64encode(email_content.encode()).decode()
         msg = GmailMessage(msg_id="repeat123", raw_data=encoded_data)
@@ -173,9 +175,7 @@ class TestEdgeCases:
 
     def test_message_with_only_headers_no_body(self) -> None:
         """Test message that contains only headers and no body."""
-        headers_only = (
-            "From: headeronly@example.com\r\nSubject: Headers Only\r\nDate: Wed, 30 Jul 2025 10:30:00 +0000\r\n\r\n"
-        )
+        headers_only = "From: headeronly@example.com\r\nSubject: Headers Only\r\nDate: Wed, 30 Jul 2025 10:30:00 +0000\r\n\r\n"
 
         encoded_data = base64.urlsafe_b64encode(headers_only.encode()).decode()
         msg = GmailMessage(msg_id="headers123", raw_data=encoded_data)

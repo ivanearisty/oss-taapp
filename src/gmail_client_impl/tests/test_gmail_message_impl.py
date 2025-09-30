@@ -80,7 +80,9 @@ class TestGmailMessage:
 
     def test_subject_without_encoding(self) -> None:
         """Test subject that doesn't need RFC 2047 decoding."""
-        email_content = "From: sender@example.com\r\nSubject: Plain Subject Line\r\n\r\nMessage body"
+        email_content = (
+            "From: sender@example.com\r\nSubject: Plain Subject Line\r\n\r\nMessage body"
+        )
 
         encoded_data = base64.urlsafe_b64encode(email_content.encode()).decode()
         message = GmailMessage(msg_id="plain123", raw_data=encoded_data)

@@ -1,6 +1,6 @@
 # Component Definition
 
-Every workspace component lives under `src/<component_name>/` and represents either a protocol or a concrete implementation.
+Every workspace component lives under `src/<component_name>/` and represents either an abstract contract implemented as an ABC or a concrete implementation.
 
 ## Directory Layout
 ```
@@ -25,8 +25,8 @@ Document, at minimum: overview, scope, exposed interfaces, usage pattern, and co
 Place concrete classes here so `__init__.py` can focus on exports and dependency injection wiring.
 
 ## Package Initialisation (`__init__.py`)
-- Protocol packages: define the `Protocol` class and `get_*` factory that raises `NotImplementedError`.
-- Implementation packages: import the protocol, expose factories like `get_*_impl`, and rebind the protocol factory (e.g., `protocol.get_* = get_*_impl`). Use `__all__` for any public symbols.
+- Contract packages: define the ABC and `get_*` factory that raises `NotImplementedError`.
+- Implementation packages: import the contract, expose factories like `get_*_impl`, and rebind the factory (e.g., `contract.get_* = get_*_impl`). Use `__all__` for any public symbols.
 
 ## Testing
 Component-level tests belong in `tests/`. Target the public interface, use mocks to isolate external services, and keep fixtures local to the component.

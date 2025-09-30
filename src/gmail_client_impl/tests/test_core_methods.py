@@ -47,7 +47,8 @@ class TestGmailClientCoreMethods:
         # Mock the message factory
         mock_message = Mock()
         with patch(
-            "gmail_client_impl.gmail_impl.message.get_message", return_value=mock_message,
+            "gmail_client_impl.gmail_impl.message.get_message",
+            return_value=mock_message,
         ) as mock_factory:
             # ACT
             result = self.client.get_message(message_id)
@@ -55,7 +56,9 @@ class TestGmailClientCoreMethods:
             # ASSERT
             assert result is mock_message
             mock_messages.get.assert_called_once_with(
-                userId=GMAIL_USER_ID, id=message_id, format=GMAIL_FORMAT_RAW,
+                userId=GMAIL_USER_ID,
+                id=message_id,
+                format=GMAIL_FORMAT_RAW,
             )
             mock_get.execute.assert_called_once()
             mock_factory.assert_called_once_with(msg_id=message_id, raw_data=raw_content)
@@ -241,13 +244,19 @@ class TestGmailClientCoreMethods:
             # Verify individual get calls
             assert mock_messages.get.call_count == len(mock_messages_list)
             mock_messages.get.assert_any_call(
-                userId=GMAIL_USER_ID, id="msg1", format=GMAIL_FORMAT_RAW,
+                userId=GMAIL_USER_ID,
+                id="msg1",
+                format=GMAIL_FORMAT_RAW,
             )
             mock_messages.get.assert_any_call(
-                userId=GMAIL_USER_ID, id="msg2", format=GMAIL_FORMAT_RAW,
+                userId=GMAIL_USER_ID,
+                id="msg2",
+                format=GMAIL_FORMAT_RAW,
             )
             mock_messages.get.assert_any_call(
-                userId=GMAIL_USER_ID, id="msg3", format=GMAIL_FORMAT_RAW,
+                userId=GMAIL_USER_ID,
+                id="msg3",
+                format=GMAIL_FORMAT_RAW,
             )
 
             # Verify factory calls
@@ -274,7 +283,8 @@ class TestGmailClientCoreMethods:
         # ASSERT
         assert len(messages) == 0
         mock_messages.list.assert_called_once_with(
-            userId=GMAIL_USER_ID, maxResults=DEFAULT_MAX_RESULTS,
+            userId=GMAIL_USER_ID,
+            maxResults=DEFAULT_MAX_RESULTS,
         )
 
     def test_get_messages_no_messages_key(self) -> None:
@@ -365,7 +375,8 @@ class TestGmailClientCoreMethods:
         mock_message_1 = Mock()
 
         with patch(
-            "gmail_client_impl.gmail_impl.message.get_message", return_value=mock_message_1,
+            "gmail_client_impl.gmail_impl.message.get_message",
+            return_value=mock_message_1,
         ) as mock_factory:
             # ACT
             messages = list(self.client.get_messages())
@@ -393,5 +404,6 @@ class TestGmailClientCoreMethods:
 
         # ASSERT
         mock_messages.list.assert_called_once_with(
-            userId=GMAIL_USER_ID, maxResults=DEFAULT_MAX_RESULTS,
+            userId=GMAIL_USER_ID,
+            maxResults=DEFAULT_MAX_RESULTS,
         )

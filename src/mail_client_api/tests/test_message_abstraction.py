@@ -1,11 +1,11 @@
-"""Tests for the mail_client_api message protocol."""
+"""Tests for the mail_client_api message abstraction."""
 
 from unittest.mock import Mock
 
 from mail_client_api.message import Message
 
 
-def test_message_protocol_comprehensive() -> None:
+def test_message_abstraction_comprehensive() -> None:
     """Verifies all properties work together in a comprehensive test."""
     mock_message = Mock(spec=Message)
     mock_message.id = "msg_67890"

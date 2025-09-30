@@ -16,6 +16,7 @@ pytestmark = pytest.mark.integration
 
 logger = logging.getLogger(__name__)
 
+
 @pytest.mark.circleci
 def test_get_client_and_authenticate() -> None:
     """Tests that the factory provides a real, authenticated GmailClient.
@@ -40,7 +41,7 @@ def test_get_client_and_authenticate() -> None:
 def test_dependency_injection_works() -> None:
     """Tests that importing the implementation packages correctly overrides.
 
-    The factory functions in the protocol packages.
+    The factory functions in the abstract contract packages.
     This test doesn't require credentials, only tests imports and factory setup.
     """
     try:
@@ -69,7 +70,7 @@ def test_message_dependency_injection() -> None:
     email_content = "From: di@example.com\r\nSubject: Dependency Injection Test\r\n\r\nDI test body"
     encoded_data = base64.urlsafe_b64encode(email_content.encode()).decode()
 
-    # Call the protocol function - should use our implementation
+    # Call the abstract factory - should use our implementation
     msg = mail_client_api.get_message(msg_id="di123", raw_data=encoded_data)
 
     # Verify it returns our GmailMessage implementation
@@ -114,7 +115,6 @@ def test_client_scope_permissions() -> None:
         # Should return a dictionary with messages list (even if empty)
         assert isinstance(messages_result, dict)
         assert "messages" in messages_result or messages_result.get("resultSizeEstimate", 0) == 0
-
 
     except FileNotFoundError:
         pytest.skip("Skipping integration test: credentials.json not found.")

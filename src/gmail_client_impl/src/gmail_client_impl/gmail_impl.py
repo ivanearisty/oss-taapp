@@ -42,9 +42,9 @@ except ImportError:
 
 
 class GmailClient(mail_client_api.Client):
-    """Concrete implementation of the Client protocol using Gmail API.
+    """Concrete implementation of the Client abstraction using Gmail API.
 
-    This class provides a complete implementation of the mail_client_api.Client protocol
+    This class provides a complete implementation of the mail_client_api.Client abstraction
     using Google's Gmail API. It handles OAuth2 authentication automatically and provides
     methods to interact with Gmail messages.
 
@@ -67,7 +67,7 @@ class GmailClient(mail_client_api.Client):
 
     """
 
-    TOKEN_PATH: ClassVar[str] = "token.json" #noqa: S105
+    TOKEN_PATH: ClassVar[str] = "token.json"  # noqa: S105
     CREDENTIALS_PATH: ClassVar[str] = "credentials.json"
     SCOPES: ClassVar[list[str]] = [
         "https://www.googleapis.com/auth/gmail.modify",
@@ -157,7 +157,7 @@ class GmailClient(mail_client_api.Client):
                 scopes=self.SCOPES,
             )
             creds.refresh(Request())  # type: ignore[no-untyped-call]
-            return creds # noqa: TRY300
+            return creds  # noqa: TRY300
         except (GoogleAuthError, RefreshError, OSError, ValueError):
             return None
 
@@ -175,7 +175,7 @@ class GmailClient(mail_client_api.Client):
             if not Path(token_path).exists():
                 return None
 
-            creds = Credentials.from_authorized_user_file( # type: ignore[no-untyped-call]
+            creds = Credentials.from_authorized_user_file(  # type: ignore[no-untyped-call]
                 token_path,
                 self.SCOPES,
             )
@@ -188,7 +188,7 @@ class GmailClient(mail_client_api.Client):
         except (GoogleAuthError, RefreshError, OSError, ValueError):
             return None
 
-        return creds # type: ignore[no-any-return]
+        return creds  # type: ignore[no-any-return]
 
     def _save_token(self, creds: Credentials, token_path: str) -> None:
         """Save the credentials token to a file.
@@ -288,7 +288,7 @@ class GmailClient(mail_client_api.Client):
         This method fetches a list of message summaries from the Gmail API,
         then retrieves the raw content for each message. It uses the
         `message.get_message` factory function to construct and yield
-        a clean, protocol-compliant Message object for each email.
+        a clean, contract-compliant Message object for each email.
 
         Args:
             max_results: The maximum number of messages to retrieve.

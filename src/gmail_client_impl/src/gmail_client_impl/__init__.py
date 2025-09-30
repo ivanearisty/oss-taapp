@@ -29,5 +29,6 @@ def register() -> None:
     _register_client()
     _register_message()
 
+
 # Dependency Injection happens at import time
 register()

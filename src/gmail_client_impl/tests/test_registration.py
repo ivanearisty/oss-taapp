@@ -16,7 +16,12 @@ def test_register_binds_factories(monkeypatch: pytest.MonkeyPatch) -> None:
 
     # Reset to protocol defaults before invoking register.
     monkeypatch.setattr(mail_client_api, "get_client", client_protocol.get_client, raising=False)
-    monkeypatch.setattr(message_protocol, "get_message", message_protocol_module.get_message, raising=False)
+    monkeypatch.setattr(
+        message_protocol,
+        "get_message",
+        message_protocol_module.get_message,
+        raising=False,
+    )
 
     gmail_client_impl.register()
 

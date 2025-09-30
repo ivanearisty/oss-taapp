@@ -47,7 +47,7 @@ def test_main_script_runs_and_fetches_messages() -> None:
     try:
         # Run the command and capture the output
         # We need to be in the right directory for the script to find its dependencies
-        result = subprocess.run( # noqa: S603
+        result = subprocess.run(  # noqa: S603
             command,
             capture_output=True,
             text=True,
@@ -81,7 +81,7 @@ def test_main_script_runs_and_fetches_messages() -> None:
 
 
 @pytest.mark.circleci
-def test_main_script_with_env_vars_only() -> None: # noqa: PLR0915, PLR0912, C901
+def test_main_script_with_env_vars_only() -> None:  # noqa: PLR0915, PLR0912, C901
     """Tests that main.py works correctly in CI/CD environments.
 
     Uses only environment variables for authentication (no token.json or credentials.json).
@@ -104,7 +104,7 @@ def test_main_script_with_env_vars_only() -> None: # noqa: PLR0915, PLR0912, C90
     ci_main_content = """
 # ta-assignment/main.py (CI/CD version)
 
-# Import the protocols first
+# Import the contracts first
 import mail_client_api
 import gmail_client_impl
 
@@ -185,7 +185,7 @@ if __name__ == "__main__":
             command = [sys.executable, str(ci_main_script)]
 
             # Run the CI version
-            result = subprocess.run( # noqa: S603
+            result = subprocess.run(  # noqa: S603
                 command,
                 capture_output=True,
                 text=True,
@@ -251,7 +251,6 @@ def test_main_script_handles_no_credentials_gracefully(tmp_path: Path) -> None:
     ):
         mail_client_api.get_client(interactive=False)
 
-
     message = str(excinfo.value)
     assert "No valid credentials found" in message
     assert "Please provide valid credentials" in message
@@ -272,7 +271,7 @@ def test_main_script_syntax_is_valid() -> None:
     command = [sys.executable, "-m", "py_compile", str(main_script)]
 
     try:
-        subprocess.run( # noqa: S603
+        subprocess.run(  # noqa: S603
             command,
             capture_output=True,
             text=True,
@@ -311,7 +310,7 @@ except ImportError as e:
     command = [sys.executable, "-c", import_test_code]
 
     try:
-        result = subprocess.run( # noqa: S603
+        result = subprocess.run(  # noqa: S603
             command,
             capture_output=True,
             text=True,
@@ -354,4 +353,3 @@ def test_application_structure_integrity() -> None:
 
     if missing_files:
         pytest.fail(f"Missing required files: {missing_files}")
-

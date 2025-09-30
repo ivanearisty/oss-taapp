@@ -9,7 +9,7 @@ This package serves as the production-ready Gmail integration for the email assi
 
 - **Gmail API Integration**: Connects to Gmail using official Google APIs
 - **OAuth2 Authentication**: Handles secure authentication with multiple modes (interactive/non-interactive)
-- **Protocol Implementation**: Provides concrete implementation of all Client operations
+- **ABC Implementation**: Provides concrete implementation of all Client operations
 - **Message Integration**: Works seamlessly with GmailMessage implementation
 - **Dependency Injection**: Automatically registers itself as the Client implementation
 
@@ -32,7 +32,7 @@ client = get_client(interactive=False)
 ## API Reference
 
 ### GmailClient
-Implements the `mail_client_api.Client` protocol.
+Implements the `mail_client_api.Client` abstract base class.
 
 #### Methods
 - `get_message(message_id: str) -> Message`: Fetches and decodes a single Gmail message.
@@ -168,37 +168,6 @@ uv run pytest src/gmail_client_impl/tests/ --cov=src/gmail_client_impl --cov-rep
 - Unit tests rely on mocks—no real Gmail calls.
 - Integration and e2e suites in `tests/` expect credentials or environment variables.
 
-## Related Components
-- `mail_client_api`: Protocol definition consumed by this implementation.
-- `gmail_message_impl`: Gmail message implementation returned by the client.
-- `message`: Shared message protocol.
-
-- **Daily Quota**: 1 billion API calls per day (generous)
-- **Per-User Rate Limit**: 250 quota units per user per 100 seconds
-- **Implementation**: Client handles rate limiting automatically
-
-### Caching Strategy
-
-- **Authentication Tokens**: Cached and auto-refreshed
-- **Message Data**: Not cached (ensures fresh data)
-- **API Connections**: Reused efficiently
-
-## Related Components
-
-- **[mail_client_api](../mail_client_api/README.md)**: Protocol interface implemented by this package
-- **[gmail_message_impl](../gmail_message_impl/README.md)**: Used for creating Message objects from Gmail data
-- **[message](../message/README.md)**: Protocol for Message return types
-
-## Design Principles
-
-This implementation follows key software engineering principles:
-
-- **Single Responsibility**: Focuses solely on Gmail API integration
-- **Open/Closed**: Extends the Client protocol without modifying it
-- **Liskov Substitution**: Can be used anywhere a Client is expected
-- **Dependency Inversion**: Implements the abstract Client protocol
-- **Separation of Concerns**: API logic separated from protocol definition
-
 ## Gmail API Integration
 
 ### Scopes Required
@@ -211,13 +180,6 @@ SCOPES = [
     'https://www.googleapis.com/auth/gmail.modify'     # Mark as read, delete
 ]
 ```
-
-### API Endpoints Used
-
-- **`messages().list()`**: Get message IDs from inbox
-- **`messages().get()`**: Get full message data with raw content
-- **`messages().modify()`**: Update message labels (mark as read)
-- **`messages().delete()`**: Permanently delete messages
 
 ### Response Handling
 
