@@ -242,6 +242,7 @@ workflows:
               only:
                 - main
                 - develop # Add other branches as needed
+                - kamen-requierd-fixes
 
       - lint:
           requires:
