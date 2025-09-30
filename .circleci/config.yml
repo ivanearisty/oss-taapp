@@ -213,25 +213,55 @@ workflows:
   # Main workflow: Build, Lint, Test (runs on all branches)
   build_and_test:
     jobs:
-      - build
+      - build:
+          filters:
+            branches:
+              ignore:
+                - main
+                - develop
+                - kamen-requierd-fixes
 
       - lint:
           requires:
             - build
+          filters:
+            branches:
+              ignore:
+                - main
+                - develop
+                - kamen-requierd-fixes
 
       - unit_test:
           requires:
             - build
+          filters:
+            branches:
+              ignore:
+                - main
+                - develop
+                - kamen-requierd-fixes
 
       - circleci_test:
           requires:
             - unit_test # Run after unit tests pass
+          filters:
+            branches:
+              ignore:
+                - main
+                - develop
+                - kamen-requierd-fixes
 
       # Optional: Report summary after core tests
       - report_summary:
           requires:
             - unit_test
             - circleci_test
+          filters:
+            branches:
+              ignore:
+                - main
+                - develop
+                - kamen-requierd-fixes
 
   # Enhanced workflow: Full tests with real credentials (main/develop only)
   full_integration:
@@ -252,6 +282,7 @@ workflows:
               only:
                 - main
                 - develop
+                - kamen-requierd-fixes
 
       - unit_test:
           requires:
@@ -261,6 +292,7 @@ workflows:
               only:
                 - main
                 - develop
+                - kamen-requierd-fixes
 
       - circleci_test:
           requires:
@@ -270,6 +302,7 @@ workflows:
               only:
                 - main
                 - develop
+                - kamen-requierd-fixes
 
       - integration_test:
           requires:
@@ -280,7 +313,8 @@ workflows:
               only:
                 - main
                 - develop
-
+                - kamen-requierd-fixes
+                
       - report_summary:
           requires:
             - unit_test
@@ -291,3 +325,4 @@ workflows:
               only:
                 - main
                 - develop
+                - kamen-requierd-fixes

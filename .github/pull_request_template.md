@@ -1,40 +1,56 @@
 # Pull Request
 
 ## Summary
-Describe the goal of this change and the user-visible impact.
+- What problem is being solved?
+- Why now? Any user-visible impact?
 
 ## Related Issues
 - Closes #
-- References #
+- Relates to #
 
 ## Change Type
-- [ ] Feature
-- [ ] Bug fix
-- [ ] Breaking change
-- [ ] Documentation / tooling only
+- [ ] 🐛 Bug fix
+- [ ] ✨ Feature / enhancement
+- [ ] 💥 Breaking change
+- [ ] 📚 Documentation
+- [ ] 🔧 Refactor / cleanup
+- [ ] ⚡ Performance
+- [ ] 🧪 Test improvement
+- [ ] 🔨 Build / tooling
 
-## Verification
-- [ ] Tests executed
-- [ ] Type checks passed
-- [ ] Linting clean
-- [ ] Docs updated (if user-facing changes)
+## Impacted Areas
+- [ ] `mail_client_api`
+- [ ] `gmail_client_impl`
+- [ ] Documentation
+- [ ] Tests
+- [ ] Tooling / CI
+- [ ] Other (describe in summary)
 
-<details>
-<summary>Commands (update as needed)</summary>
-
+## Testing
+### Commands executed
 ```bash
-uv run pytest
+# Example (edit as needed)
+uv run pytest src/ tests/
 uv run mypy src tests
 uv run ruff check .
 ```
 
-</details>
+### Results
+- [ ] Tests pass
+- [ ] Type checks clean
+- [ ] Linting clean
+- [ ] Manual verification (if applicable)
 
-## Checklist
-- [ ] Contract boundaries respected
-- [ ] Backward compatibility confirmed or migration noted
-- [ ] Security and sensitive data handled appropriately
+## Quality Checklist
+- [ ] Contract boundaries respected; abstractions unchanged unless noted
+- [ ] Backward compatibility confirmed or migration documented
+- [ ] Security / secrets handled correctly
 - [ ] Performance impact acceptable
+- [ ] Docs updated for user-facing changes
+
+## Breaking Changes (skip if none)
+1. Impact:
+2. Migration / mitigation:
 
 ## Notes for Reviewers
-Optional context, trade-offs, or follow-up work.
+Call out tricky areas, follow-ups, or validation details.
