@@ -9,6 +9,7 @@ import gmail_client_impl  # noqa: F401
 import mail_client_api
 
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def main() -> None:
@@ -51,16 +52,16 @@ def main() -> None:
             if confirmation == "DELETE":
                 success = client.delete_message(delete_message_id)
                 if success:
-                    print(f"Message {delete_message_id} deleted successfully.")
+                    logger.info("Message with ID %s deleted.", delete_message_id)
                 else:
-                    print(f"Failed to delete message {delete_message_id}.")
+                    logger.info("Failed to delete message with ID %s.", delete_message_id)
         except EOFError:
             # This means that CircleCI or another non-interactive environment is not going to actually delete anything
-            print("Skipping deletion in non-interactive mode")
+            pass
     else:
-        print("Not enough messages to test deletion")
+        pass
 
-    print("Demo complete")
+    print("Demo complete.")  # noqa: T201
 
 
 if __name__ == "__main__":
