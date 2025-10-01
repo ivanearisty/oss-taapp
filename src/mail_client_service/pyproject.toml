@@ -1,0 +1,17 @@
+[project]
+name = "mail-client-service"
+version = "0.1.0"
+description = "A description of my project"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.118.0",
+    "httpx>=0.28.1",
+    "uvicorn>=0.37.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.2.0",
+]
