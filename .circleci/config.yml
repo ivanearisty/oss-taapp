@@ -220,7 +220,7 @@ workflows:
                 - main
                 - develop
                 - kamen-requierd-fixes
-
+                - make-real-deletions
       - lint:
           requires:
             - build
