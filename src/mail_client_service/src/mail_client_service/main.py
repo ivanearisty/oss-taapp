@@ -14,7 +14,6 @@ Run to start API and manage Gmail via HTTP.
 
 from fastapi import FastAPI, HTTPException, Query, status
 from fastapi.responses import JSONResponse
-
 import gmail_client_impl  # noqa: F401
 import mail_client_api
 
