@@ -1,20 +1,15 @@
-"""Implement a FastAPI-based Gmail client service.
+"""FastAPI Gmail client service.
 
-It provides endpoints for:
-- Root ("/"): Returns a welcome message for the Mail Client Service.
-- Login ("/login"): Authenticates the user's Gmail account using the mail_client_api.
-    If already authenticated, it returns a corresponding message. Otherwise, it attempts
-    interactive authentication and stores the client in the application state. Handles
-    authentication errors gracefully.
+Endpoints:
+- "/"         : Welcome message.
+- "/login"    : Authenticate Gmail account.
+- "/messages" : List messages.
+- "/messages/{id}" : Message details.
+- "/messages/{id}/mark-as-read" : Mark as read.
+- "/messages/{id}" (DELETE): Delete message.
 
-Dependencies:
-- FastAPI for API framework.
-- mail_client_api for Gmail client authentication and management.
-- gmail_client_impl for Gmail client implementation (imported for side effects).
-
-Typical usage:
-        Run this module to start the Mail Client Service API, then interact with the
-        endpoints to authenticate and manage Gmail accounts.
+Requires FastAPI, mail_client_api, gmail_client_impl.
+Run to start API and manage Gmail via HTTP.
 """
 
 from fastapi import FastAPI, HTTPException, Query, status
