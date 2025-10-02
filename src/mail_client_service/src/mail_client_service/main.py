@@ -16,7 +16,7 @@ Typical usage:
         Run this module to start the Mail Client Service API, then interact with the
         endpoints to authenticate and manage Gmail accounts.
 """
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, Query, status
 from fastapi.responses import JSONResponse
 
 import gmail_client_impl  # noqa: F401
@@ -51,7 +51,21 @@ def login() -> JSONResponse:
 
     try:
         # Attempt interactive authentication
-        client = mail_client_api.get_client(interactive=True)
+        # Prevent multiple simultaneous authentication attempts
+        if getattr(app.state, "auth_in_progress", False):
+            raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={
+                "error": "Authentication in progress",
+                "message": "Authentication is already in progress. Please wait.",
+                "status": "error",
+            },
+            )
+        app.state.auth_in_progress = True
+        try:
+            client = mail_client_api.get_client(interactive=True)
+        finally:
+            app.state.auth_in_progress = False
 
         # Store client in application state
         app.state.client = client
@@ -115,3 +129,67 @@ def login() -> JSONResponse:
                 "status": "error",
             },
         ) from e
+
+@app.get("/messages")
+def get_messages(
+    max_results: int = Query(3, ge=1, le=100, description="Maximum number of messages to return")
+) -> JSONResponse:
+    """Get messages from the authenticated Gmail client.
+    Args:
+        max_results (int): Maximum number of messages to return (default: 3, min: 1, max: 100).
+    Returns:
+        JSONResponse: List of messages if successful, error details if failed.
+    Raises:
+        HTTPException: 401 if not authenticated, 500 if message retrieval fails.
+    """
+    # Check if user is authenticated
+    if not hasattr(app.state, "client") or app.state.client is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "error": "Not authenticated",
+                "message": "User is not authenticated. Please log in first.",
+                "status": "error",
+            },
+        )
+    
+     # Validate max_results query parameter
+    if not isinstance(max_results, int) or max_results < 1 or max_results > 100:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={
+                "error": "Invalid query parameter",
+                "message": "max_results must be an integer between 1 and 100.",
+                "status": "error",
+            },
+        )
+    
+    try:
+        messages = list(app.state.client.get_messages(max_results=max_results))
+        
+        # Convert GmailMessage objects to dictionaries for JSON serialization
+        serialized_messages = []
+        for message in messages:
+            serialized_messages.append({
+                "id": message.id,
+                "from": message.from_,
+                "to": message.to,
+                "date": message.date,
+                "subject": message.subject,
+                "body": message.body,
+            })
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"messages": serialized_messages, "status": "success"},
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "error": "Failed to fetch messages",
+                "message": str(e),
+                "status": "error",
+            },
+        ) from e
+    
