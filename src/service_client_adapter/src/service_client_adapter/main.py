@@ -29,7 +29,7 @@ class ServiceClientAdapter(mail_client_api.Client):
     def get_message(self, message_id: str) -> Message:
         """Return a message by its ID."""
         
-        return get_message_by_id.sync_detailed(
+        return get_message.sync_detailed(
             message_id = message_id,
             client = self.Client,
         )
@@ -56,3 +56,10 @@ class ServiceClientAdapter(mail_client_api.Client):
         content = json.loads(messages.content)
         max_results = min(max_results,len(content['messages']))
         return content['messages'][:max_results]
+    
+# testing
+if __name__ == "__main__":
+    adapter = ServiceClientAdapter()
+    adapter.login()
+    print(adapter.get_messages(3))
+
