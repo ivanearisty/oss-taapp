@@ -23,6 +23,7 @@ The Mail Client Service is a REST API wrapper around the Gmail client implementa
 - `GET /login` - Authenticate Gmail account with OAuth2 flow
   - Supports `interactive` query parameter:
     - `GET /login?interactive=true` - Initiate interactive browser-based authentication
+- `GET /logout` - Revoke authentication and log out the current Gmail account
 
 ### Messages
 
