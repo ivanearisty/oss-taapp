@@ -20,7 +20,7 @@ import mail_client_api
 
 app = FastAPI(
     title="Mail Client Service API",
-    description="A FastAPI service for managing Gmail messages",
+    description="A Restful FastAPI service for managing Gmail messages",
     version="1.0.0"
 )
 
@@ -31,8 +31,11 @@ def root() -> dict[str, str]:
     return {"message": "Welcome to Mail Client Service!"}
 
 @app.get("/login", tags=["Authentication"], summary="Authenticate Gmail Account")
-def login() -> JSONResponse:
+def login(interactive: bool = Query(False, description="Whether to use interactive authentication")) -> JSONResponse:
     """Authenticate the user's Gmail account.
+
+    Args:
+        interactive (bool): Whether to use interactive authentication.
 
     Returns:
         JSONResponse: Success message if authenticated, error details if failed.
@@ -49,7 +52,7 @@ def login() -> JSONResponse:
         )
 
     try:
-        # Attempt interactive authentication
+        # Attempt authentication
         # Prevent multiple simultaneous authentication attempts
         if getattr(app.state, "auth_in_progress", False):
             raise HTTPException(
@@ -62,7 +65,7 @@ def login() -> JSONResponse:
             )
         app.state.auth_in_progress = True
         try:
-            client = mail_client_api.get_client(interactive=True)
+            client = mail_client_api.get_client(interactive=interactive)
         finally:
             app.state.auth_in_progress = False
 
@@ -128,6 +131,19 @@ def login() -> JSONResponse:
             },
         ) from e
 
+@app.get("/logout", tags=["Authentication"], summary="Logout Gmail Account")
+def logout() -> JSONResponse:
+    """Logout the authenticated Gmail account by clearing the client from app state."""
+    if hasattr(app.state, "client") and app.state.client is not None:
+        app.state.client = None
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"message": "Logged out successfully", "status": "success"},
+        )
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"message": "No active session to logout", "status": "success"},
+    )
 
 @app.get("/messages", tags=["Messages"], summary="Get Messages", description="Retrieve a list of Gmail messages with optional limit")
 def get_messages(max_results: int = Query(3, ge=1, le=100, description="Maximum number of messages to return")) -> JSONResponse:

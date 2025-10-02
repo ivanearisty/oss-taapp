@@ -20,7 +20,9 @@ The Mail Client Service is a REST API wrapper around the Gmail client implementa
 
 ### Authentication
 
-- `GET /login` - Authenticate Gmail account with interactive OAuth2 flow
+- `GET /login` - Authenticate Gmail account with OAuth2 flow
+  - Supports `interactive` query parameter:
+    - `GET /login?interactive=true` - Initiate interactive browser-based authentication
 
 ### Messages
 
@@ -72,9 +74,10 @@ The service will be available at `http://localhost:8000` with interactive API do
 ### Authentication Flow
 
 1. Start the service
-2. Call `GET /login` to initiate Gmail authentication
-3. Follow the interactive OAuth2 flow in your browser
-4. Once authenticated, use other endpoints to manage messages
+2. Call `GET /login` to initiate Gmail authentication (the service will use Gmail auth variables from your `.env` file by default).
+   - To use the interactive login flow, call `GET /login?interactive=true`.
+3. Follow the interactive OAuth2 flow in your browser (if applicable).
+4. Once authenticated, use the other endpoints to manage messages.
 
 ### Example API Calls
 
