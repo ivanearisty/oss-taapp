@@ -340,3 +340,60 @@ def mark_message_as_read(message_id: str) -> JSONResponse:
                 "status": "error",
             },
         ) from e
+    
+@app.delete("/messages/{message_id}")
+def delete_message(message_id: str) -> JSONResponse:
+    """Delete a message by its ID.
+    Args:
+        message_id (str): The ID of the message to delete.
+    Returns:
+        JSONResponse: Success message if deleted, error details if failed.
+    Raises:
+        HTTPException: 401 if not authenticated, 404 if message not found, 500 for other errors.
+    """
+    # Check if user is authenticated
+    if not hasattr(app.state, "client") or app.state.client is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "error": "Not authenticated",
+                "message": "User is not authenticated. Please log in first.",
+                "status": "error",
+            },
+        )
+    try:
+        result = app.state.client.delete_message(message_id)
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "error": "Message not found",
+                    "message": f"No message found with ID: {message_id}",
+                    "status": "error",
+                },
+            )
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"message": f"Message {message_id} deleted successfully.", "status": "success"},
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_str = str(e)
+        if "404" in error_str and "not found" in error_str.lower():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "error": "Message not found",
+                    "message": f"Message with ID '{message_id}' does not exist in your Gmail account.",
+                    "status": "error",
+                },
+            ) from e
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "error": "Failed to delete message",
+                "message": f"An unexpected error occurred: {error_str}",
+                "status": "error",
+            },
+        ) from e
