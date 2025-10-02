@@ -62,8 +62,9 @@ source .venv/bin/activate
 # Start the FastAPI server from root of project
 fastapi dev src/mail_client_service/src/mail_client_service/main.py
 
-# Or with custom host/port
-uvicorn mail_client_service.main:app --host 0.0.0.0 --port 8000
+# Or with uvicorn
+cd src/mail_client_service/src
+uvicorn mail_client_service.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 The service will be available at `http://localhost:8000` with interactive API documentation at `http://localhost:8000/docs`.
@@ -76,6 +77,10 @@ The service will be available at `http://localhost:8000` with interactive API do
 4. Once authenticated, use other endpoints to manage messages
 
 ### Example API Calls
+
+> **Tip:**  
+> You can explore and test all API endpoints interactively using the built-in UI at [http://localhost:8000/docs](http://localhost:8000/docs).  
+> This interface allows you to authenticate, send requests, and view responses directly from your browser without writing any code.
 
 ```bash
 # Authenticate
@@ -142,32 +147,6 @@ The service provides detailed error responses for various scenarios:
 - **mail-client-api**: Abstract mail client interface (workspace dependency)
 - **gmail-client-impl**: Gmail-specific client implementation (workspace dependency)
 
-## Development
-
-### Running Tests
-
-```bash
-# Run all tests
-pytest
-
-# Run with coverage
-pytest --cov
-
-# Run specific test file
-pytest tests/test_specific.py
-```
-
-### Code Quality
-
-```bash
-# Type checking
-mypy src
-
-# Linting and formatting
-ruff check src
-ruff format src
-```
-
 ### Project Structure
 
 ```
@@ -179,26 +158,3 @@ mail_client_service/
 ├── pyproject.toml          # Project configuration
 └── README.md               # This file
 ```
-
-## Configuration
-
-The service can be configured through:
-
-- **Environment Variables**: For Gmail API credentials
-- **FastAPI Settings**: Server host, port, and other runtime options
-- **Query Parameters**: Runtime behavior (e.g., `max_results` for message listing)
-
-## Security Considerations
-
-- Uses OAuth2 for Gmail authentication
-- No credentials stored in application state
-- Authentication tokens managed by underlying Gmail client
-- Comprehensive error handling prevents information leakage
-
-## License
-
-This project is part of the OSS Teaching Assistant Application (oss-taapp) workspace.
-
-## Contributing
-
-This service is part of a larger workspace project. See the main project documentation for contribution guidelines.
