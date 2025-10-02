@@ -193,3 +193,93 @@ def get_messages(
             },
         ) from e
     
+@app.get("/messages/{message_id}")
+def get_message_detail(message_id: str) -> JSONResponse:
+    """Fetch the full detail of a single message by its ID.
+    Args:
+        message_id (str): The ID of the message to fetch.
+    Returns:
+        JSONResponse: The message details if successful, error details if failed.
+    Raises:
+        HTTPException: 401 if not authenticated, 404 if message not found, 500 for other errors.
+    """
+    # Check if user is authenticated
+    if not hasattr(app.state, "client") or app.state.client is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "error": "Not authenticated",
+                "message": "User is not authenticated. Please log in first.",
+                "status": "error",
+            },
+        )
+    try:
+        message = app.state.client.get_message(message_id)
+        if message is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "error": "Message not found",
+                    "message": f"No message found with ID: {message_id}",
+                    "status": "error",
+                },
+            )
+        message_dict = {
+            "id": message.id,
+            "from": message.from_,
+            "to": message.to,
+            "date": message.date,
+            "subject": message.subject,
+            "body": message.body,
+        }
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"message": message_dict, "status": "success"},
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_str = str(e)
+        
+        # Handle Gmail API 404 errors specifically
+        if "404" in error_str and "not found" in error_str.lower():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "error": "Message not found",
+                    "message": f"Message with ID '{message_id}' does not exist in your Gmail account.",
+                    "status": "error",
+                },
+            ) from e
+        
+        # Handle other Gmail API errors
+        if "HttpError" in error_str:
+            # Extract status code from HttpError if possible
+            if "400" in error_str:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail={
+                        "error": "Bad request",
+                        "message": f"Invalid message ID format: {message_id}",
+                        "status": "error",
+                    },
+                ) from e
+            elif "403" in error_str:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail={
+                        "error": "Access forbidden",
+                        "message": "Access to this message is forbidden. Check your Gmail permissions.",
+                        "status": "error",
+                    },
+                ) from e
+        
+        # Generic fallback for other errors
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "error": "Failed to fetch message",
+                "message": f"An unexpected error occurred while fetching the message: {error_str}",
+                "status": "error",
+            },
+        ) from e
