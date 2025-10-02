@@ -26,7 +26,6 @@ def root() -> dict[str, str]:
     """Return a welcome message for the Mail Client Service."""
     return {"message": "Welcome to Mail Client Service!"}
 
-
 @app.get("/login")
 def login() -> JSONResponse:
     """Authenticate the user's Gmail account.

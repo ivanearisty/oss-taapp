@@ -50,6 +50,7 @@ ignore_missing_imports = false
 module = [
     "mail_client_api.*",
     "gmail_client_impl.*",
+    "fastapi.*",
 ]
 ignore_missing_imports = true
 
