@@ -14,6 +14,15 @@ LONG_BODY_LEN = 10_000
 
 class HTTPStatus(Enum):
     OK = 200
+    CREATED = 201
+    ACCEPTED = 202
+    NO_CONTENT = 204
+    BAD_REQUEST = 400
+    UNAUTHORIZED = 401
+    FORBIDDEN = 403
+    NOT_FOUND = 404
+    METHOD_NOT_ALLOWED = 405
+    CONFLICT = 409
     INTERNAL_SERVER_ERROR = 500
 
 
@@ -54,3 +63,5 @@ def setup_test() -> None:
     # Clear any side effects from previous tests
     mock_mail_client.get_messages.side_effect = None
     mock_mail_client.get_message.side_effect = None
+    mock_mail_client.mark_as_read.side_effect = None
+    mock_mail_client.delete_message.side_effect = None
