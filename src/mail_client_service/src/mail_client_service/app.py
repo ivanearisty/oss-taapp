@@ -1,22 +1,34 @@
-from fastapi import FastAPI
+"""FastAPI service for mail client operations."""
 
-# Ensure Gmail implementation registers itself with the API factory via import side effects
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+from typing import Annotated
+
 import gmail_client_impl  # noqa: F401
-import mail_client_api
+from fastapi import Depends, FastAPI, Request
+from mail_client_api import Client, get_client
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    """Manage application lifespan and initialize mail client."""
+    client = get_client(interactive=True)
+    app.state.mail_client = client
+    yield
 
 
-@app.on_event("startup")
-def initialize_client() -> None:
-    """Obtain a client instance from the factory.
-
-    This ensures the Gmail implementation is registered and can be constructed.
-    No application logic is re-implemented here.
-    """
-
-    # We call the factory to ensure instantiation works; we do not retain the instance
-    mail_client_api.get_client(interactive=False)
+app = FastAPI(
+    title="Mail Client Service",
+    description="REST API for mail client operations.",
+    lifespan=lifespan,
+)
 
 
+# --- Dependency: obtain the mail client ---
+def get_mail_client(request: Request) -> Client:
+    """Get the already constructed mail client."""
+    return request.app.state.mail_client
+
+
+# --- Define a type alias for reuse (from FastAPI docs) ---
+MailClientDep = Annotated[Client, Depends(get_mail_client)]
