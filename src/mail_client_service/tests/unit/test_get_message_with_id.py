@@ -1,6 +1,6 @@
 """Unit tests for mail client service API endpoints."""
 
-from .conftest import LONG_BODY_LEN, HTTPStatus, client, create_mock_message, mock_mail_client
+from src.mail_client_service.tests.conftest import LONG_BODY_LEN, HTTPStatus, client, create_mock_message, mock_mail_client
 
 
 def test_get_message_with_special_characters() -> None:
