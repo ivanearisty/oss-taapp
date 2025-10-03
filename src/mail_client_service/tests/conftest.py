@@ -2,7 +2,6 @@
 
 from unittest.mock import Mock, create_autospec
 
-import os
 import pytest
 from fastapi.testclient import TestClient
 from mail_client_api import Client, Message
@@ -46,44 +45,23 @@ def create_mock_message(
     return mock_msg
 
 
-USE_REAL = os.getenv("USE_REAL_MAIL_CLIENT", "0") == "1"
+# Create mock client once (reused across all tests)
+mock_mail_client = create_autospec(Client, spec_set=True)
 
-# Create mock client and client TestClient only when not running real integration
-mock_mail_client = None
-client = None
-if not USE_REAL:
-    mock_mail_client = create_autospec(Client, spec_set=True)
-    mock_mail_client.get_messages.return_value = []
-    mock_mail_client.get_message.return_value = create_mock_message(
-        "default_id",
-        "noreply@example.com",
-        "recipient@example.com",
-        "(no subject)",
-        "1970-01-01T00:00:00Z",
-        "",
-    )
-    mock_mail_client.mark_as_read.return_value = True
-    mock_mail_client.delete_message.return_value = True
+# Override the dependency once
+app.dependency_overrides[get_mail_client] = lambda: mock_mail_client
 
-    # Override the dependency once
-    app.dependency_overrides[get_mail_client] = lambda: mock_mail_client
-
-    # Create the test client once
-    client = TestClient(app)
+# Create the test client once
+client = TestClient(app)
 
 
 @pytest.fixture(autouse=True)
 def setup_test() -> None:
-    """Reset mock state before each test (but reuse the same mock object).
-
-    Note: when running real integration tests (USE_REAL_MAIL_CLIENT=1) the
-    mocked client is not created and this fixture is a no-op.
-    """
-    if not USE_REAL and mock_mail_client is not None:
-        # Just reset the mock's call history and side effects, don't recreate it
-        mock_mail_client.reset_mock()
-        # Clear any side effects from previous tests
-        mock_mail_client.get_messages.side_effect = None
-        mock_mail_client.get_message.side_effect = None
-        mock_mail_client.mark_as_read.side_effect = None
-        mock_mail_client.delete_message.side_effect = None
+    """Reset mock state before each test (but reuse the same mock object)."""
+    # Just reset the mock's call history and side effects, don't recreate it
+    mock_mail_client.reset_mock()
+    # Clear any side effects from previous tests
+    mock_mail_client.get_messages.side_effect = None
+    mock_mail_client.get_message.side_effect = None
+    mock_mail_client.mark_as_read.side_effect = None
+    mock_mail_client.delete_message.side_effect = None
