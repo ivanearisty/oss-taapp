@@ -2,14 +2,13 @@
 
 **Adapter class** (`ServiceClientAdapter`) that interacts with the mail_client_api service.
 
-
 ## Features
 
-- **Login**: Authenticate with the mail client service.  
-- **Get Message by ID**: Retrieve an individual message.  
-- **Delete Message**: Delete a specific message by its ID.  
-- **Mark as Read**: Mark a message as read.  
-- **Get Multiple Messages**: Retrieve a limited number of inbox messages.  
+- **Login**: Authenticate with the mail client service.
+- **Get Message by ID**: Retrieve an individual message.
+- **Delete Message**: Delete a specific message by its ID.
+- **Mark as Read**: Mark a message as read.
+- **Get Multiple Messages**: Retrieve a limited number of inbox messages.
 
 ---
 
@@ -62,7 +61,6 @@ if __name__ == "__main__":
     adapter.delete_message("message_id_here")
 ```
 
-
 ## Updating the API Client
 
 If the underlying mail_client_api schema changes, the API client code must be regenerated.  
@@ -78,7 +76,7 @@ openapi-python-client generate --url http://127.0.0.1:8000/openapi.json
 This will rebuild the client package from the updated OpenAPI specification, with the project structure similar to this:
 
 ```
-mail-client-service-api-client/         
+mail-client-service-api-client/
 │
 ├── mail_client_service_api_client/      # Main package
 │   ├── api/                             # Auto-generated API endpoints
@@ -91,9 +89,9 @@ mail-client-service-api-client/
 │   ├── py.typed                         # Typing marker (for mypy/static checkers)
 │   └── __init__.py                      # Package initializer
 │
-├── pyproject.toml                       
-├── README.md                            
-└── .gitignore                           
+├── pyproject.toml
+├── README.md
+└── .gitignore
 ```
 
 ---
@@ -101,6 +99,21 @@ mail-client-service-api-client/
 ## Notes
 
 - By default, the client connects to `http://127.0.0.1:8000`.  
-  You can update the base URL inside the `ServiceClientAdapter` constructor if your API server runs elsewhere.  
+  You can update the base URL inside the `ServiceClientAdapter` constructor if your API server runs elsewhere.
 
-- The adapter expects API endpoints defined in `mail_client_service_api_client.api` modules to be reachable.  
+- The adapter expects API endpoints defined in `mail_client_service_api_client.api` modules to be reachable.
+
+## Test
+
+To run the pytest:
+
+```
+pytest -v src/service_client_adapter/tests
+```
+
+To test for coverage:
+
+```
+pytest src/service_client_adapter/tests --cov=src/service_client_adapter --cov-report=term-missing -v
+
+```
