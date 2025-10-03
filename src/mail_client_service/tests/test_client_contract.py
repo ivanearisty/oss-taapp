@@ -1,7 +1,7 @@
 
 from unittest.mock import Mock
 
-from message import Message
+from mail_client_api.message import Message
 
 from mail_client_api import Client
 
