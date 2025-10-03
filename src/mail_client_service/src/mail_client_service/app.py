@@ -75,3 +75,14 @@ async def get_message(client: MailClientDep, message_id: str) -> dict[str, str]:
         return format_message_object(msg=msg)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.post("/messages/{message_id}/mark-as-read")
+async def mark_as_read(client: MailClientDep, message_id: str) -> dict[str, str]:
+    """Mark a message as read by delegating to the mail client implementation."""
+    try:
+        client.mark_as_read(message_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
+    else:
+        return {"detail": f"Message {message_id} marked as read."}
