@@ -1,6 +1,6 @@
 """Unit tests for mail client service API endpoints."""
 
-from conftest import client, create_mock_message, mock_mail_client
+from .conftest import client, create_mock_message, mock_mail_client
 
 
 def test_list_messages_success() -> None:
