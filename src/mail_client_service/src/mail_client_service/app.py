@@ -64,3 +64,14 @@ async def list_messages(client: MailClientDep) -> list[dict[str, str]]:
         return [format_message_object(msg=msg) for msg in messages]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.get("/messages/{message_id}")
+async def get_message(client: MailClientDep, message_id: str) -> dict[str, str]:
+    """Get a specific message by ID."""
+    try:
+        msg = client.get_message(message_id)
+
+        return format_message_object(msg=msg)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
