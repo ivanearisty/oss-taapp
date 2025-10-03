@@ -1,6 +1,6 @@
 """Unit tests for mail client service API endpoints."""
 
-from .conftest import client, create_mock_message, mock_mail_client
+from .conftest import LONG_BODY_LEN, HTTPStatus, client, create_mock_message, mock_mail_client
 
 
 def test_list_messages_success() -> None:
@@ -38,7 +38,7 @@ def test_list_messages_success() -> None:
     response = client.get("/messages")
 
     # Assert
-    assert response.status_code == 200
+    assert HTTPStatus(response.status_code) == HTTPStatus.OK
     data = response.json()
 
     assert len(data) == 3
@@ -65,7 +65,7 @@ def test_list_messages_empty_list() -> None:
     response = client.get("/messages")
 
     # Assert
-    assert response.status_code == 200
+    assert HTTPStatus(response.status_code) == HTTPStatus.OK
     data = response.json()
     assert data == []
 
@@ -87,7 +87,7 @@ def test_list_messages_single_message() -> None:
     response = client.get("/messages")
 
     # Assert
-    assert response.status_code == 200
+    assert HTTPStatus(response.status_code) == HTTPStatus.OK
     data = response.json()
     assert len(data) == 1
     assert data[0]["id"] == "single_msg"
@@ -105,7 +105,7 @@ def test_list_messages_client_exception() -> None:
     response = client.get("/messages")
 
     # Assert
-    assert response.status_code == 500
+    assert HTTPStatus(response.status_code) == HTTPStatus.INTERNAL_SERVER_ERROR
     data = response.json()
     assert "detail" in data
     assert "Mail client connection failed" in data["detail"]
@@ -122,7 +122,7 @@ def test_list_messages_client_runtime_error() -> None:
     response = client.get("/messages")
 
     # Assert
-    assert response.status_code == 500
+    assert HTTPStatus(response.status_code) == HTTPStatus.INTERNAL_SERVER_ERROR
     data = response.json()
     assert data["detail"] == "Authentication failed"
 
@@ -136,7 +136,7 @@ def test_list_messages_client_value_error() -> None:
     response = client.get("/messages")
 
     # Assert
-    assert response.status_code == 500
+    assert HTTPStatus(response.status_code) == HTTPStatus.INTERNAL_SERVER_ERROR
     data = response.json()
     assert data["detail"] == "Invalid configuration"
 
@@ -158,7 +158,7 @@ def test_list_messages_with_special_characters() -> None:
     response = client.get("/messages")
 
     # Assert
-    assert response.status_code == 200
+    assert HTTPStatus(response.status_code) == HTTPStatus.OK
     data = response.json()
     assert len(data) == 1
     assert data[0]["subject"] == "Subject with émojis 🎉 and spëcial chars"
@@ -168,7 +168,7 @@ def test_list_messages_with_special_characters() -> None:
 def test_list_messages_with_long_content() -> None:
     """Test messages with very long content."""
     # Arrange
-    long_body = "A" * 10000  # Very long message body
+    long_body = "A" * LONG_BODY_LEN
     long_message = create_mock_message(
         "long_msg",
         "test@example.com",
@@ -183,10 +183,10 @@ def test_list_messages_with_long_content() -> None:
     response = client.get("/messages")
 
     # Assert
-    assert response.status_code == 200
+    assert HTTPStatus(response.status_code) == HTTPStatus.OK
     data = response.json()
     assert len(data) == 1
-    assert len(data[0]["body"]) == 10000
+    assert len(data[0]["body"]) == LONG_BODY_LEN
 
 
 def test_get_message_success() -> None:
@@ -206,7 +206,7 @@ def test_get_message_success() -> None:
     response = client.get("/messages/test_msg_001")
 
     # Assert
-    assert response.status_code == 200
+    assert HTTPStatus(response.status_code) == HTTPStatus.OK
     data = response.json()
     assert data["id"] == "test_msg_001"
     assert data["from"] == "sender@example.com"
@@ -228,7 +228,7 @@ def test_get_message_not_found() -> None:
     response = client.get("/messages/nonexistent_msg")
 
     # Assert
-    assert response.status_code == 500
+    assert HTTPStatus(response.status_code) == HTTPStatus.INTERNAL_SERVER_ERROR
     data = response.json()
     assert data["detail"] == "Message not found"
 
@@ -247,6 +247,6 @@ def test_get_message_client_exception() -> None:
     response = client.get("/messages/some_msg_id")
 
     # Assert
-    assert response.status_code == 500
+    assert HTTPStatus(response.status_code) == HTTPStatus.INTERNAL_SERVER_ERROR
     data = response.json()
     assert data["detail"] == "Failed to connect to mail server"
