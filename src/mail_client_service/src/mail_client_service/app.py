@@ -86,3 +86,14 @@ async def mark_as_read(client: MailClientDep, message_id: str) -> dict[str, str]
         raise HTTPException(status_code=500, detail=str(e)) from e
     else:
         return {"detail": f"Message {message_id} marked as read."}
+
+
+@app.delete("/messages/{message_id}")
+async def delete_message(client: MailClientDep, message_id: str) -> dict[str, str]:
+    """Delete a message by ID by delegating to the mail client implementation."""
+    try:
+        client.delete_message(message_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
+    else:
+        return {"detail": f"Message {message_id} deleted."}
