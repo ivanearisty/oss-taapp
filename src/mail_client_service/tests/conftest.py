@@ -7,6 +7,14 @@ from fastapi.testclient import TestClient
 from mail_client_api import Client, Message
 
 from mail_client_service.app import app, get_mail_client
+from enum import Enum
+
+LONG_BODY_LEN = 10_000
+
+
+class HTTPStatus(Enum):
+    OK = 200
+    INTERNAL_SERVER_ERROR = 500
 
 
 def create_mock_message(
