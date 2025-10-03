@@ -5,8 +5,8 @@ from contextlib import asynccontextmanager
 from typing import Annotated
 
 import gmail_client_impl  # noqa: F401
-from fastapi import Depends, FastAPI, Request
-from mail_client_api import Client, get_client
+from fastapi import Depends, FastAPI, HTTPException, Request
+from mail_client_api import Client, Message, get_client
 
 
 @asynccontextmanager
@@ -32,3 +32,35 @@ def get_mail_client(request: Request) -> Client:
 
 # --- Define a type alias for reuse (from FastAPI docs) ---
 MailClientDep = Annotated[Client, Depends(get_mail_client)]
+
+
+def format_message_object(msg: Message) -> dict[str, str]:
+    """Convert a Message object into a JSON-serializable dictionary.
+
+    Args:
+        msg: A Message instance containing email metadata and body content.
+
+    Returns:
+        A dictionary with the message ID, sender, recipient, subject, date,
+        and body text, ready for JSON serialization.
+
+    """
+    return {
+        "id": msg.id,
+        "from": msg.from_,
+        "to": msg.to,
+        "subject": msg.subject,
+        "date": msg.date,
+        "body": msg.body,
+    }
+
+
+@app.get("/messages")
+async def list_messages(client: MailClientDep) -> list[dict[str, str]]:
+    """Get a list of messages from the mail client."""
+    try:
+        messages = client.get_messages()
+
+        return [format_message_object(msg=msg) for msg in messages]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
