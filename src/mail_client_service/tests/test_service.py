@@ -114,3 +114,17 @@ def test_health_check():
     resp = client.get("/health")
     assert resp.status_code == 200
     assert resp.json() == {"status": "healthy"}
+
+
+def test_get_mail_client_dependency(monkeypatch):
+    """
+    Test that get_mail_client returns a client from the factory,
+    but patch the factory so we don't hit real GmailClient.
+    """
+    import mail_client_service.dependencies as deps
+
+    fake_client = MagicMock()
+    monkeypatch.setattr(deps, "_client_factory", lambda: fake_client)
+
+    client_obj = deps.get_mail_client()
+    assert client_obj is fake_client
