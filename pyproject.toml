@@ -25,6 +25,8 @@ members = [
   "src/mail_client_api",
   "src/gmail_client_impl",
   "src/mail_client_service",
+  "src/mail_client_adapter",
+  "src/mail_client_service_client",
 ]
 
 [tool.ruff]
@@ -83,3 +85,15 @@ exclude_lines = [
     "raise NotImplementedError",
     "if TYPE_CHECKING:",
 ]
+
+[dependency-groups]
+dev = [
+    "openapi-python-client>=0.26.1",
+]
+
+[tool.uv.sources]
+mail_client_api = { workspace = true }
+gmail_client_impl = { workspace = true }
+mail_client_service = { workspace = true }
+mail_client_adapter = { workspace = true }
+mail_client_service_client = { workspace = true }
