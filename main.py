@@ -6,6 +6,8 @@ import contextlib
 import logging
 
 import gmail_client_impl  # noqa: F401
+import gmail_client_impl
+import gmail_message_impl
 import mail_client_api
 # Import the protocols first
 # --- TRIGGER DEPENDENCY INJECTION ---
