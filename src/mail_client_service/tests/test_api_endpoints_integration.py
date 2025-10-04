@@ -5,12 +5,13 @@ from fastapi.testclient import TestClient
 
 import mail_client_api
 
+import sys
+
+from mail_client_service.src.mail_client_service.main import app
+
 # Prevent importing the real `gmail_client_impl` (which pulls in `google` packages)
 # by inserting a minimal dummy module into sys.modules before importing app.
 sys.modules.setdefault("gmail_client_impl", ModuleType("gmail_client_impl"))
-
-from mail_client_service.main import app
-
 
 def _ensure_logged_out() -> None:
     # clear any client stored in app state to ensure test isolation
