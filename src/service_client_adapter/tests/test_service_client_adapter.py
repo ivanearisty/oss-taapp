@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 
 def test_get_messages_respects_max_results(monkeypatch):
-    import service_client_adapter.main as main_mod
+    import service_client_adapter.src.service_client_adapter.main as main_mod
 
     class FakeGetMessages:
         @staticmethod
@@ -29,7 +29,7 @@ def test_get_messages_respects_max_results(monkeypatch):
 
 
 def test_get_message_calls_api_and_returns(monkeypatch):
-    import service_client_adapter.main as main_mod
+    import service_client_adapter.src.service_client_adapter.main as main_mod
 
     captured = {}
 
@@ -51,7 +51,7 @@ def test_get_message_calls_api_and_returns(monkeypatch):
 
 
 def test_delete_and_mark_and_login(monkeypatch):
-    import service_client_adapter.main as main_mod
+    import service_client_adapter.src.service_client_adapter.main as main_mod
 
     class FakeDelete:
         @staticmethod

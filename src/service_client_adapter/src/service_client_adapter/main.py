@@ -1,10 +1,10 @@
 from collections.abc import Iterator
 import json
 
-from mail_client_service_api_client import Client
+from mail_client_service_api_client.mail_client_service_api_client.client import Client
 
-from mail_client_service_api_client.api.authentication import *
-from mail_client_service_api_client.api.messages import *
+from mail_client_service_api_client.mail_client_service_api_client.api.authentication import *
+from mail_client_service_api_client.mail_client_service_api_client.api.messages import *
 from mail_client_api.message import Message
 
 import mail_client_api
