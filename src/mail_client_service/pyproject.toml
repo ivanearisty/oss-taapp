@@ -34,4 +34,10 @@ ignore = []
 mail-client-api = { workspace = true }
 gmail-client-impl = { workspace = true }
 
+[tool.pytest.ini_options]
+markers = [
+  "integration: integration tests that may touch real services",
+  "circleci: tests that run (or are gated) in CI"
+]
+
 

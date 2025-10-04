@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 from mail_client_api import Client, Message
 
-from mail_client_service.app import app, get_mail_client
+from mail_client_service import App
 from enum import Enum
 
 LONG_BODY_LEN = 10_000
@@ -49,7 +49,7 @@ def create_mock_message(
 mock_mail_client = create_autospec(Client, spec_set=True)
 
 # Override the dependency once
-app.dependency_overrides[get_mail_client] = lambda: mock_mail_client
+app.dependency_overrides = lambda: mock_mail_client
 
 # Create the test client once
 client = TestClient(app)

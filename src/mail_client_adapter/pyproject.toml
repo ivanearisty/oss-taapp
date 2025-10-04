@@ -26,10 +26,14 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+markers = [
+  "e2e: end-to-end tests that hit the real service/Gmail"
+]
+# Optional: skip E2E by default in regular runs
+# addopts = "-m 'not e2e'"
 
 [tool.hatch.metadata]
 allow-direct-references = true
 
 [tool.uv.sources]
 mail-client-api = { workspace = true }
-
