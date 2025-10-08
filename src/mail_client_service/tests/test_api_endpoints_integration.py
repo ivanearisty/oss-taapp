@@ -5,8 +5,6 @@ from fastapi.testclient import TestClient
 
 import mail_client_api
 
-import sys
-
 from mail_client_service.src.mail_client_service.main import app
 
 # Prevent importing the real `gmail_client_impl` (which pulls in `google` packages)

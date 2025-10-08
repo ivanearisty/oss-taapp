@@ -1,34 +1,41 @@
-from collections.abc import Iterator
+"""Mail client service adapter.
+
+Handles authentication, message retrieval, and related API calls.
+"""
 import json
+from collections.abc import Iterator
 
-from mail_client_service_api_client.mail_client_service_api_client.client import Client
-
-from mail_client_service_api_client.mail_client_service_api_client.api.authentication import *
-from mail_client_service_api_client.mail_client_service_api_client.api.messages import *
 from mail_client_api.message import Message
+from mail_client_service_api_client.api.authentication import login
+from mail_client_service_api_client.api.messages import (
+    delete_message,
+    get_message,
+    get_messages,
+    mark_message_as_read,
+)
+from mail_client_service_api_client.client import Client
 
 import mail_client_api
 
 
 class ServiceClientAdapter(mail_client_api.Client):
-    """
-    Adapter class for interacting with the mail client API using a fast API client
+    """Adapter class for interacting with the mail client API using a fast API client.
 
-    Provides methods to get, delete, and mark messages as read, as well as to retrieve messages from inbox
+    Provides methods to get, delete, and mark messages as read, as well as to retrieve messages from inbox.
     """
-    def __init__(self):
+
+    def __init__(self) -> None:
+        """Initialize client adapter."""
         self.Client = Client(base_url = "http://127.0.0.1:8000")
-        
+
     def login(self) -> Message:
-        """Authenticates the user """
-        
+        """Authenticate the user."""
         return login.sync_detailed(
             client = self.Client,
         )
-    
+
     def get_message(self, message_id: str) -> Message:
         """Return a message by its ID."""
-        
         return get_message.sync_detailed(
             message_id = message_id,
             client = self.Client,
@@ -45,7 +52,7 @@ class ServiceClientAdapter(mail_client_api.Client):
         """Mark a message as read by its ID."""
         return mark_message_as_read.sync_detailed(
             message_id = message_id,
-            client = self.Client
+            client = self.Client,
         )
 
     def get_messages(self, max_results: int = 10) -> Iterator[Message]:
@@ -54,12 +61,10 @@ class ServiceClientAdapter(mail_client_api.Client):
             client = self.Client,
         )
         content = json.loads(messages.content)
-        max_results = min(max_results,len(content['messages']))
-        return content['messages'][:max_results]
-    
-# testing
+        max_results = min(max_results,len(content["messages"]))
+        return content["messages"][:max_results]
+
 if __name__ == "__main__":
     adapter = ServiceClientAdapter()
     adapter.login()
     print(adapter.get_messages(3))
-

@@ -164,8 +164,8 @@ class GmailClient(mail_client_api.Client):
         if not found_path:
             attempted = ", ".join(str(p) for p in final_candidates[:10])
             raise FileNotFoundError(
-                f"'{creds_path}' not found. Tried: {attempted}. Cannot run interactive auth."
-            )  # noqa: EM102 TRY003
+                f"'{creds_path}' not found. Tried: {attempted}. Cannot run interactive auth.",
+            )
 
         flow = InstalledAppFlow.from_client_secrets_file(
             str(found_path),
