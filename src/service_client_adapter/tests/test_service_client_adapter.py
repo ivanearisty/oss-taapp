@@ -6,14 +6,19 @@ These tests monkeypatch the generated API functions so no real HTTP requests are
 import json
 from types import SimpleNamespace
 
+import pytest
 
-def test_get_messages_respects_max_results(monkeypatch) -> None:
+from mail_client_service_api_client.client import Client
+
+
+def test_get_messages_respects_max_results(monkeypatch: pytest.MonkeyPatch) -> None:
     """Tests get message request max results."""
     import service_client_adapter.src.service_client_adapter.main as main_mod
 
     class FakeGetMessages:
         @staticmethod
-        def sync_detailed(client) -> SimpleNamespace:
+        def sync_detailed(client : Client) -> SimpleNamespace:
+            _ = client
             payload = {"messages": [{"id": "1"}, {"id": "2"}, {"id": "3"}]}
             return SimpleNamespace(content=json.dumps(payload))
 
@@ -22,14 +27,14 @@ def test_get_messages_respects_max_results(monkeypatch) -> None:
 
     adapter = main_mod.ServiceClientAdapter()
     results = adapter.get_messages(max_results=2)
-
+    test_length = 2
     assert isinstance(results, list)
-    assert len(results) == 2
+    assert len(results) == test_length
     assert results[0]["id"] == "1"
     assert results[1]["id"] == "2"
 
 
-def test_get_message_calls_api_and_returns(monkeypatch) -> None:
+def test_get_message_calls_api_and_returns(monkeypatch: pytest.MonkeyPatch) -> None:
     """Tests get message api."""
     import service_client_adapter.src.service_client_adapter.main as main_mod
 
@@ -37,7 +42,7 @@ def test_get_message_calls_api_and_returns(monkeypatch) -> None:
 
     class FakeGetMessage:
         @staticmethod
-        def sync_detailed(message_id, client) -> str:
+        def sync_detailed(message_id : str, client: Client) -> str:
             captured["message_id"] = message_id
             captured["client"] = client
             return "SENTINEL"
@@ -52,23 +57,26 @@ def test_get_message_calls_api_and_returns(monkeypatch) -> None:
     assert captured["client"] is adapter.Client
 
 
-def test_delete_and_mark_and_login(monkeypatch) -> None:
+def test_delete_and_mark_and_login(monkeypatch: pytest.MonkeyPatch) -> None:
     """Tests delete message, marking messages as read and login."""
     import service_client_adapter.src.service_client_adapter.main as main_mod
 
     class FakeDelete:
         @staticmethod
-        def sync_detailed(message_id, client) -> bool:
+        def sync_detailed(message_id: str, client: Client) -> bool:
+            _, _  = message_id, client
             return True
 
     class FakeMark:
         @staticmethod
-        def sync_detailed(message_id, client) -> bool:
+        def sync_detailed(message_id: str, client: Client) -> bool:
+            _, _  = message_id, client
             return False
 
     class FakeLogin:
         @staticmethod
-        def sync_detailed(client) -> SimpleNamespace:
+        def sync_detailed(client: Client) -> SimpleNamespace:
+            _ = client
             return SimpleNamespace(token="abc")
 
     monkeypatch.setattr(main_mod, "delete_message", FakeDelete)

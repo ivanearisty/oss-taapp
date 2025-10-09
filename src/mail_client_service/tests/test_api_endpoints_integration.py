@@ -179,7 +179,7 @@ def test_message_not_found_and_mutations(monkeypatch) -> None:
 
     monkeypatch.setattr(mail_client_api, "get_client", lambda interactive=False: fake_client)
     client = TestClient(app)
-    login_resp = client.get("/login")
+    client.get("/login")
     # If login didn't correctly set the client due to implementation quirks,
     # ensure the app state has our fake client so the following endpoints are
     # treated as authenticated.
