@@ -7,7 +7,6 @@ import json
 from types import SimpleNamespace
 
 import pytest
-
 from mail_client_service_api_client.client import Client
 
 
