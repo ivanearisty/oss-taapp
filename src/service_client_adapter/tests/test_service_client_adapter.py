@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from mail_client_service_api_client.mail_client_service_api_client.client import Client
+from mail_client_service_api_client.client import Client
 
 
 def test_get_messages_respects_max_results(monkeypatch: pytest.MonkeyPatch) -> None:
