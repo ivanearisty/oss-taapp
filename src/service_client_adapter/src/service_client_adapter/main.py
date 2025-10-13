@@ -6,8 +6,9 @@ import json
 from collections.abc import Iterator
 from typing import cast
 
-import mail_client_api
 from mail_client_api.message import Message
+
+import mail_client_api
 from mail_client_service_api_client.api.authentication import login
 from mail_client_service_api_client.api.messages import (
     delete_message,
