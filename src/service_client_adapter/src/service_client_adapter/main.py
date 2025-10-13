@@ -7,16 +7,16 @@ from collections.abc import Iterator
 from typing import cast
 
 from mail_client_api.message import Message
-from mail_client_service_api_client.api.authentication import login
-from mail_client_service_api_client.api.messages import (
+
+import mail_client_api
+from mail_client_service_api_client.src.mail_client_service_api_client.api.authentication import login
+from mail_client_service_api_client.src.mail_client_service_api_client.api.messages import (
     delete_message,
     get_message,
     get_messages,
     mark_message_as_read,
 )
-from mail_client_service_api_client.client import Client
-
-import mail_client_api
+from mail_client_service_api_client.src.mail_client_service_api_client.client import Client
 
 
 class ServiceClientAdapter(mail_client_api.Client):
