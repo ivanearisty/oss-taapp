@@ -1,24 +1,25 @@
-[tool.poetry]
+[project]
 name = "mail-client-service-api-client"
 version = "1.0.0"
 description = "A client library for accessing Mail Client Service API"
-authors = []
 readme = "README.md"
-packages = [
-    { include = "mail_client_service_api_client" },
+requires-python = ">=3.9"
+dependencies = [
+    "httpx>=0.23.0,<0.29.0",
+    "attrs>=22.2.0",
+    "python-dateutil>=2.8.0",
 ]
-include = ["CHANGELOG.md", "mail_client_service_api_client/py.typed"]
-
-[tool.poetry.dependencies]
-python = "^3.9"
-httpx = ">=0.23.0,<0.29.0"
-attrs = ">=22.2.0"
-python-dateutil = "^2.8.0"
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling>=1.18.0"]
+build-backend = "hatchling.build"
 
+[tool.hatch.build]
+include = [
+    "CHANGELOG.md",
+    "mail_client_service_api_client/py.typed",
+    "mail_client_service_api_client",
+]
 [tool.ruff]
 line-length = 120
 

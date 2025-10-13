@@ -10,12 +10,12 @@ dependencies = [
     "python-multipart>=0.0.6",
     # Workspace dependencies
     "mail-client-api",
-    "fast-api-client"
+    "mail_client_service_api_client"
 ]
 
 [tool.uv.sources]
 mail-client-api = { workspace = true }
-fast-api-client = { workspace = true }
+mail_client_service_api_client = { workspace = true }
 
 [project.optional-dependencies]
 dev = [
