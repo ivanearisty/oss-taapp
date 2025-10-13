@@ -4,18 +4,18 @@ Handles authentication, message retrieval, and related API calls.
 """
 import json
 from collections.abc import Iterator
-
+from typing import cast
 from mail_client_api.message import Message
-
-import mail_client_api
-from mail_client_service_api_client.mail_client_service_api_client.api.authentication import login
-from mail_client_service_api_client.mail_client_service_api_client.api.messages import (
+from mail_client_service_api_client.api.authentication import login
+from mail_client_service_api_client.api.messages import (
     delete_message,
     get_message,
     get_messages,
     mark_message_as_read,
 )
-from mail_client_service_api_client.mail_client_service_api_client.client import Client
+from mail_client_service_api_client.client import Client
+
+import mail_client_api
 
 
 class ServiceClientAdapter(mail_client_api.Client):
@@ -36,24 +36,24 @@ class ServiceClientAdapter(mail_client_api.Client):
 
     def get_message(self, message_id: str) -> Message:
         """Return a message by its ID."""
-        return get_message.sync_detailed(
+        return cast("Message",get_message.sync_detailed(
             message_id = message_id,
             client = self.Client,
-        )
+        ))
 
     def delete_message(self, message_id: str) -> bool:
         """Delete a message by its ID."""
-        return delete_message.sync_detailed(
+        return cast("bool",delete_message.sync_detailed(
             message_id = message_id,
             client = self.Client,
-        )
+        ))
 
     def mark_as_read(self, message_id: str) -> bool:
         """Mark a message as read by its ID."""
-        return mark_message_as_read.sync_detailed(
+        return cast("bool",mark_message_as_read.sync_detailed(
             message_id = message_id,
             client = self.Client,
-        )
+        ))
 
     def get_messages(self, max_results: int = 10) -> Iterator[Message]:
         """Return an iterator of messages from the inbox."""
