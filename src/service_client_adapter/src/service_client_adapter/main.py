@@ -5,6 +5,7 @@ Handles authentication, message retrieval, and related API calls.
 import json
 from collections.abc import Iterator
 from typing import cast
+
 from mail_client_api.message import Message
 from mail_client_service_api_client.api.authentication import login
 from mail_client_service_api_client.api.messages import (
