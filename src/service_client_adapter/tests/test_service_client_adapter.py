@@ -13,7 +13,7 @@ from mail_client_service_api_client.client import Client
 
 def test_get_messages_respects_max_results(monkeypatch: pytest.MonkeyPatch) -> None:
     """Tests get message request max results."""
-    import service_client_adapter.src.service_client_adapter.main as main_mod
+    import service_client_adapter.main as main_mod
 
     class FakeGetMessages:
         @staticmethod
@@ -36,7 +36,7 @@ def test_get_messages_respects_max_results(monkeypatch: pytest.MonkeyPatch) -> N
 
 def test_get_message_calls_api_and_returns(monkeypatch: pytest.MonkeyPatch) -> None:
     """Tests get message api."""
-    import service_client_adapter.src.service_client_adapter.main as main_mod
+    import service_client_adapter.main as main_mod
 
     captured = {}
 
@@ -59,7 +59,7 @@ def test_get_message_calls_api_and_returns(monkeypatch: pytest.MonkeyPatch) -> N
 
 def test_delete_and_mark_and_login(monkeypatch: pytest.MonkeyPatch) -> None:
     """Tests delete message, marking messages as read and login."""
-    import service_client_adapter.src.service_client_adapter.main as main_mod
+    import service_client_adapter.main as main_mod
 
     class FakeDelete:
         @staticmethod
