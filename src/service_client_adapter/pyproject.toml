@@ -13,10 +13,6 @@ dependencies = [
     "mail_client_service_api_client"
 ]
 
-[tool.uv.sources]
-mail-client-api = { workspace = true }
-mail_client_service_api_client = { workspace = true }
-
 [project.optional-dependencies]
 dev = [
     "pytest>=8.4.1",
