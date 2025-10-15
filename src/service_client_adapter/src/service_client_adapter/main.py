@@ -3,7 +3,6 @@
 Handles authentication, message retrieval, and related API calls.
 """
 import json
-from collections.abc import Iterator
 from typing import cast
 
 from mail_client_api.message import Message
