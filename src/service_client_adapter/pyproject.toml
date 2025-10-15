@@ -21,6 +21,12 @@ dev = [
     "pytest-cov>=6.2.1",
 ]
 
+[tool.mypy]
+strict = true
+explicit_package_bases = true
+mypy_path = "src"
+ignore_missing_imports = false
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
