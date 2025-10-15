@@ -31,4 +31,6 @@ testpaths = ["tests"]
 
 [tool.uv.sources]
 mail-client-api = { workspace = true }
+mail-client-service-api-client = { workspace = true }
+
 
