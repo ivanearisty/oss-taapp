@@ -937,6 +937,7 @@ name = "open-source"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "mail-client-service" },
     { name = "types-requests" },
 ]
 
@@ -962,6 +963,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "google-api-python-client-stubs", marker = "extra == 'dev'", specifier = ">=1.30.0" },
+    { name = "mail-client-service", editable = "src/mail_client_service" },
     { name = "mkdocs", marker = "extra == 'dev'", specifier = ">=1.6.1" },
     { name = "mkdocs-material", marker = "extra == 'dev'", specifier = ">=9.6.15" },
     { name = "mkdocstrings-python", marker = "extra == 'dev'", specifier = ">=1.16.12" },

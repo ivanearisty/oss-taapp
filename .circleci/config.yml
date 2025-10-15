@@ -25,9 +25,6 @@ jobs:
             source .venv/bin/activate
             # Install all dependencies including dev/test extras
             uv sync --all-packages --extra dev --verbose
-            uv pip install src/mail_client_service_api_client
-            uv pip install src/service_client_adapter
-            uv pip install src/mail_client_api
       - run:
           name: "Verify Installation (Optional)"
           command: |
