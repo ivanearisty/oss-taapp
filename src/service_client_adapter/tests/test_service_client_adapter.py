@@ -7,8 +7,7 @@ import json
 from types import SimpleNamespace
 
 import pytest
-
-from mail_client_service_api_client.src.mail_client_service_api_client.client import Client
+from mail_client_service_api_client.client import Client
 
 
 def test_get_messages_respects_max_results(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -38,11 +37,11 @@ def test_get_message_calls_api_and_returns(monkeypatch: pytest.MonkeyPatch) -> N
     """Tests get message api."""
     import service_client_adapter.main as main_mod
 
-    captured: dict[str,object] = {}
+    captured = {}
 
     class FakeGetMessage:
         @staticmethod
-        def sync_detailed(message_id : str, client: Client) -> str:
+        def sync_detailed(message_id : str, client: str) -> str:
             captured["message_id"] = message_id
             captured["client"] = client
             return "SENTINEL"
