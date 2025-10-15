@@ -15,7 +15,6 @@ from mail_client_service_api_client.src.mail_client_service_api_client.api.messa
     get_messages,
     mark_message_as_read,
 )
-from mail_client_service_api_client.src.mail_client_service_api_client.client import Client
 
 
 class ServiceClientAdapter(Client): #type: ignore[misc]
