@@ -5,9 +5,9 @@ Handles authentication, message retrieval, and related API calls.
 import json
 from typing import cast
 
+from mail_client_api.client import Client
 from mail_client_api.message import Message
 
-import mail_client_api
 from mail_client_service_api_client.src.mail_client_service_api_client.api.authentication import login
 from mail_client_service_api_client.src.mail_client_service_api_client.api.messages import (
     delete_message,
@@ -18,7 +18,7 @@ from mail_client_service_api_client.src.mail_client_service_api_client.api.messa
 from mail_client_service_api_client.src.mail_client_service_api_client.client import Client
 
 
-class ServiceClientAdapter(mail_client_api.client): #type: ignore[misc]
+class ServiceClientAdapter(Client): #type: ignore[misc]
     """Adapter class for interacting with the mail client API using a fast API client.
 
     Provides methods to get, delete, and mark messages as read, as well as to retrieve messages from inbox.
