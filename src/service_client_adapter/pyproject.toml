@@ -29,3 +29,6 @@ build-backend = "hatchling.build"
 pythonpath = [".","src"]
 testpaths = ["tests"]
 
+[tool.uv.sources]
+mail-client-api = { workspace = true }
+
