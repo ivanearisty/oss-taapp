@@ -19,7 +19,7 @@ from mail_client_service_api_client.src.mail_client_service_api_client.api.messa
 from mail_client_service_api_client.src.mail_client_service_api_client.client import Client
 
 
-class ServiceClientAdapter(mail_client_api.Client):
+class ServiceClientAdapter(mail_client_api.client): #type: ignore[misc]
     """Adapter class for interacting with the mail client API using a fast API client.
 
     Provides methods to get, delete, and mark messages as read, as well as to retrieve messages from inbox.
@@ -56,7 +56,7 @@ class ServiceClientAdapter(mail_client_api.Client):
             client = self.Client,
         ))
 
-    def get_messages(self, max_results: int = 10) -> Iterator[Message]:
+    def get_messages(self, max_results: int = 10) -> Message:
         """Return an iterator of messages from the inbox."""
         messages = get_messages.sync_detailed(
             client = self.Client,

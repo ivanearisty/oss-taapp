@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "Template repository for a mail client"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "types-requests>=2.32.4.20250913",
+]
 
 [project.optional-dependencies]
 dev = [
@@ -26,6 +28,9 @@ members = [
   "src/gmail_client_impl",
   "src/mail_client_service",
 ]
+
+[tool.setuptools.package-data]
+mail_client_api = ["py.typed"]
 
 [tool.ruff]
 line-length = 130 # high for top level due to tests
@@ -54,6 +59,7 @@ module = [
     "googleapiclient.*",
     "gmail_client_impl.*",
     "mail_client_api.*",
+    "service_client_adapter.*",
 ]
 ignore_missing_imports = true
 
@@ -71,6 +77,7 @@ markers = [
     "circleci: marks tests that can run in CI/CD environments without local credentials",
     "local_credentials: marks tests that require local credentials.json or token.json files",
 ]
+
 
 [tool.coverage.run]
 source = ["src"]
