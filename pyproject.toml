@@ -31,6 +31,13 @@ members = [
   "src/service_client_adapter",
 ]
 
+[tool.uv.sources]
+"mail-client-api" = { workspace = true }
+"gmail-client-impl" = { workspace = true }
+"mail-client-service" = { workspace = true }
+"mail-client-service-api-client" = { workspace = true }
+"service-client-adapter" = { workspace = true }
+
 [tool.setuptools.package-data]
 mail_client_api = ["py.typed"]
 
