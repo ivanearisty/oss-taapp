@@ -16,9 +16,9 @@ flowchart TB
 
   UP["<b>User Program</b><br/>1. Imports mail_client_api.Client contract<br/>2. Calls get_client() normally"]
 
-  OA["<b>Option A: In-process</b><br/>1. Returns GmailClient implementation<br/>2. Calls Gmail directly via existing logic"]
+  OA["<b>Option A: In-process (existing)</b><br/>1. Returns GmailClient implementation<br/>2. Calls Gmail directly via existing logic"]
 
-  OB["<b>Option B: Service Adapter</b><br/>1. ServiceClientAdapter implements same contract<br/>2. Calls mail_client_service_api_client (HTTP client)<br/>3. FastAPI service endpoints"]
+  OB["<b>Option B: Service Adapter (new)</b><br/>1. ServiceClientAdapter implements same contract<br/>2. Calls mail_client_service_api_client (HTTP client)<br/>3. FastAPI service endpoints"]
 
   KI["<b>Key Idea</b><br/><ul><li>get_messages(), get_message(), mark_as_read(), delete_message()</li><li>Works the same whether local or remote</li></ul>"]
 
