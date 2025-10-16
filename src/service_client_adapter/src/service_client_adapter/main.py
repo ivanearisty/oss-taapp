@@ -25,7 +25,7 @@ class ServiceClientAdapter(Client): #type: ignore[misc]
 
     def __init__(self) -> None:
         """Initialize client adapter."""
-        self.Client = Client(base_url = "http://127.0.0.1:8000")
+        self.Client = Client()
 
     def login(self) -> Message:
         """Authenticate the user."""
