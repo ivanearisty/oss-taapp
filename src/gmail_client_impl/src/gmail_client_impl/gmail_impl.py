@@ -23,6 +23,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow  # type: ignore[import-un
 from googleapiclient.discovery import Resource, build
 from googleapiclient.errors import HttpError
 from mail_client_api import message
+from mail_client_api.client import Client
 
 # Try to load .env file if python-dotenv is available
 try:
@@ -42,7 +43,7 @@ except ImportError:
                     os.environ[key.strip()] = value.strip()
 
 
-class GmailClient(mail_client_api.Client):
+class GmailClient(Client): #type: ignore[misc]
     """Concrete implementation of the Client abstraction using Gmail API.
 
     This class provides a complete implementation of the mail_client_api.Client abstraction
@@ -377,11 +378,11 @@ class GmailClient(mail_client_api.Client):
                 )
 
 
-def get_client_impl(*, interactive: bool = False) -> mail_client_api.Client:
+def get_client_impl(*, interactive: bool = False) -> Client:
     """Return a configured :class:`GmailClient` instance."""
     return GmailClient(interactive=interactive)
 
 
 def register() -> None:
     """Register the Gmail client implementation with the mail client API."""
-    mail_client_api.get_client = get_client_impl
+    mail_client_api.get_client = get_client_impl # type: ignore[attr-defined]

@@ -213,7 +213,7 @@ def test_get_messages_fetch_error(monkeypatch:pytest.MonkeyPatch) -> None:
 
     # client whose get_messages raises an Exception
     class BadClient:
-        def get_messages(self, max_results=3):
+        def get_messages(self, max_results:int =3 ) -> None:
             raise Exception("fetch failed")
 
     bad = BadClient()
@@ -230,7 +230,7 @@ def test_get_message_error_mappings(monkeypatch:pytest.MonkeyPatch) -> None:
 
     # 404-like error
     class C404:
-        def get_message(self, message_id):
+        def get_message(self, message_id: str) -> None:
             raise Exception("404 Not Found")
 
     monkeypatch.setattr(mail_client_api, "get_client", lambda interactive=False: C404())
@@ -241,7 +241,7 @@ def test_get_message_error_mappings(monkeypatch:pytest.MonkeyPatch) -> None:
 
     # HttpError 400 -> 400
     class C400:
-        def get_message(self, message_id):
+        def get_message(self, message_id: str) -> None:
             raise Exception("HttpError 400 bad request")
 
     monkeypatch.setattr(mail_client_api, "get_client", lambda interactive=False: C400())
@@ -253,7 +253,7 @@ def test_get_message_error_mappings(monkeypatch:pytest.MonkeyPatch) -> None:
 
     # HttpError 403 -> 403
     class C403:
-        def get_message(self, message_id):
+        def get_message(self, message_id: str) -> None:
             raise Exception("HttpError 403 forbidden")
 
     monkeypatch.setattr(mail_client_api, "get_client", lambda interactive=False: C403())
@@ -264,7 +264,7 @@ def test_get_message_error_mappings(monkeypatch:pytest.MonkeyPatch) -> None:
 
     # Generic other exception -> 500
     class C500:
-        def get_message(self, message_id):
+        def get_message(self, message_id: str) -> None:
             raise Exception("kaboom")
 
     monkeypatch.setattr(mail_client_api, "get_client", lambda interactive=False: C500())
@@ -279,7 +279,7 @@ def test_mark_and_delete_exception_mappings(monkeypatch:pytest.MonkeyPatch) -> N
 
     # mark_as_read raising 404-like
     class M1:
-        def mark_as_read(self, message_id):
+        def mark_as_read(self, message_id: str) -> None:
             raise Exception("404 not found")
 
     monkeypatch.setattr(mail_client_api, "get_client", lambda interactive=False: M1())
@@ -290,7 +290,7 @@ def test_mark_and_delete_exception_mappings(monkeypatch:pytest.MonkeyPatch) -> N
 
     # mark_as_read generic -> 500
     class M2:
-        def mark_as_read(self, message_id):
+        def mark_as_read(self, message_id: str) -> None:
             raise Exception("boom")
 
     monkeypatch.setattr(mail_client_api, "get_client", lambda interactive=False: M2())
@@ -301,7 +301,7 @@ def test_mark_and_delete_exception_mappings(monkeypatch:pytest.MonkeyPatch) -> N
 
     # delete_message raising 404-like
     class D1:
-        def delete_message(self, message_id):
+        def delete_message(self, message_id: str) -> None:
             raise Exception("404 Not Found")
 
     monkeypatch.setattr(mail_client_api, "get_client", lambda interactive=False: D1())
@@ -312,7 +312,7 @@ def test_mark_and_delete_exception_mappings(monkeypatch:pytest.MonkeyPatch) -> N
 
     # delete generic -> 500
     class D2:
-        def delete_message(self, message_id):
+        def delete_message(self, message_id: str) -> None:
             raise Exception("boom")
 
     monkeypatch.setattr(mail_client_api, "get_client", lambda interactive=False: D2())
@@ -328,7 +328,7 @@ def test_client_methods_raise_http_exception(monkeypatch:pytest.MonkeyPatch) -> 
     from fastapi import HTTPException
 
     class GH:
-        def get_message(self, message_id):
+        def get_message(self, message_id: str) -> None:
             raise HTTPException(status_code=418, detail={"error": "teapot"})
 
     monkeypatch.setattr(mail_client_api, "get_client", lambda interactive=False: GH())
@@ -338,7 +338,7 @@ def test_client_methods_raise_http_exception(monkeypatch:pytest.MonkeyPatch) -> 
     assert r.status_code == 418
 
     class MH:
-        def mark_as_read(self, message_id):
+        def mark_as_read(self, message_id: str) -> None:
             raise HTTPException(status_code=499, detail={"error": "client error"})
 
     monkeypatch.setattr(mail_client_api, "get_client", lambda interactive=False: MH())
@@ -348,7 +348,7 @@ def test_client_methods_raise_http_exception(monkeypatch:pytest.MonkeyPatch) -> 
     assert r2.status_code == 499
 
     class DH:
-        def delete_message(self, message_id):
+        def delete_message(self, message_id: str) -> None:
             raise HTTPException(status_code=450, detail={"error": "client delete"})
 
     monkeypatch.setattr(mail_client_api, "get_client", lambda interactive=False: DH())
@@ -358,7 +358,7 @@ def test_client_methods_raise_http_exception(monkeypatch:pytest.MonkeyPatch) -> 
     assert r3.status_code == 450
 
 
-def test_mark_and_delete_success(monkeypatch) -> None:
+def test_mark_and_delete_success(monkeypatch:pytest.MonkeyPatch) -> None:
     # Reuse the same logged-out helper to ensure clean state
     _ensure_logged_out()
 
@@ -380,7 +380,7 @@ def test_mark_and_delete_success(monkeypatch) -> None:
 
     called = {}
 
-    def fake_get_client(interactive=False):
+    def fake_get_client(interactive:bool=False) -> SimpleNamespace:
         called['interactive'] = interactive
         return fake_client
 

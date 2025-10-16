@@ -10,7 +10,7 @@ import mail_client_api
 from mail_client_api import message
 
 
-class GmailMessage(message.Message):
+class GmailMessage(message.Message): #type: ignore[misc]
     """Concrete implementation of the Message abstraction for Gmail messages."""
 
     MAX_PRINTABLE_ASCII = 126
@@ -206,4 +206,4 @@ def get_message_impl(msg_id: str, raw_data: str) -> message.Message:
 def register() -> None:
     """Register the Gmail message implementation with the message abstraction."""
     message.get_message = get_message_impl
-    mail_client_api.get_message = get_message_impl
+    mail_client_api.get_message = get_message_impl # type: ignore[attr-defined]

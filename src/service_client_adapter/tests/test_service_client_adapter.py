@@ -42,7 +42,7 @@ def test_get_message_calls_api_and_returns(monkeypatch: pytest.MonkeyPatch) -> N
 
     class FakeGetMessage:
         @staticmethod
-        def sync_detailed(message_id : str, client: Client) -> str:
+        def sync_detailed(message_id : str, client: str) -> str:
             captured["message_id"] = message_id
             captured["client"] = client
             return "SENTINEL"

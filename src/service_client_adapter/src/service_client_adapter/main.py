@@ -3,12 +3,11 @@
 Handles authentication, message retrieval, and related API calls.
 """
 import json
-from collections.abc import Iterator
 from typing import cast
 
 from mail_client_api.message import Message
 
-import mail_client_api
+from mail_client_service_api_client.src.mail_client_service_api_client import client
 from mail_client_service_api_client.src.mail_client_service_api_client.api.authentication import login
 from mail_client_service_api_client.src.mail_client_service_api_client.api.messages import (
     delete_message,
@@ -16,10 +15,9 @@ from mail_client_service_api_client.src.mail_client_service_api_client.api.messa
     get_messages,
     mark_message_as_read,
 )
-from mail_client_service_api_client.src.mail_client_service_api_client.client import Client
 
 
-class ServiceClientAdapter(mail_client_api.Client):
+class ServiceClientAdapter(client.Client): #type: ignore[misc]
     """Adapter class for interacting with the mail client API using a fast API client.
 
     Provides methods to get, delete, and mark messages as read, as well as to retrieve messages from inbox.
@@ -27,7 +25,7 @@ class ServiceClientAdapter(mail_client_api.Client):
 
     def __init__(self) -> None:
         """Initialize client adapter."""
-        self.Client = Client(base_url = "http://127.0.0.1:8000")
+        self.Client = client.Client(base_url = "http://127.0.0.1:8000")
 
     def login(self) -> Message:
         """Authenticate the user."""
@@ -56,7 +54,7 @@ class ServiceClientAdapter(mail_client_api.Client):
             client = self.Client,
         ))
 
-    def get_messages(self, max_results: int = 10) -> Iterator[Message]:
+    def get_messages(self, max_results: int = 10) -> Message:
         """Return an iterator of messages from the inbox."""
         messages = get_messages.sync_detailed(
             client = self.Client,

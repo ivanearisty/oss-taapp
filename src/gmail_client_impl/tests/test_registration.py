@@ -23,7 +23,7 @@ def test_register_binds_factories(monkeypatch: pytest.MonkeyPatch) -> None:
         raising=False,
     )
 
-    gmail_client_impl.register()
+    gmail_client_impl.register() # type: ignore[attr-defined]
 
-    assert mail_client_api.get_client is gmail_client_impl.get_client_impl
-    assert message_protocol.get_message is gmail_client_impl.get_message_impl
+    assert mail_client_api.get_client is gmail_client_impl.get_client_impl # type: ignore[attr-defined]
+    assert message_protocol.get_message is gmail_client_impl.get_message_impl# type: ignore[attr-defined]
