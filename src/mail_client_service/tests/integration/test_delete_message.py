@@ -1,8 +1,9 @@
 import pytest
 from fastapi.testclient import TestClient
-from mail_client_service.app import app
+from mail_client_service import app
 
 client = TestClient(app)
+
 
 @pytest.mark.integration
 def test_delete_message_end_to_end():
@@ -14,4 +15,3 @@ def test_delete_message_end_to_end():
         assert data["detail"] == "Message test_msg_001 deleted."
     else:
         assert "detail" in data
-

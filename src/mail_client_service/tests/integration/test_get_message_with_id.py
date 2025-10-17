@@ -1,8 +1,9 @@
 import pytest
 from fastapi.testclient import TestClient
-from mail_client_service.app import app
+from mail_client_service import app
 
 client = TestClient(app)
+
 
 @pytest.mark.integration
 def test_get_message_by_id_end_to_end():
