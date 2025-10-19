@@ -43,7 +43,7 @@ except ImportError:
                     os.environ[key.strip()] = value.strip()
 
 
-class GmailClient(Client): #type: ignore[misc]
+class GmailClient(Client):
     """Concrete implementation of the Client abstraction using Gmail API.
 
     This class provides a complete implementation of the mail_client_api.Client abstraction
@@ -385,4 +385,4 @@ def get_client_impl(*, interactive: bool = False) -> Client:
 
 def register() -> None:
     """Register the Gmail client implementation with the mail client API."""
-    mail_client_api.get_client = get_client_impl # type: ignore[attr-defined]
+    mail_client_api.get_client = get_client_impl
