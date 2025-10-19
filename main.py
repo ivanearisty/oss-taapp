@@ -6,9 +6,13 @@ import contextlib
 import logging
 
 import gmail_client_impl  # noqa: F401
-import gmail_client_impl
-import gmail_message_impl
 import mail_client_api
+
+# Import the protocols first
+# --- TRIGGER DEPENDENCY INJECTION ---
+# By importing the implementation packages, their __init__.py files
+# run and override the factory functions in the protocol packages.
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
