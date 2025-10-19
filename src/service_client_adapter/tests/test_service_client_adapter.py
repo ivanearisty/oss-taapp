@@ -87,6 +87,18 @@ def test_delete_and_mark_and_login(monkeypatch: pytest.MonkeyPatch) -> None:
     """Tests delete message, marking messages as read and login."""
     import service_client_adapter.main as main_mod
 
+    class FakeLogin:
+        @staticmethod
+        def sync_detailed(client: Client) -> Response[Any]:
+            _ = client
+            return Response(
+                status_code=HTTPStatus.OK,
+                content=b"{}",
+                headers={},
+                parsed={"message": "Login Successful",
+                        "status": "success"},
+            )
+
     class FakeDelete:
         @staticmethod
         def sync_detailed(message_id: str, client: Client) -> Response[Any]:
@@ -113,13 +125,16 @@ def test_delete_and_mark_and_login(monkeypatch: pytest.MonkeyPatch) -> None:
                 }},
             )
 
-
+    monkeypatch.setattr(main_mod, "login", FakeLogin)
     monkeypatch.setattr(main_mod, "delete_message", FakeDelete)
     monkeypatch.setattr(main_mod, "mark_message_as_read", FakeMark)
 
     adapter = main_mod.ServiceClientAdapter()
 
+    # assert login to succeed
+    assert adapter.login() == HTTPStatus.OK
     # delete_message returns True
     assert adapter.delete_message("x") is True
     # mark_as_read returns False
     assert adapter.mark_as_read("x") is False
+
