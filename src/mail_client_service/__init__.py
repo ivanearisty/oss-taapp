@@ -5,6 +5,6 @@ The tests (and other callers) expect ``mail_client_service`` to expose the FastA
 ``app`` instance and its dependencies directly, so we re-export them here.
 """
 
-from .src.mail_client_service.app import app, get_mail_client  # noqa: F401
+from .src.mail_client_service.app import app, get_mail_client
 
 __all__ = ["app", "get_mail_client"]

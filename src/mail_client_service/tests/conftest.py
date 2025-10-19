@@ -1,5 +1,6 @@
 """Test configuration for mail client service."""
 
+from enum import Enum
 from unittest.mock import Mock, create_autospec
 
 import pytest
@@ -8,13 +9,12 @@ from mail_client_api import Client, Message
 
 from mail_client_service import app, get_mail_client
 
-
-from enum import Enum
-
 LONG_BODY_LEN = 10_000
 
 
 class HTTPStatus(Enum):
+    """HTTP status codes used in the API."""
+
     OK = 200
     CREATED = 201
     ACCEPTED = 202
@@ -28,7 +28,7 @@ class HTTPStatus(Enum):
     INTERNAL_SERVER_ERROR = 500
 
 
-def create_mock_message(
+def create_mock_message( # noqa: PLR0913
     msg_id: str,
     from_: str,
     to: str,
