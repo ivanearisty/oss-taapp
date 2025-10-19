@@ -97,6 +97,3 @@ async def delete_message(client: MailClientDep, message_id: str) -> dict[str, st
         raise HTTPException(status_code=500, detail=str(e)) from e
     else:
         return {"detail": f"Message {message_id} deleted."}
-
-
-

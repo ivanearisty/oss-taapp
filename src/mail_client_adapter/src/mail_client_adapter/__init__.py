@@ -1,26 +1,22 @@
 """Mail client adapter package for wrapping auto-generated client."""
 
+from mail_client_service_client import Client
+
 from .service_client_adapter import ServiceClientAdapter
 
 __all__ = ["ServiceClientAdapter", "create_service_adapter"]
 
 
-def create_service_adapter(base_url: str, token: str) -> ServiceClientAdapter:
+def create_service_adapter(base_url: str) -> ServiceClientAdapter:
     """Create a ServiceClientAdapter with the given service configuration.
-    
+
     Args:
         base_url: The base URL of the mail service
-        token: Authentication token for the service
-        
+
     Returns:
         ServiceClientAdapter: Configured adapter instance
-    """
-    from .client import AuthenticatedClient
-    
-    service_client = AuthenticatedClient(
-        base_url=base_url,
-        token=token
-    )
-    
-    return ServiceClientAdapter(service_client)
 
+    """
+    service_client = Client(base_url=base_url)
+
+    return ServiceClientAdapter(service_client)

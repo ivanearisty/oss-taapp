@@ -12,6 +12,7 @@ members = [
     "mail-client-adapter",
     "mail-client-api",
     "mail-client-service",
+    "mail-client-service-client",
     "ta-assignment",
 ]
 
@@ -518,6 +519,7 @@ dependencies = [
     { name = "attrs" },
     { name = "httpx" },
     { name = "mail-client-api" },
+    { name = "mail-client-service-client" },
     { name = "python-dateutil" },
 ]
 
@@ -532,6 +534,7 @@ requires-dist = [
     { name = "attrs", specifier = ">=22.2.0" },
     { name = "httpx", specifier = ">=0.23.0,<0.29.0" },
     { name = "mail-client-api", editable = "src/mail_client_api" },
+    { name = "mail-client-service-client", editable = "src/mail_client_service_client" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.0.0" },
     { name = "python-dateutil", specifier = ">=2.8.0" },
@@ -572,6 +575,36 @@ requires-dist = [
     { name = "uvicorn", specifier = ">=0.30.0" },
 ]
 provides-extras = ["test"]
+
+[[package]]
+name = "mail-client-service-client"
+version = "0.1.0"
+source = { editable = "src/mail_client_service_client" }
+dependencies = [
+    { name = "attrs" },
+    { name = "httpx" },
+    { name = "python-dateutil" },
+]
+
+[package.optional-dependencies]
+dev = [
+    { name = "mypy" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "attrs", specifier = ">=22.2.0" },
+    { name = "httpx", specifier = ">=0.23.0,<0.29.0" },
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.17.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0.0" },
+    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.0.0" },
+    { name = "python-dateutil", specifier = ">=2.8.0" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.12.7" },
+]
+provides-extras = ["dev"]
 
 [[package]]
 name = "markdown"
@@ -1298,6 +1331,13 @@ dev = [
     { name = "types-requests" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "mypy" },
+    { name = "pytest-cov" },
+    { name = "ruff" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "google-api-python-client-stubs", marker = "extra == 'dev'", specifier = ">=1.30.0" },
@@ -1312,6 +1352,13 @@ requires-dist = [
     { name = "types-requests", marker = "extra == 'dev'", specifier = ">=2.32.4.20250611" },
 ]
 provides-extras = ["dev"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "mypy", specifier = ">=1.18.2" },
+    { name = "pytest-cov", specifier = ">=7.0.0" },
+    { name = "ruff", specifier = ">=0.13.2" },
+]
 
 [[package]]
 name = "tomli"

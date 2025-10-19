@@ -1,22 +1,22 @@
 """Tests for API functions."""
 
-import pytest
-from unittest.mock import Mock, patch
-import httpx
+from unittest.mock import Mock
 
+import pytest
 from mail_client_adapter.api import (
-    list_messages_sync,
-    get_message_sync,
     delete_message_sync,
+    get_message_sync,
+    list_messages_sync,
     mark_as_read_sync,
 )
-from mail_client_adapter.client import Client, AuthenticatedClient
+
+from mail_client_service_client import AuthenticatedClient, Client
 
 
 class TestListMessagesSync:
     """Test cases for list_messages_sync function."""
 
-    def test_list_messages_success(self):
+    def test_list_messages_success(self) -> None:
         """Test successful message listing."""
         # Mock client and response
         mock_client = Mock(spec=Client)
@@ -24,7 +24,7 @@ class TestListMessagesSync:
         mock_response.status_code = 200
         mock_response.json.return_value = [
             {"id": "msg1", "from": "sender1@example.com", "subject": "Test 1"},
-            {"id": "msg2", "from": "sender2@example.com", "subject": "Test 2"}
+            {"id": "msg2", "from": "sender2@example.com", "subject": "Test 2"},
         ]
         mock_client.get_httpx_client.return_value.request.return_value = mock_response
 
@@ -34,10 +34,10 @@ class TestListMessagesSync:
         # Verify the result
         assert result == [
             {"id": "msg1", "from": "sender1@example.com", "subject": "Test 1"},
-            {"id": "msg2", "from": "sender2@example.com", "subject": "Test 2"}
+            {"id": "msg2", "from": "sender2@example.com", "subject": "Test 2"},
         ]
 
-    def test_list_messages_non_200_status(self):
+    def test_list_messages_non_200_status(self) -> None:
         """Test handling of non-200 status code."""
         # Mock client and response
         mock_client = Mock(spec=Client)
@@ -52,7 +52,7 @@ class TestListMessagesSync:
         # Verify the result
         assert result is None
 
-    def test_list_messages_non_200_status_with_raise(self):
+    def test_list_messages_non_200_status_with_raise(self) -> None:
         """Test handling of non-200 status code with raise_on_unexpected_status=True."""
         # Mock client and response
         mock_client = Mock(spec=Client)
@@ -65,7 +65,7 @@ class TestListMessagesSync:
         with pytest.raises(Exception, match="Unexpected status code: 500"):
             list_messages_sync(client=mock_client)
 
-    def test_list_messages_with_authenticated_client(self):
+    def test_list_messages_with_authenticated_client(self) -> None:
         """Test with AuthenticatedClient."""
         # Mock client and response
         mock_client = Mock(spec=AuthenticatedClient)
@@ -84,7 +84,7 @@ class TestListMessagesSync:
 class TestGetMessageSync:
     """Test cases for get_message_sync function."""
 
-    def test_get_message_success(self):
+    def test_get_message_success(self) -> None:
         """Test successful message retrieval."""
         # Mock client and response
         mock_client = Mock(spec=Client)
@@ -94,7 +94,7 @@ class TestGetMessageSync:
             "id": "msg123",
             "from": "sender@example.com",
             "subject": "Test Subject",
-            "body": "Test Body"
+            "body": "Test Body",
         }
         mock_client.get_httpx_client.return_value.request.return_value = mock_response
 
@@ -106,10 +106,10 @@ class TestGetMessageSync:
             "id": "msg123",
             "from": "sender@example.com",
             "subject": "Test Subject",
-            "body": "Test Body"
+            "body": "Test Body",
         }
 
-    def test_get_message_not_found(self):
+    def test_get_message_not_found(self) -> None:
         """Test message not found scenario."""
         # Mock client and response
         mock_client = Mock(spec=Client)
@@ -124,7 +124,7 @@ class TestGetMessageSync:
         # Verify the result
         assert result is None
 
-    def test_get_message_server_error_with_raise(self):
+    def test_get_message_server_error_with_raise(self) -> None:
         """Test server error with raise_on_unexpected_status=True."""
         # Mock client and response
         mock_client = Mock(spec=Client)
@@ -141,7 +141,7 @@ class TestGetMessageSync:
 class TestDeleteMessageSync:
     """Test cases for delete_message_sync function."""
 
-    def test_delete_message_success(self):
+    def test_delete_message_success(self) -> None:
         """Test successful message deletion."""
         # Mock client and response
         mock_client = Mock(spec=Client)
@@ -156,7 +156,7 @@ class TestDeleteMessageSync:
         # Verify the result
         assert result == {"success": True}
 
-    def test_delete_message_failure(self):
+    def test_delete_message_failure(self) -> None:
         """Test message deletion failure."""
         # Mock client and response
         mock_client = Mock(spec=Client)
@@ -171,7 +171,7 @@ class TestDeleteMessageSync:
         # Verify the result
         assert result is None
 
-    def test_delete_message_with_authenticated_client(self):
+    def test_delete_message_with_authenticated_client(self) -> None:
         """Test with AuthenticatedClient."""
         # Mock client and response
         mock_client = Mock(spec=AuthenticatedClient)
@@ -190,7 +190,7 @@ class TestDeleteMessageSync:
 class TestMarkAsReadSync:
     """Test cases for mark_as_read_sync function."""
 
-    def test_mark_as_read_success(self):
+    def test_mark_as_read_success(self) -> None:
         """Test successful mark as read."""
         # Mock client and response
         mock_client = Mock(spec=Client)
@@ -205,7 +205,7 @@ class TestMarkAsReadSync:
         # Verify the result
         assert result == {"success": True}
 
-    def test_mark_as_read_failure(self):
+    def test_mark_as_read_failure(self) -> None:
         """Test mark as read failure."""
         # Mock client and response
         mock_client = Mock(spec=Client)
@@ -220,7 +220,7 @@ class TestMarkAsReadSync:
         # Verify the result
         assert result is None
 
-    def test_mark_as_read_with_authenticated_client(self):
+    def test_mark_as_read_with_authenticated_client(self) -> None:
         """Test with AuthenticatedClient."""
         # Mock client and response
         mock_client = Mock(spec=AuthenticatedClient)
@@ -235,7 +235,7 @@ class TestMarkAsReadSync:
         # Verify the result
         assert result == {"success": True}
 
-    def test_mark_as_read_unauthorized_with_raise(self):
+    def test_mark_as_read_unauthorized_with_raise(self) -> None:
         """Test unauthorized with raise_on_unexpected_status=True."""
         # Mock client and response
         mock_client = Mock(spec=Client)

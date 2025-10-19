@@ -1,11 +1,18 @@
 """Unit tests for mail client service API endpoints."""
 
-from src.mail_client_service.tests.conftest import LONG_BODY_LEN, HTTPStatus, client, create_mock_message, mock_mail_client
+from src.mail_client_service.tests.conftest import (
+    LONG_BODY_LEN,
+    HTTPStatus,
+    client,
+    create_mock_message,
+    mock_mail_client,
+)
 
 
 def test_list_messages_success() -> None:
     """Test successful retrieval of messages."""
     # Arrange
+    NUM_OF_MESSAGES = 3 # noqa: N806
     sample_messages = [
         create_mock_message(
             "msg_001",
@@ -41,7 +48,7 @@ def test_list_messages_success() -> None:
     assert HTTPStatus(response.status_code) == HTTPStatus.OK
     data = response.json()
 
-    assert len(data) == 3
+    assert len(data) == NUM_OF_MESSAGES
     assert data[0]["id"] == "msg_001"
     assert data[0]["from"] == "sender1@example.com"
     assert data[0]["to"] == "recipient@example.com"

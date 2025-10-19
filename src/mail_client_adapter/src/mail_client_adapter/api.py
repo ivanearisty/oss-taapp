@@ -1,24 +1,32 @@
 """API functions for mail service."""
 
-from http import HTTPStatus
-from typing import Any, Optional, Union
+from enum import IntEnum
+from typing import Any
 
-import httpx
+from mail_client_service_client import Client
 
-from .client import AuthenticatedClient, Client
-from .models import (
-    DeleteMessageResponse,
-    GetMessageResponse,
-    ListMessagesResponse,
-    MarkAsReadResponse,
-)
+
+class HTTPStatus(IntEnum):
+    """HTTP status codes used in the API."""
+
+    OK = 200
+    CREATED = 201
+    ACCEPTED = 202
+    NO_CONTENT = 204
+    BAD_REQUEST = 400
+    UNAUTHORIZED = 401
+    FORBIDDEN = 403
+    NOT_FOUND = 404
+    METHOD_NOT_ALLOWED = 405
+    CONFLICT = 409
+    INTERNAL_SERVER_ERROR = 500
 
 
 def list_messages_sync(
     *,
-    client: Union[AuthenticatedClient, Client],
-) -> Optional[list[dict[str, str]]]:
-    """List Messages
+    client: Client,
+) -> list[dict[str, str]] | None:
+    """List Messages.
 
      Get a list of messages from the mail client.
 
@@ -27,6 +35,7 @@ def list_messages_sync(
 
     Returns:
         List of message dictionaries
+
     """
     kwargs: dict[str, Any] = {
         "method": "get",
@@ -34,21 +43,21 @@ def list_messages_sync(
     }
 
     response = client.get_httpx_client().request(**kwargs)
-    
-    if response.status_code == 200:
+
+    if response.status_code == HTTPStatus.OK:
         return response.json()
-    else:
-        if client.raise_on_unexpected_status:
-            raise Exception(f"Unexpected status code: {response.status_code}")
-        return None
+    if client.raise_on_unexpected_status:
+        msg = f"Unexpected status code: {response.status_code}"
+        raise RuntimeError(msg)
+    return None
 
 
 def get_message_sync(
     message_id: str,
     *,
-    client: Union[AuthenticatedClient, Client],
-) -> Optional[dict[str, str]]:
-    """Get Message
+    client: Client,
+) -> dict[str, str] | None:
+    """Get Message.
 
      Get a specific message by ID.
 
@@ -58,6 +67,7 @@ def get_message_sync(
 
     Returns:
         Message dictionary or None if not found
+
     """
     kwargs: dict[str, Any] = {
         "method": "get",
@@ -65,21 +75,21 @@ def get_message_sync(
     }
 
     response = client.get_httpx_client().request(**kwargs)
-    
-    if response.status_code == 200:
+
+    if response.status_code == HTTPStatus.OK:
         return response.json()
-    else:
-        if client.raise_on_unexpected_status:
-            raise Exception(f"Unexpected status code: {response.status_code}")
-        return None
+    if client.raise_on_unexpected_status:
+        msg = f"Unexpected status code: {response.status_code}"
+        raise RuntimeError(msg)
+    return None
 
 
 def delete_message_sync(
     message_id: str,
     *,
-    client: Union[AuthenticatedClient, Client],
-) -> Optional[dict[str, Any]]:
-    """Delete Message
+    client: Client,
+) -> dict[str, Any] | None:
+    """Delete Message.
 
      Delete a message by ID by delegating to the mail client implementation.
 
@@ -89,6 +99,7 @@ def delete_message_sync(
 
     Returns:
         Response dictionary or None if failed
+
     """
     kwargs: dict[str, Any] = {
         "method": "delete",
@@ -96,21 +107,21 @@ def delete_message_sync(
     }
 
     response = client.get_httpx_client().request(**kwargs)
-    
-    if response.status_code == 200:
+
+    if response.status_code == HTTPStatus.OK:
         return response.json()
-    else:
-        if client.raise_on_unexpected_status:
-            raise Exception(f"Unexpected status code: {response.status_code}")
-        return None
+    if client.raise_on_unexpected_status:
+        msg = f"Unexpected status code: {response.status_code}"
+        raise RuntimeError(msg)
+    return None
 
 
 def mark_as_read_sync(
     message_id: str,
     *,
-    client: Union[AuthenticatedClient, Client],
-) -> Optional[dict[str, Any]]:
-    """Mark As Read
+    client: Client,
+) -> dict[str, Any] | None:
+    """Mark As Read.
 
      Mark a message as read by delegating to the mail client implementation.
 
@@ -120,6 +131,7 @@ def mark_as_read_sync(
 
     Returns:
         Response dictionary or None if failed
+
     """
     kwargs: dict[str, Any] = {
         "method": "post",
@@ -127,10 +139,10 @@ def mark_as_read_sync(
     }
 
     response = client.get_httpx_client().request(**kwargs)
-    
-    if response.status_code == 200:
+
+    if response.status_code == HTTPStatus.OK:
         return response.json()
-    else:
-        if client.raise_on_unexpected_status:
-            raise Exception(f"Unexpected status code: {response.status_code}")
-        return None
+    if client.raise_on_unexpected_status:
+        msg = f"Unexpected status code: {response.status_code}"
+        raise RuntimeError(msg)
+    return None

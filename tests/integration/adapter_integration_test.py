@@ -1,24 +1,26 @@
+"""Integration tests for the adapter."""
 from __future__ import annotations
 
-from typing import List
-from unittest.mock import create_autospec, MagicMock
+from unittest.mock import MagicMock, create_autospec
 
 import pytest
-import mail_client_api
-import gmail_client_impl
-from starlette.testclient import TestClient
-
-from mail_client_api import Message, Client
-from mail_client_service import app as service_app, get_mail_client
 from mail_client_adapter.client import AuthenticatedClient
 from mail_client_adapter.service_client_adapter import ServiceClientAdapter
+from starlette.testclient import TestClient
+
+import gmail_client_impl
+import mail_client_api
+from mail_client_api import Client, Message
+from mail_client_service import app as service_app
+from mail_client_service import get_mail_client
 
 
 class DummyMessage:
-    def __init__(
-        self, id: str, sender: str, recipient: str, subject: str, date: str, body: str
-    ) -> None:
-        self.id = id
+    """Dummy message for testing."""
+
+    def __init__(self, message_id: str, sender: str, recipient: str, subject: str, date: str, body: str) -> None: # noqa: PLR0913
+        """Initialize the dummy message."""
+        self.id = message_id
         self.from_ = sender
         self.to = recipient
         self.subject = subject
@@ -30,6 +32,7 @@ class DummyMessage:
 def test_adapter_exercises_service_and_mail_client(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Test that the adapter exercises the service and mail client."""
     mock_client = create_autospec(Client, spec_set=True)
 
     dummy = DummyMessage(
@@ -47,9 +50,7 @@ def test_adapter_exercises_service_and_mail_client(
     mock_client.delete_message.return_value = True
 
     # Ensure the app's lifespan doesn't try to create a real client
-    monkeypatch.setattr(
-        mail_client_api, "get_client", lambda interactive=True: mock_client, raising=True
-    )
+    monkeypatch.setattr(mail_client_api, "get_client", lambda: mock_client, raising=True)
 
     # Force the FastAPI dependency to use our mock client
     service_app.dependency_overrides[get_mail_client] = lambda: mock_client  # type: ignore[assignment]
@@ -57,7 +58,7 @@ def test_adapter_exercises_service_and_mail_client(
     try:
         base_url = "http://testserver"
         with TestClient(service_app, base_url=base_url) as httpx_client:
-            auth_client = AuthenticatedClient(base_url=base_url, token="fake-token")
+            auth_client = AuthenticatedClient(base_url=base_url, token="fake-token") # noqa: S106
             auth_client.set_httpx_client(httpx_client)
 
             adapter = ServiceClientAdapter(auth_client)
@@ -65,7 +66,7 @@ def test_adapter_exercises_service_and_mail_client(
             got_one: Message = adapter.get_message(dummy.id)
             # Adapter returns an iterator; materialize to a list for assertions
             got_many_iter = adapter.get_messages()
-            got_many: List[Message] = list(got_many_iter)
+            got_many: list[Message] = list(got_many_iter)
 
         assert got_one.id == dummy.id
         assert got_one.from_ == dummy.from_
@@ -89,11 +90,10 @@ def test_adapter_exercises_service_and_mail_client(
 def test_end_to_end_service_call_with_mocked_gmail_impl(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """
-    End-to-end-style integration that wires:
-    mail_client_adapter -> mail_client_service -> mocked gmail_client_impl
-    """
+    """End-to-end-style integration that wires.
 
+    mail_client_adapter -> mail_client_service -> mocked gmail_client_impl.
+    """
     mock_message_data = {
         "id": "circleci_msg_123",
         "from": "sender@circleci.com",
@@ -121,7 +121,7 @@ def test_end_to_end_service_call_with_mocked_gmail_impl(
     monkeypatch.setattr(
         mail_client_api,
         "get_client",
-        lambda interactive=True: mock_gmail_client,
+        lambda: mock_gmail_client,
         raising=True,
     )
 
@@ -131,9 +131,7 @@ def test_end_to_end_service_call_with_mocked_gmail_impl(
     try:
         base_url = "http://testserver"
         with TestClient(service_app, base_url=base_url) as httpx_client:
-            auth_client = AuthenticatedClient(
-                base_url=base_url, token="circleci-test-token"
-            )
+            auth_client = AuthenticatedClient(base_url=base_url, token="circleci-test-token") # noqa: S106
             auth_client.set_httpx_client(httpx_client)
 
             adapter = ServiceClientAdapter(auth_client)
