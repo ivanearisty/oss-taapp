@@ -102,11 +102,7 @@ def login(interactive: bool = Query(False, description="Whether to use interacti
             )
         app.state.auth_in_progress = True
         try:
-<<<<<<<<< Temporary merge branch 1
             client = mail_client_api.get_client(interactive=interactive)
-=========
-            client = mail_client_api.get_client(interactive=interactive) # type: ignore[attr-defined]
->>>>>>>>> Temporary merge branch 2
         finally:
             app.state.auth_in_progress = False
 
