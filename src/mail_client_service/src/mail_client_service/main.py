@@ -12,8 +12,9 @@ Requires FastAPI, mail_client_api, gmail_client_impl.
 Run to start API and manage Gmail via HTTP.
 """
 
+from typing import Callable, Awaitable
 from fastapi import FastAPI, HTTPException, Query, Request, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 import gmail_client_impl  # noqa: F401
 import mail_client_api
 
@@ -25,7 +26,7 @@ app = FastAPI(
 
 
 @app.middleware("http")
-async def auth_middleware(request: Request, call_next):
+async def auth_middleware(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
     """Middleware to ensure protected routes require an authenticated client.
 
     Exemptions: root ("/"), /login, /logout, and OpenAPI/docs/swagger related routes.
