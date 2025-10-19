@@ -45,7 +45,7 @@ class MessageResponse:
         subject = d.pop("subject")
         body = d.pop("body")
 
-        root_get_response_root_get = cls(
+        message_response = cls(
             id=id,
             from_=from_,
             to=to,
@@ -54,8 +54,8 @@ class MessageResponse:
             body=body,
         )
 
-        root_get_response_root_get.additional_properties = d
-        return root_get_response_root_get
+        message_response.additional_properties = d
+        return message_response
 
     @property
     def additional_keys(self) -> list[str]:
@@ -96,12 +96,12 @@ class MessagesResponse:
         messages = d.pop("messages")
         
 
-        root_get_response_root_get = cls(
+        messages_response = cls(
             messages=messages
         )
 
-        root_get_response_root_get.additional_properties = d
-        return root_get_response_root_get
+        messages_response.additional_properties = d
+        return messages_response 
 
     @property
     def additional_keys(self) -> list[str]:
