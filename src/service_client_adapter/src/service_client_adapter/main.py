@@ -3,6 +3,8 @@
 Handles authentication, message retrieval, and related API calls.
 """
 
+from http import HTTPStatus
+
 from mail_client_api.message import Message
 from mail_client_service_api_client.api.authentication import login
 from mail_client_service_api_client.api.messages import (
@@ -26,11 +28,12 @@ class ServiceClientAdapter(Client):
         """Initialize client adapter."""
         self.Client = Client(base_url = "http://127.0.0.1:8000")
 
-    def login(self) -> None:
+    def login(self) -> HTTPStatus:
         """Authenticate the user."""
-        login.sync_detailed(
+        response = login.sync_detailed(
             client = self.Client,
         )
+        return response.status_code
 
     def get_message(self, message_id: str) -> Message:
         """Return a message by its ID."""
