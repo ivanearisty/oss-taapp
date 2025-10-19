@@ -23,7 +23,6 @@ from google_auth_oauthlib.flow import InstalledAppFlow  # type: ignore[import-un
 from googleapiclient.discovery import Resource, build
 from googleapiclient.errors import HttpError
 from mail_client_api import message
-from mail_client_api.client import Client
 
 # Try to load .env file if python-dotenv is available
 try:
@@ -43,7 +42,7 @@ except ImportError:
                     os.environ[key.strip()] = value.strip()
 
 
-class GmailClient(Client):
+class GmailClient(mail_client_api.Client):
     """Concrete implementation of the Client abstraction using Gmail API.
 
     This class provides a complete implementation of the mail_client_api.Client abstraction
@@ -140,7 +139,8 @@ class GmailClient(Client):
             # of its parents (covers nested src/ layouts)
             module_dir = Path(__file__).resolve().parent
             candidates.append(module_dir / creds_path)
-            candidates.extend(parent / creds_path for parent in module_dir.parents[:6])
+            for parent in module_dir.parents[:6]:
+                candidates.append(parent / creds_path)
 
         # Deduplicate while preserving order
         seen = set()
@@ -148,7 +148,7 @@ class GmailClient(Client):
         for p in candidates:
             try:
                 rp = p.resolve()
-            except (FileNotFoundError, OSError):
+            except Exception:
                 rp = p
             if rp in seen:
                 continue
@@ -163,8 +163,9 @@ class GmailClient(Client):
 
         if not found_path:
             attempted = ", ".join(str(p) for p in final_candidates[:10])
-            msg = f"'{creds_path}' not found. Tried: {attempted}. Cannot run interactive auth."
-            raise FileNotFoundError(msg)
+            raise FileNotFoundError(
+                f"'{creds_path}' not found. Tried: {attempted}. Cannot run interactive auth."
+            )  # noqa: EM102 TRY003
 
         flow = InstalledAppFlow.from_client_secrets_file(
             str(found_path),
@@ -378,7 +379,7 @@ class GmailClient(Client):
                 )
 
 
-def get_client_impl(*, interactive: bool = False) -> Client:
+def get_client_impl(*, interactive: bool = False) -> mail_client_api.Client:
     """Return a configured :class:`GmailClient` instance."""
     return GmailClient(interactive=interactive)
 

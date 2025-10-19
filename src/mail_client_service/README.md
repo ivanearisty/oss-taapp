@@ -162,38 +162,3 @@ mail_client_service/
 ├── pyproject.toml          # Project configuration
 └── README.md               # This file
 ```
-
-### Testing
-
-There are two focused test files for the Mail Client Service. They live under
-`src/mail_client_service/tests` and test different layers of the code:
-
-- `test_client_contract.py` — unit/contract tests that verify the `Client` and
-  `Message` shapes using simple mocks. This test validates that client implementations conform to the required interface.
-
-- `test_api_endpoints_integration.py` — integration tests checks the
-  FastAPI application using `fastapi.testclient.TestClient`. These tests cover
-  routing, serialization, input validation and error mapping. This test validates the HTTP surface of the service.
-
-Running the tests
-
-- Run the unit (contract) tests only:
-
-```bash
-PYTHONPATH=src/mail_client_service/src:src/mail_client_api/src \
-  pytest -q src/mail_client_service/tests/test_client_contract.py
-```
-
-- Run the integration (API) tests only:
-
-```bash
-PYTHONPATH=src/mail_client_service/src:src/mail_client_api/src \
-  pytest -q src/mail_client_service/tests/test_api_endpoints_integration.py
-```
-
-- Run both test files for the mail_client_service package:
-
-```bash
-PYTHONPATH=src/mail_client_service/src:src/mail_client_api/src \
-  pytest -q src/mail_client_service/tests
-```

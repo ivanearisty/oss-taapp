@@ -12,9 +12,9 @@ Requires FastAPI, mail_client_api, gmail_client_impl.
 Run to start API and manage Gmail via HTTP.
 """
 
-from typing import Callable, Awaitable
-from fastapi import FastAPI, HTTPException, Query, Request, status
-from fastapi.responses import JSONResponse, Response
+from fastapi import FastAPI, HTTPException, Query, status
+from fastapi.responses import JSONResponse
+
 import gmail_client_impl  # noqa: F401
 import mail_client_api
 
@@ -23,43 +23,6 @@ app = FastAPI(
     description="A Restful FastAPI service for managing Gmail messages",
     version="1.0.0"
 )
-
-
-@app.middleware("http")
-async def auth_middleware(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
-    """Middleware to ensure protected routes require an authenticated client.
-
-    Exemptions: root ("/"), /login, /logout, and OpenAPI/docs/swagger related routes.
-    If the client is missing, raise HTTPException 401 with the same detail payload
-    previously used in individual endpoints.
-    """
-    # Paths that don't require authentication
-    public_paths = {
-        "/",
-        "/login",
-        "/logout",
-        "/openapi.json",
-        "/docs",
-        "/redoc",
-    }
-
-    # Also allow paths under /docs/static or other swagger UI assets by prefix check
-    if request.url.path in public_paths or request.url.path.startswith("/docs") or request.url.path.startswith("/openapi"):
-        return await call_next(request)
-
-    # Only enforce auth for message-related endpoints
-    if request.url.path.startswith("/messages"):
-        if not hasattr(app.state, "client") or app.state.client is None:
-            return JSONResponse(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                content={
-                    "error": "Not authenticated",
-                    "message": "User is not authenticated. Please log in first.",
-                    "status": "error",
-                },
-            )
-
-    return await call_next(request)
 
 
 @app.get("/", tags=["General"])
@@ -192,7 +155,16 @@ def get_messages(max_results: int = Query(3, ge=1, le=100, description="Maximum 
     Raises:
         HTTPException: 401 if not authenticated, 500 if message retrieval fails.
     """
-    # Authentication for this route is enforced by middleware.
+    # Check if user is authenticated
+    if not hasattr(app.state, "client") or app.state.client is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "error": "Not authenticated",
+                "message": "User is not authenticated. Please log in first.",
+                "status": "error",
+            },
+        )
 
     # Validate max_results query parameter
     if not isinstance(max_results, int) or max_results < 1 or max_results > 100:
@@ -247,7 +219,16 @@ def get_message_detail(message_id: str) -> JSONResponse:
     Raises:
         HTTPException: 401 if not authenticated, 404 if message not found, 500 for other errors.
     """
-    # Authentication for this route is enforced by middleware.
+    # Check if user is authenticated
+    if not hasattr(app.state, "client") or app.state.client is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "error": "Not authenticated",
+                "message": "User is not authenticated. Please log in first.",
+                "status": "error",
+            },
+        )
     try:
         message = app.state.client.get_message(message_id)
         if message is None:
@@ -330,7 +311,16 @@ def mark_message_as_read(message_id: str) -> JSONResponse:
     Raises:
         HTTPException: 401 if not authenticated, 404 if message not found, 500 for other errors.
     """
-    # Authentication for this route is enforced by middleware.
+    # Check if user is authenticated
+    if not hasattr(app.state, "client") or app.state.client is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "error": "Not authenticated",
+                "message": "User is not authenticated. Please log in first.",
+                "status": "error",
+            },
+        )
     try:
         result = app.state.client.mark_as_read(message_id)
         if not result:
@@ -379,7 +369,16 @@ def delete_message(message_id: str) -> JSONResponse:
     Raises:
         HTTPException: 401 if not authenticated, 404 if message not found, 500 for other errors.
     """
-    # Authentication for this route is enforced by middleware.
+    # Check if user is authenticated
+    if not hasattr(app.state, "client") or app.state.client is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "error": "Not authenticated",
+                "message": "User is not authenticated. Please log in first.",
+                "status": "error",
+            },
+        )
     try:
         result = app.state.client.delete_message(message_id)
         if not result:
