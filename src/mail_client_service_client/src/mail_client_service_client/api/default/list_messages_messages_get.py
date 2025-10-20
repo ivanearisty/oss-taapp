@@ -3,10 +3,12 @@ from typing import Any, Optional, Union
 
 import httpx
 
-from ... import errors
-from ...client import AuthenticatedClient, Client
-from ...models.list_messages_messages_get_response_200_item import ListMessagesMessagesGetResponse200Item
-from ...types import Response
+from mail_client_service_client import errors
+from mail_client_service_client.client import AuthenticatedClient, Client
+from mail_client_service_client.models.list_messages_messages_get_response_200_item import (
+    ListMessagesMessagesGetResponse200Item,
+)
+from mail_client_service_client.types import Response
 
 
 def _get_kwargs() -> dict[str, Any]:

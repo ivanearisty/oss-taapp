@@ -1,14 +1,30 @@
 """End-to-end tests for the mail service."""
+
 import os
 import socket
 import subprocess
 import time
 from contextlib import closing
+from enum import IntEnum
 from pathlib import Path
 
 import pytest
 
-from tests.test_helper import HTTPStatus
+
+class HTTPStatus(IntEnum):
+    """HTTP status codes used in the API."""
+
+    OK = 200
+    CREATED = 201
+    ACCEPTED = 202
+    NO_CONTENT = 204
+    BAD_REQUEST = 400
+    UNAUTHORIZED = 401
+    FORBIDDEN = 403
+    NOT_FOUND = 404
+    METHOD_NOT_ALLOWED = 405
+    CONFLICT = 409
+    INTERNAL_SERVER_ERROR = 500
 
 
 def _free_port() -> int:
@@ -27,14 +43,14 @@ def _wait_for_ready(base_url: str, timeout_s: int = 45) -> None:
             if r.status_code < HTTPStatus.INTERNAL_SERVER_ERROR.value:
                 return
         except Exception as e:
-            print(f"Error waiting for service to be ready: {e}") # noqa: T201
+            print(f"Error waiting for service to be ready: {e}")  # noqa: T201
         time.sleep(0.5)
     msg = f"Service never became ready at {base_url}"
     raise RuntimeError(msg)
 
 
 @pytest.fixture(scope="session")
-def service_base_url(tmp_path_factory) -> None: #noqa: ANN001
+def service_base_url(tmp_path_factory) -> None:  # noqa: ANN001
     """Start the real FastAPI service in a separate process (uvicorn) so we hit it over HTTP."""
     port = _free_port()
     base_url = f"http://127.0.0.1:{port}"
@@ -57,7 +73,7 @@ def service_base_url(tmp_path_factory) -> None: #noqa: ANN001
         "python",
         "-m",
         "uvicorn",
-        "app:app",  # module:var (src/mail_client_service/app.py defines app = FastAPI(...))
+        "fast_api_service:app",  # module:var (src/mail_client_service/fast_api_service.py defines app = FastAPI(...))
         "--app-dir",
         "src/mail_client_service",  # directory that contains app.py
         "--host",

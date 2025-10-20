@@ -10,7 +10,7 @@ from mail_client_adapter.api import (
     mark_as_read_sync,
 )
 
-from mail_client_service_client import AuthenticatedClient, Client
+from mail_client_service_client import Client
 
 
 class TestListMessagesSync:
@@ -64,21 +64,6 @@ class TestListMessagesSync:
         # Call the function and expect exception
         with pytest.raises(Exception, match="Unexpected status code: 500"):
             list_messages_sync(client=mock_client)
-
-    def test_list_messages_with_authenticated_client(self) -> None:
-        """Test with AuthenticatedClient."""
-        # Mock client and response
-        mock_client = Mock(spec=AuthenticatedClient)
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = [{"id": "msg1", "subject": "Test"}]
-        mock_client.get_httpx_client.return_value.request.return_value = mock_response
-
-        # Call the function
-        result = list_messages_sync(client=mock_client)
-
-        # Verify the result
-        assert result == [{"id": "msg1", "subject": "Test"}]
 
 
 class TestGetMessageSync:
@@ -171,21 +156,6 @@ class TestDeleteMessageSync:
         # Verify the result
         assert result is None
 
-    def test_delete_message_with_authenticated_client(self) -> None:
-        """Test with AuthenticatedClient."""
-        # Mock client and response
-        mock_client = Mock(spec=AuthenticatedClient)
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {"success": True}
-        mock_client.get_httpx_client.return_value.request.return_value = mock_response
-
-        # Call the function
-        result = delete_message_sync(message_id="msg123", client=mock_client)
-
-        # Verify the result
-        assert result == {"success": True}
-
 
 class TestMarkAsReadSync:
     """Test cases for mark_as_read_sync function."""
@@ -219,21 +189,6 @@ class TestMarkAsReadSync:
 
         # Verify the result
         assert result is None
-
-    def test_mark_as_read_with_authenticated_client(self) -> None:
-        """Test with AuthenticatedClient."""
-        # Mock client and response
-        mock_client = Mock(spec=AuthenticatedClient)
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {"success": True}
-        mock_client.get_httpx_client.return_value.request.return_value = mock_response
-
-        # Call the function
-        result = mark_as_read_sync(message_id="msg123", client=mock_client)
-
-        # Verify the result
-        assert result == {"success": True}
 
     def test_mark_as_read_unauthorized_with_raise(self) -> None:
         """Test unauthorized with raise_on_unexpected_status=True."""

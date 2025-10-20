@@ -1,6 +1,6 @@
 """Unit tests for mail client service API endpoints."""
 
-from src.mail_client_service.tests.conftest import (
+from .conftest import (
     LONG_BODY_LEN,
     HTTPStatus,
     client,
@@ -12,7 +12,7 @@ from src.mail_client_service.tests.conftest import (
 def test_list_messages_success() -> None:
     """Test successful retrieval of messages."""
     # Arrange
-    NUM_OF_MESSAGES = 3 # noqa: N806
+    NUM_OF_MESSAGES = 3  # noqa: N806
     sample_messages = [
         create_mock_message(
             "msg_001",

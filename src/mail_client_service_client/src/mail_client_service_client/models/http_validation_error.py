@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING, Any, TypeVar, Union
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..types import UNSET, Unset
+from mail_client_service_client.types import UNSET, Unset
 
 if TYPE_CHECKING:
-    from ..models.validation_error import ValidationError
+    from mail_client_service_client.models.validation_error import ValidationError
 
 
 T = TypeVar("T", bound="HTTPValidationError")
@@ -41,7 +41,7 @@ class HTTPValidationError:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.validation_error import ValidationError
+        from mail_client_service_client.models.validation_error import ValidationError
 
         d = dict(src_dict)
         detail = []

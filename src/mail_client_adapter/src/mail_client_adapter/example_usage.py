@@ -39,7 +39,6 @@ def main() -> None:
             print(f"Testing DELETE /messages/{message_id}")  # noqa: T201
             confirmation = input("Y/N  to continue: ")
             if confirmation.lower() == "y":
-
                 print(f"\tbefore: length messages = {len(messages)}")  # noqa: T201
 
                 success = adapter.delete_message(message_id)

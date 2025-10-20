@@ -81,6 +81,7 @@ def test_main_script_runs_and_fetches_messages() -> None:
 
 
 @pytest.mark.circleci
+@pytest.mark.local_credentials
 def test_main_script_with_env_vars_only() -> None:  # noqa: PLR0915, PLR0912, C901
     """Tests that main.py works correctly in CI/CD environments.
 

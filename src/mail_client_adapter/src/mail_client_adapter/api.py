@@ -1,7 +1,7 @@
 """API functions for mail service."""
 
 from enum import IntEnum
-from typing import Any
+from typing import Any, cast
 
 from mail_client_service_client import Client
 
@@ -45,7 +45,7 @@ def list_messages_sync(
     response = client.get_httpx_client().request(**kwargs)
 
     if response.status_code == HTTPStatus.OK:
-        return response.json()
+        return cast("list[dict[str, str]]", response.json())
     if client.raise_on_unexpected_status:
         msg = f"Unexpected status code: {response.status_code}"
         raise RuntimeError(msg)
@@ -77,7 +77,7 @@ def get_message_sync(
     response = client.get_httpx_client().request(**kwargs)
 
     if response.status_code == HTTPStatus.OK:
-        return response.json()
+        return cast("dict[str, str]", response.json())
     if client.raise_on_unexpected_status:
         msg = f"Unexpected status code: {response.status_code}"
         raise RuntimeError(msg)
@@ -109,7 +109,7 @@ def delete_message_sync(
     response = client.get_httpx_client().request(**kwargs)
 
     if response.status_code == HTTPStatus.OK:
-        return response.json()
+        return cast("dict[str, Any]", response.json())
     if client.raise_on_unexpected_status:
         msg = f"Unexpected status code: {response.status_code}"
         raise RuntimeError(msg)
@@ -141,7 +141,7 @@ def mark_as_read_sync(
     response = client.get_httpx_client().request(**kwargs)
 
     if response.status_code == HTTPStatus.OK:
-        return response.json()
+        return cast("dict[str, Any]", response.json())
     if client.raise_on_unexpected_status:
         msg = f"Unexpected status code: {response.status_code}"
         raise RuntimeError(msg)

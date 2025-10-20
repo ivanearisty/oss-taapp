@@ -36,6 +36,7 @@ target-version = "py311"
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
+  "COM812", # The `COM812` rule may cause conflicts with code formatters. It is ignored to avoid unexpected behavior.
   "D203", # `incorrect-blank-line-before-class` (D203) and `no-blank-line-before-class` (D211) are incompatible. Ignoring `incorrect-blank-line-before-class`.
   "D213", # `multi-line-summary-first-line` (D212) and `multi-line-summary-second-line` (D213) are incompatible. Ignoring `multi-line-summary-second-line`.
   "S101", # Use of `assert` detected --> Asserts are good in our opinion. Tests use asserts profusely.
@@ -45,7 +46,7 @@ per-file-ignores = { "**/test_*.py" = ["TRY300", "BLE001", "ANN401", "SLF001", "
 [tool.mypy]
 strict = true
 explicit_package_bases = true # Required for src layout
-mypy_path = ["src/mail_client_api/src", "src/mail_client_gmail_impl/src", "src/mail_client_service/src", "src/mail_client_adapter/src"]
+mypy_path = ["src/mail_client_api/src", "src/mail_client_gmail_impl/src", "src/mail_client_service/src", "src/mail_client_adapter/src", "src/mail_client_service_client/src"]
 ignore_missing_imports = false
 warn_unused_ignores = false
 
@@ -58,6 +59,7 @@ module = [
     "mail_client_api.*",
     "mail_client_service.*",
     "mail_client_adapter.*",
+    "mail_client_service_client.*",
 ]
 ignore_missing_imports = true
 

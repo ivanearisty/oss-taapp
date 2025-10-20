@@ -1,6 +1,6 @@
 """Unit tests for mail client service delete message endpoint."""
 
-from src.mail_client_service.tests.conftest import HTTPStatus, client, mock_mail_client
+from .conftest import HTTPStatus, client, mock_mail_client
 
 
 def test_delete_message_success() -> None:

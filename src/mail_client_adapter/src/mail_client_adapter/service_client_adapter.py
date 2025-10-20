@@ -2,6 +2,7 @@
 
 import logging
 from collections.abc import Iterator
+from typing import cast
 
 from mail_client_api.client import Client
 from mail_client_api.message import Message
@@ -55,9 +56,10 @@ class ServiceClientAdapter(Client):
             )
 
             if response is None:
+                # Raise a runtime error if the message is not found
                 self._raise_message_not_found_error(message_id)
 
-            return ServiceMessage(response)
+            return ServiceMessage(cast("dict[str, str]", response))
 
         except Exception as e:
             msg = f"Failed to get message {message_id}: {e!s}"
@@ -180,11 +182,7 @@ class ServiceClientAdapter(Client):
                 return
 
             # Limit results if max_results is specified and positive
-            messages_to_process = (
-                response[:max_results]
-                if max_results is not None and max_results > 0
-                else response
-            )
+            messages_to_process = response[:max_results] if max_results is not None and max_results > 0 else response
 
             self.logger.info("Processing %d messages", len(messages_to_process))
             for i, message_item in enumerate(messages_to_process):

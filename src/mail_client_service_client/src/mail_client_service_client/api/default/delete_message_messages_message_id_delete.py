@@ -3,13 +3,13 @@ from typing import Any, Optional, Union
 
 import httpx
 
-from ... import errors
-from ...client import AuthenticatedClient, Client
-from ...models.delete_message_messages_message_id_delete_response_delete_message_messages_message_id_delete import (
+from mail_client_service_client import errors
+from mail_client_service_client.client import AuthenticatedClient, Client
+from mail_client_service_client.models.delete_message_messages_message_id_delete_response_delete_message_messages_message_id_delete import (
     DeleteMessageMessagesMessageIdDeleteResponseDeleteMessageMessagesMessageIdDelete,
 )
-from ...models.http_validation_error import HTTPValidationError
-from ...types import Response
+from mail_client_service_client.models.http_validation_error import HTTPValidationError
+from mail_client_service_client.types import Response
 
 
 def _get_kwargs(

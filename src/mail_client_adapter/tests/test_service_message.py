@@ -1,7 +1,7 @@
 """Tests for ServiceMessage class."""
 
 import pytest
-from mail_client_adapter.service_client_adapter import ServiceMessage
+from mail_client_adapter.models import ServiceMessage
 
 
 class TestServiceMessage:
@@ -46,7 +46,7 @@ class TestServiceMessage:
 
     def test_service_message_with_empty_data(self) -> None:
         """Test ServiceMessage with empty data dictionary."""
-        message_data = {}
+        message_data: dict[str, str] = {}
 
         message = ServiceMessage(message_data)
 
@@ -68,7 +68,7 @@ class TestServiceMessage:
             "body": "Test Body",
         }
 
-        message = ServiceMessage(message_data)
+        message = ServiceMessage(message_data)  # type: ignore[arg-type] # purpose of the test
 
         assert message.id == "msg123"
         assert message.from_ is None  # None values are preserved
@@ -87,7 +87,7 @@ class TestServiceMessage:
             "subject": "Test Subject",
             "body": "Test Body",
             "extra_field": "extra_value",
-            "another_field": 123,
+            "another_field": "123",
         }
 
         message = ServiceMessage(message_data)
@@ -108,13 +108,13 @@ class TestServiceMessage:
 
         # Properties should be read-only (no setters)
         with pytest.raises(AttributeError):
-            message.id = "new_id"
+            message.id = "new_id"  # type: ignore[misc] # purpose of the test
 
         with pytest.raises(AttributeError):
-            message.from_ = "new_sender@example.com"
+            message.from_ = "new_sender@example.com"  # type: ignore[misc] # purpose of the test
 
         with pytest.raises(AttributeError):
-            message.subject = "New Subject"
+            message.subject = "New Subject"  # type: ignore[misc] # purpose of the test
 
     def test_service_message_with_special_characters(self) -> None:
         """Test ServiceMessage with special characters in data."""

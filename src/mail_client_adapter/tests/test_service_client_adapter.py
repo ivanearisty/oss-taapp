@@ -3,9 +3,9 @@
 from unittest.mock import Mock, patch
 
 import pytest
-from mail_client_adapter.client import AuthenticatedClient
 
 from mail_client_adapter import ServiceClientAdapter
+from mail_client_service_client import Client
 
 
 class TestServiceClientAdapter:
@@ -13,7 +13,7 @@ class TestServiceClientAdapter:
 
     def setup_method(self) -> None:
         """Set up test fixtures."""
-        self.mock_service_client = Mock(spec=AuthenticatedClient)
+        self.mock_service_client = Mock(spec=Client)
         self.adapter = ServiceClientAdapter(self.mock_service_client)
 
     def test_init(self) -> None:

@@ -37,7 +37,7 @@ class TestListMessagesResponse:
 
     def test_list_messages_response_empty_list(self) -> None:
         """Test ListMessagesResponse with empty list."""
-        data = []
+        data: list[dict[str, str]] = []
 
         response = ListMessagesResponse(data)
 
@@ -96,7 +96,7 @@ class TestGetMessageResponse:
 
     def test_get_message_response_empty_dict(self) -> None:
         """Test GetMessageResponse with empty dictionary."""
-        data = {}
+        data: dict[str, str] = {}
 
         response = GetMessageResponse(data)
 
@@ -256,11 +256,10 @@ class TestModelClassesGeneral:
 
     def test_models_with_none_data(self) -> None:
         """Test model classes with None data."""
-        # This should work without raising exceptions
-        list_response = ListMessagesResponse(None)
-        get_response = GetMessageResponse(None)
-        delete_response = DeleteMessageResponse(None)
-        mark_response = MarkAsReadResponse(None)
+        list_response = ListMessagesResponse(None)  # type: ignore[arg-type]
+        get_response = GetMessageResponse(None)  # type: ignore[arg-type]
+        delete_response = DeleteMessageResponse(None)  # type: ignore[arg-type]
+        mark_response = MarkAsReadResponse(None)  # type: ignore[arg-type]
 
         assert list_response.data is None
         assert get_response.data is None
@@ -269,10 +268,10 @@ class TestModelClassesGeneral:
 
     def test_models_to_dict_with_none_data(self) -> None:
         """Test to_dict method with None data."""
-        list_response = ListMessagesResponse(None)
-        get_response = GetMessageResponse(None)
-        delete_response = DeleteMessageResponse(None)
-        mark_response = MarkAsReadResponse(None)
+        list_response = ListMessagesResponse(None)  # type: ignore[arg-type] # purpose of the test
+        get_response = GetMessageResponse(None)  # type: ignore[arg-type]
+        delete_response = DeleteMessageResponse(None)  # type: ignore[arg-type]
+        mark_response = MarkAsReadResponse(None)  # type: ignore[arg-type]
 
         assert list_response.to_dict() is None
         assert get_response.to_dict() is None

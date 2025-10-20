@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.circleci
+@pytest.mark.local_credentials
 def test_get_client_and_authenticate() -> None:
     """Tests that the factory provides a real, authenticated GmailClient.
 
@@ -95,6 +96,7 @@ def test_factory_functions_work_together() -> None:
 
 
 @pytest.mark.circleci
+@pytest.mark.local_credentials
 def test_client_scope_permissions() -> None:
     """Tests that the client has the necessary OAuth scopes for the operations we want to perform."""
     try:

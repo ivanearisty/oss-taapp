@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Annotated
+from typing import Annotated, cast
 
 import gmail_client_impl  # noqa: F401
 from fastapi import Depends, FastAPI, HTTPException, Request
@@ -27,7 +27,7 @@ app = FastAPI(
 # --- Dependency: obtain the mail client ---
 def get_mail_client(request: Request) -> Client:
     """Get the already constructed mail client."""
-    return request.app.state.mail_client
+    return cast("Client", request.app.state.mail_client)
 
 
 # --- Define a type alias for reuse (from FastAPI docs) ---

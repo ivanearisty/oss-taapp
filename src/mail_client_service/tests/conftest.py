@@ -1,6 +1,7 @@
 """Test configuration for mail client service."""
 
 from enum import Enum
+from typing import cast
 from unittest.mock import Mock, create_autospec
 
 import pytest
@@ -28,7 +29,7 @@ class HTTPStatus(Enum):
     INTERNAL_SERVER_ERROR = 500
 
 
-def create_mock_message( # noqa: PLR0913
+def create_mock_message(  # noqa: PLR0913
     msg_id: str,
     from_: str,
     to: str,
@@ -44,7 +45,7 @@ def create_mock_message( # noqa: PLR0913
     mock_msg.subject = subject
     mock_msg.date = date
     mock_msg.body = body
-    return mock_msg
+    return cast("Mock", mock_msg)
 
 
 # Create mock client once (reused across all tests)

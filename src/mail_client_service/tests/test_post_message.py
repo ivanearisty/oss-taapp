@@ -1,6 +1,6 @@
 """Unit tests for POST endpoints in the mail client service."""
 
-from src.mail_client_service.tests.conftest import HTTPStatus, client, mock_mail_client
+from .conftest import HTTPStatus, client, mock_mail_client
 
 
 def test_mark_message_as_read_success() -> None:

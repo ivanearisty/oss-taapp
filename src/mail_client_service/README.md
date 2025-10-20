@@ -58,7 +58,7 @@ Note: This repository already contains a `token.json` at the repo root used by t
    ```
 2. Start the FastAPI development server:
    ```bash
-   uv run uvicorn mail_client_service.app:app --reload --port 8000
+   uv run uvicorn mail_client_service.fast_api_service:app --reload --port 8000
    ```
 3. Open the docs UI:
    - Swagger UI: `http://127.0.0.1:8000/docs`
@@ -78,7 +78,7 @@ Note: This repository already contains a `token.json` at the repo root used by t
    ```
 3. Start the server:
    ```bash
-   python -m uvicorn mail_client_service.app:app --reload --port 8000
+   python -m uvicorn mail_client_service.fast_api_service:app --reload --port 8000
    ```
 4. Visit:
    - Swagger UI: `http://127.0.0.1:8000/docs`

@@ -12,7 +12,7 @@
 ## Architecture
 
 ### Component Design
-The package exposes a `ServiceClientAdapter` class that implements the `mail_client_api.Client` interface by wrapping the auto-generated `AuthenticatedClient` from `mail_client_impl`. It translates method calls to appropriate service endpoints and converts response models to the expected `Message` interface.
+The package exposes a `ServiceClientAdapter` class that implements the `mail_client_api.Client` interface by wrapping the auto-generated `Client` from `mail_client_service_client`. It translates method calls to appropriate service endpoints and converts response models to the expected `Message` interface.
 
 ### Service Integration
 ```python
@@ -114,7 +114,7 @@ PYTHONPATH="/Users/faithvillarreal/Desktop/Coursework/OSP/HW1/oss-taapp/src/mail
 
 The adapter implements the `mail_client_api.Client` interface by:
 
-1. **Wrapping the auto-generated client**: Uses `AuthenticatedClient` from `mail_client_impl`
+1. **Wrapping the auto-generated client**: Uses `Client` from `mail_client_service_client`
 2. **Translating method calls**: Maps interface methods to appropriate service endpoints
 3. **Converting response models**: Transforms service responses to `Message` interface
 4. **Handling errors**: Provides appropriate error handling and fallbacks

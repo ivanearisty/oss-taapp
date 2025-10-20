@@ -3,9 +3,9 @@
 from unittest.mock import Mock, patch
 
 import pytest
-from mail_client_adapter.client import AuthenticatedClient
 
 from mail_client_adapter import ServiceClientAdapter
+from mail_client_service_client import Client
 
 
 class TestServiceClientAdapterEdgeCases:
@@ -13,13 +13,13 @@ class TestServiceClientAdapterEdgeCases:
 
     def setup_method(self) -> None:
         """Set up test fixtures."""
-        self.mock_service_client = Mock(spec=AuthenticatedClient)
+        self.mock_service_client = Mock(spec=Client)
         self.adapter = ServiceClientAdapter(self.mock_service_client)
 
     def test_init_with_none_client(self) -> None:
         """Test adapter initialization with None client."""
         # The adapter doesn't validate the client parameter, so this should work
-        adapter = ServiceClientAdapter(None)
+        adapter = ServiceClientAdapter(None)  # type: ignore[arg-type] # purpose of the test
         assert adapter._service_client is None
 
     def test_get_message_with_empty_id(self) -> None:
@@ -36,7 +36,7 @@ class TestServiceClientAdapterEdgeCases:
             mock_get_message.return_value = None
 
             with pytest.raises(RuntimeError, match="Message with ID None not found"):
-                self.adapter.get_message(None)
+                self.adapter.get_message(None)  # type: ignore[arg-type] # purpose of the test
 
     def test_get_message_with_very_long_id(self) -> None:
         """Test get_message with very long message ID."""
@@ -73,7 +73,7 @@ class TestServiceClientAdapterEdgeCases:
         with patch("mail_client_adapter.service_client_adapter.delete_message_sync") as mock_delete_message:
             mock_delete_message.return_value = {"success": True}
 
-            result = self.adapter.delete_message(None)
+            result = self.adapter.delete_message(None)  # type: ignore[arg-type] # purpose of the test
             assert result is True
 
     def test_mark_as_read_with_empty_id(self) -> None:
@@ -89,7 +89,7 @@ class TestServiceClientAdapterEdgeCases:
         with patch("mail_client_adapter.service_client_adapter.mark_as_read_sync") as mock_mark_as_read:
             mock_mark_as_read.return_value = {"success": True}
 
-            result = self.adapter.mark_as_read(None)
+            result = self.adapter.mark_as_read(None)  # type: ignore[arg-type] # purpose of the test
             assert result is True
 
     def test_get_messages_with_zero_max_results(self) -> None:
@@ -120,9 +120,11 @@ class TestServiceClientAdapterEdgeCases:
 
     def test_get_messages_with_very_large_max_results(self) -> None:
         """Test get_messages with very large max_results."""
-        NUM_OF_MESSAGES = 5 # noqa: N806
+        NUM_OF_MESSAGES = 5  # noqa: N806
         with patch("mail_client_adapter.service_client_adapter.list_messages_sync") as mock_list_messages:
-            mock_messages = [{"id": f"msg{i}", "from": f"sender{i}@example.com", "subject": f"Test {i}"} for i in range(NUM_OF_MESSAGES)]
+            mock_messages = [
+                {"id": f"msg{i}", "from": f"sender{i}@example.com", "subject": f"Test {i}"} for i in range(NUM_OF_MESSAGES)
+            ]
             mock_list_messages.return_value = mock_messages
 
             messages = list(self.adapter.get_messages(max_results=1000))
@@ -136,7 +138,7 @@ class TestServiceClientAdapterEdgeCases:
 
             # When max_results is None, the condition max_results > 0 is False
             # So it returns all messages (not limited)
-            messages = list(self.adapter.get_messages(max_results=None))
+            messages = list(self.adapter.get_messages(max_results=None))  # type: ignore[arg-type] # purpose of the test
             assert len(messages) == 1
 
     def test_get_message_with_malformed_response(self) -> None:

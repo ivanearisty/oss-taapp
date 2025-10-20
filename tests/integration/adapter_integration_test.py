@@ -1,10 +1,10 @@
 """Integration tests for the adapter."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, create_autospec
 
 import pytest
-from mail_client_adapter.client import AuthenticatedClient
 from mail_client_adapter.service_client_adapter import ServiceClientAdapter
 from starlette.testclient import TestClient
 
@@ -13,12 +13,13 @@ import mail_client_api
 from mail_client_api import Client, Message
 from mail_client_service import app as service_app
 from mail_client_service import get_mail_client
+from mail_client_service_client import Client as ServiceClient
 
 
 class DummyMessage:
     """Dummy message for testing."""
 
-    def __init__(self, message_id: str, sender: str, recipient: str, subject: str, date: str, body: str) -> None: # noqa: PLR0913
+    def __init__(self, message_id: str, sender: str, recipient: str, subject: str, date: str, body: str) -> None:  # noqa: PLR0913
         """Initialize the dummy message."""
         self.id = message_id
         self.from_ = sender
@@ -29,6 +30,7 @@ class DummyMessage:
 
 
 @pytest.mark.integration
+@pytest.mark.local_credentials
 def test_adapter_exercises_service_and_mail_client(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -58,10 +60,10 @@ def test_adapter_exercises_service_and_mail_client(
     try:
         base_url = "http://testserver"
         with TestClient(service_app, base_url=base_url) as httpx_client:
-            auth_client = AuthenticatedClient(base_url=base_url, token="fake-token") # noqa: S106
-            auth_client.set_httpx_client(httpx_client)
+            service_client = ServiceClient(base_url=base_url)
+            service_client.set_httpx_client(httpx_client)
 
-            adapter = ServiceClientAdapter(auth_client)
+            adapter = ServiceClientAdapter(service_client)
 
             got_one: Message = adapter.get_message(dummy.id)
             # Adapter returns an iterator; materialize to a list for assertions
@@ -87,6 +89,7 @@ def test_adapter_exercises_service_and_mail_client(
 
 
 @pytest.mark.integration
+@pytest.mark.local_credentials
 def test_end_to_end_service_call_with_mocked_gmail_impl(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -131,10 +134,10 @@ def test_end_to_end_service_call_with_mocked_gmail_impl(
     try:
         base_url = "http://testserver"
         with TestClient(service_app, base_url=base_url) as httpx_client:
-            auth_client = AuthenticatedClient(base_url=base_url, token="circleci-test-token") # noqa: S106
-            auth_client.set_httpx_client(httpx_client)
+            service_client = ServiceClient(base_url=base_url)
+            service_client.set_httpx_client(httpx_client)
 
-            adapter = ServiceClientAdapter(auth_client)
+            adapter = ServiceClientAdapter(service_client)
 
             # Single message flow
             retrieved_message = adapter.get_message(mock_message_data["id"])

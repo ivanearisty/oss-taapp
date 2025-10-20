@@ -1,9 +1,10 @@
-"""Tests for Client and AuthenticatedClient classes."""
+"""Tests for Client class."""
 
 from unittest.mock import Mock, patch
 
 import httpx
-from mail_client_adapter.client import AuthenticatedClient, Client
+
+from mail_client_service_client import Client
 
 
 class TestClient:
@@ -93,7 +94,12 @@ class TestClient:
 
         assert result is mock_client_instance
         mock_httpx_client_class.assert_called_once_with(
-            base_url="https://api.example.com", cookies={}, headers={}, timeout=None, verify=True, follow_redirects=False,
+            base_url="https://api.example.com",
+            cookies={},
+            headers={},
+            timeout=None,
+            verify=True,
+            follow_redirects=False,
         )
 
     def test_get_httpx_client_returns_existing(self) -> None:
@@ -141,7 +147,12 @@ class TestClient:
 
         assert result is mock_async_client_instance
         mock_async_client_class.assert_called_once_with(
-            base_url="https://api.example.com", cookies={}, headers={}, timeout=None, verify=True, follow_redirects=False,
+            base_url="https://api.example.com",
+            cookies={},
+            headers={},
+            timeout=None,
+            verify=True,
+            follow_redirects=False,
         )
 
     def test_get_async_httpx_client_returns_existing(self) -> None:
@@ -157,203 +168,6 @@ class TestClient:
     def test_async_context_manager(self) -> None:
         """Test async context manager functionality."""
         client = Client(base_url="https://api.example.com")
-        mock_async_client = Mock()
-        mock_async_client.__aenter__ = Mock(return_value=mock_async_client)
-        mock_async_client.__aexit__ = Mock(return_value=None)
-        client._async_client = mock_async_client
-
-        # Test that the async context manager methods are callable
-        assert callable(mock_async_client.__aenter__)
-        assert callable(mock_async_client.__aexit__)
-
-
-class TestAuthenticatedClient:
-    """Test cases for AuthenticatedClient class."""
-
-    def test_authenticated_client_initialization(self) -> None:
-        """Test authenticated client initialization."""
-        client = AuthenticatedClient(base_url="https://api.example.com", token="test-token")
-
-        assert client.token == "test-token"
-        assert client.prefix == "Bearer"
-        assert client.auth_header_name == "Authorization"
-        assert client.raise_on_unexpected_status is False
-
-    def test_authenticated_client_initialization_with_custom_auth(self) -> None:
-        """Test authenticated client initialization with custom auth settings."""
-        client = AuthenticatedClient(
-            base_url="https://api.example.com",
-            token="test-token",
-            prefix="Token",
-            auth_header_name="X-API-Key",
-            raise_on_unexpected_status=True,
-        )
-
-        assert client.token == "test-token"
-        assert client.prefix == "Token"
-        assert client.auth_header_name == "X-API-Key"
-        assert client.raise_on_unexpected_status is True
-
-    def test_with_headers(self) -> None:
-        """Test with_headers method."""
-        client = AuthenticatedClient(base_url="https://api.example.com", token="token")
-        new_client = client.with_headers({"Content-Type": "application/json"})
-
-        assert new_client._headers == {"Content-Type": "application/json"}
-        assert client._headers == {}  # Original client unchanged
-
-    def test_with_cookies(self) -> None:
-        """Test with_cookies method."""
-        client = AuthenticatedClient(base_url="https://api.example.com", token="token")
-        new_client = client.with_cookies({"session": "abc123"})
-
-        assert new_client._cookies == {"session": "abc123"}
-        assert client._cookies == {}  # Original client unchanged
-
-    def test_with_timeout(self) -> None:
-        """Test with_timeout method."""
-        client = AuthenticatedClient(base_url="https://api.example.com", token="token")
-        timeout = httpx.Timeout(60.0)
-        new_client = client.with_timeout(timeout)
-
-        assert new_client._timeout == timeout
-        assert client._timeout is None  # Original client unchanged
-
-    def test_set_httpx_client(self) -> None:
-        """Test set_httpx_client method."""
-        client = AuthenticatedClient(base_url="https://api.example.com", token="token")
-        mock_httpx_client = Mock(spec=httpx.Client)
-
-        result = client.set_httpx_client(mock_httpx_client)
-
-        assert result is client
-        assert client._client is mock_httpx_client
-
-    @patch("httpx.Client")
-    def test_get_httpx_client_creates_new_with_auth(self, mock_httpx_client_class: Mock) -> None:
-        """Test get_httpx_client creates new client with auth header."""
-        mock_client_instance = Mock()
-        mock_httpx_client_class.return_value = mock_client_instance
-
-        client = AuthenticatedClient(base_url="https://api.example.com", token="test-token")
-        result = client.get_httpx_client()
-
-        assert result is mock_client_instance
-        mock_httpx_client_class.assert_called_once_with(
-            base_url="https://api.example.com",
-            cookies={},
-            headers={"Authorization": "Bearer test-token"},
-            timeout=None,
-            verify=True,
-            follow_redirects=False,
-        )
-
-    @patch("httpx.Client")
-    def test_get_httpx_client_with_custom_auth(self, mock_httpx_client_class: Mock) -> None:
-        """Test get_httpx_client with custom auth settings."""
-        mock_client_instance = Mock()
-        mock_httpx_client_class.return_value = mock_client_instance
-
-        client = AuthenticatedClient(
-            base_url="https://api.example.com", token="test-token", prefix="Token", auth_header_name="X-API-Key",
-        )
-        result = client.get_httpx_client()
-
-        assert result is mock_client_instance
-        mock_httpx_client_class.assert_called_once_with(
-            base_url="https://api.example.com",
-            cookies={},
-            headers={"X-API-Key": "Token test-token"},
-            timeout=None,
-            verify=True,
-            follow_redirects=False,
-        )
-
-    @patch("httpx.Client")
-    def test_get_httpx_client_with_empty_prefix(self, mock_httpx_client_class: Mock) -> None:
-        """Test get_httpx_client with empty prefix."""
-        mock_client_instance = Mock()
-        mock_httpx_client_class.return_value = mock_client_instance
-
-        client = AuthenticatedClient(base_url="https://api.example.com", token="test-token", prefix="")
-        result = client.get_httpx_client()
-
-        assert result is mock_client_instance
-        mock_httpx_client_class.assert_called_once_with(
-            base_url="https://api.example.com",
-            cookies={},
-            headers={"Authorization": "test-token"},
-            timeout=None,
-            verify=True,
-            follow_redirects=False,
-        )
-
-    def test_get_httpx_client_returns_existing(self) -> None:
-        """Test get_httpx_client returns existing client."""
-        client = AuthenticatedClient(base_url="https://api.example.com", token="token")
-        mock_httpx_client = Mock(spec=httpx.Client)
-        client._client = mock_httpx_client
-
-        result = client.get_httpx_client()
-
-        assert result is mock_httpx_client
-
-    def test_context_manager(self) -> None:
-        """Test context manager functionality."""
-        client = AuthenticatedClient(base_url="https://api.example.com", token="token")
-        mock_httpx_client = Mock()
-        mock_httpx_client.__enter__ = Mock(return_value=mock_httpx_client)
-        mock_httpx_client.__exit__ = Mock(return_value=None)
-        client._client = mock_httpx_client
-
-        with client as ctx:
-            assert ctx is client
-            mock_httpx_client.__enter__.assert_called_once()
-
-        mock_httpx_client.__exit__.assert_called_once()
-
-    def test_set_async_httpx_client(self) -> None:
-        """Test set_async_httpx_client method."""
-        client = AuthenticatedClient(base_url="https://api.example.com", token="token")
-        mock_async_client = Mock(spec=httpx.AsyncClient)
-
-        result = client.set_async_httpx_client(mock_async_client)
-
-        assert result is client
-        assert client._async_client is mock_async_client
-
-    @patch("httpx.AsyncClient")
-    def test_get_async_httpx_client_creates_new_with_auth(self, mock_async_client_class: Mock) -> None:
-        """Test get_async_httpx_client creates new client with auth header."""
-        mock_async_client_instance = Mock()
-        mock_async_client_class.return_value = mock_async_client_instance
-
-        client = AuthenticatedClient(base_url="https://api.example.com", token="test-token")
-        result = client.get_async_httpx_client()
-
-        assert result is mock_async_client_instance
-        mock_async_client_class.assert_called_once_with(
-            base_url="https://api.example.com",
-            cookies={},
-            headers={"Authorization": "Bearer test-token"},
-            timeout=None,
-            verify=True,
-            follow_redirects=False,
-        )
-
-    def test_get_async_httpx_client_returns_existing(self) -> None:
-        """Test get_async_httpx_client returns existing client."""
-        client = AuthenticatedClient(base_url="https://api.example.com", token="token")
-        mock_async_client = Mock(spec=httpx.AsyncClient)
-        client._async_client = mock_async_client
-
-        result = client.get_async_httpx_client()
-
-        assert result is mock_async_client
-
-    def test_async_context_manager(self) -> None:
-        """Test async context manager functionality."""
-        client = AuthenticatedClient(base_url="https://api.example.com", token="token")
         mock_async_client = Mock()
         mock_async_client.__aenter__ = Mock(return_value=mock_async_client)
         mock_async_client.__aexit__ = Mock(return_value=None)

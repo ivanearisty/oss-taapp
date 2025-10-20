@@ -1,6 +1,6 @@
 """Unit tests for mail client service API endpoints."""
 
-from src.mail_client_service.tests.conftest import (
+from .conftest import (
     LONG_BODY_LEN,
     HTTPStatus,
     client,
