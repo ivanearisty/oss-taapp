@@ -1,6 +1,7 @@
 """Service client adapter implementation."""
 
 import logging
+import logging
 from collections.abc import Iterator
 
 from mail_client_api.client import Client
@@ -50,7 +51,8 @@ class ServiceClientAdapter(Client):
         """
         try:
             response = get_message_sync(
-                message_id=message_id, client=self._service_client,
+                message_id=message_id,
+                client=self._service_client,
             )
 
             if response is None:
@@ -75,23 +77,27 @@ class ServiceClientAdapter(Client):
         try:
             self.logger.info("Attempting to delete message %s", message_id)
             response = delete_message_sync(
-                message_id=message_id, client=self._service_client,
+                message_id=message_id,
+                client=self._service_client,
             )
 
             # Check if the response indicates success
             if response is None:
                 self.logger.warning(
-                    "Received None response when deleting message %s", message_id,
+                    "Received None response when deleting message %s",
+                    message_id,
                 )
                 return False
 
             # The response should contain success information
             success = response.get(
-                "success", True,
+                "success",
+                True,
             )  # Assume success if we got a response
             if not success:
                 self.logger.warning(
-                    "Delete operation reported failure for message %s", message_id,
+                    "Delete operation reported failure for message %s",
+                    message_id,
                 )
                 return False
 
@@ -116,23 +122,27 @@ class ServiceClientAdapter(Client):
         try:
             self.logger.info("Attempting to mark message %s as read", message_id)
             response = mark_as_read_sync(
-                message_id=message_id, client=self._service_client,
+                message_id=message_id,
+                client=self._service_client,
             )
 
             # Check if the response indicates success
             if response is None:
                 self.logger.warning(
-                    "Received None response when marking message %s as read", message_id,
+                    "Received None response when marking message %s as read",
+                    message_id,
                 )
                 return False
 
             # The response should contain success information
             success = response.get(
-                "success", True,
+                "success",
+                True,
             )  # Assume success if we got a response
             if not success:
                 self.logger.warning(
-                    "Mark as read operation reported failure for message %s", message_id,
+                    "Mark as read operation reported failure for message %s",
+                    message_id,
                 )
                 return False
 
@@ -165,7 +175,8 @@ class ServiceClientAdapter(Client):
             # Handle case where response is not a list
             if not isinstance(response, list):
                 self.logger.error(
-                    "Expected list response but got %s", type(response).__name__,
+                    "Expected list response but got %s",
+                    type(response).__name__,
                 )
                 return
 
@@ -182,7 +193,9 @@ class ServiceClientAdapter(Client):
                     yield ServiceMessage(message_item)
                 except (TypeError, ValueError, KeyError) as e:
                     self.logger.warning(
-                        "Failed to create ServiceMessage for item %d: %s", i, e,
+                        "Failed to create ServiceMessage for item %d: %s",
+                        i,
+                        e,
                     )
                     # Continue processing other messages even if one fails
                     continue
