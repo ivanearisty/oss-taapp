@@ -13,8 +13,10 @@ Run to start API and manage Gmail via HTTP.
 """
 
 from typing import Callable, Awaitable
+
 from fastapi import FastAPI, HTTPException, Query, Request, status
 from fastapi.responses import JSONResponse, Response
+
 import gmail_client_impl  # noqa: F401
 import mail_client_api
 

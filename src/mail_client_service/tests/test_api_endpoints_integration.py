@@ -1,10 +1,11 @@
 from types import SimpleNamespace, ModuleType
 
 import sys
+
 from fastapi.testclient import TestClient
+import pytest
 
 import mail_client_api
-import pytest
 
 from mail_client_service.main import app
 
