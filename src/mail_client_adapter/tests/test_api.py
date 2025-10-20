@@ -2,13 +2,9 @@
 
 from unittest.mock import Mock
 
-from unittest.mock import Mock
-
 import pytest
 from mail_client_adapter.api import (
     delete_message_sync,
-    get_message_sync,
-    list_messages_sync,
     get_message_sync,
     list_messages_sync,
     mark_as_read_sync,

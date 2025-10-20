@@ -1,7 +1,6 @@
 """Service client adapter implementation."""
 
 import logging
-import logging
 from collections.abc import Iterator
 
 from mail_client_api.client import Client
