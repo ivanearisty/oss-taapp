@@ -13,15 +13,15 @@ Run to start API and manage Gmail via HTTP.
 """
 
 from typing import Callable, Awaitable
+
 from fastapi import FastAPI, HTTPException, Query, Request, status
 from fastapi.responses import JSONResponse, Response
+
 import gmail_client_impl  # noqa: F401
 import mail_client_api
 
 app = FastAPI(
-    title="Mail Client Service API",
-    description="A Restful FastAPI service for managing Gmail messages",
-    version="1.0.0"
+    title="Mail Client Service API", description="A Restful FastAPI service for managing Gmail messages", version="1.0.0"
 )
 
 
@@ -66,6 +66,7 @@ async def auth_middleware(request: Request, call_next: Callable[[Request], Await
 def root() -> dict[str, str]:
     """Return a welcome message for the Mail Client Service."""
     return {"message": "Welcome to Mail Client Service!"}
+
 
 @app.get("/login", tags=["Authentication"], summary="Authenticate Gmail Account")
 def login(interactive: bool = Query(False, description="Whether to use interactive authentication")) -> JSONResponse:
@@ -168,6 +169,7 @@ def login(interactive: bool = Query(False, description="Whether to use interacti
             },
         ) from e
 
+
 @app.get("/logout", tags=["Authentication"], summary="Logout Gmail Account")
 def logout() -> JSONResponse:
     """Logout the authenticated Gmail account by clearing the client from app state."""
@@ -182,7 +184,10 @@ def logout() -> JSONResponse:
         content={"message": "No active session to logout", "status": "success"},
     )
 
-@app.get("/messages", tags=["Messages"], summary="Get Messages", description="Retrieve a list of Gmail messages with optional limit")
+
+@app.get(
+    "/messages", tags=["Messages"], summary="Get Messages", description="Retrieve a list of Gmail messages with optional limit"
+)
 def get_messages(max_results: int = Query(3, ge=1, le=100, description="Maximum number of messages to return")) -> JSONResponse:
     """Get messages from the authenticated Gmail client.
     Args:
@@ -237,7 +242,12 @@ def get_messages(max_results: int = Query(3, ge=1, le=100, description="Maximum 
         ) from e
 
 
-@app.get("/messages/{message_id}", tags=["Messages"], summary="Get Message Details", description="Retrieve detailed information for a specific message by ID")
+@app.get(
+    "/messages/{message_id}",
+    tags=["Messages"],
+    summary="Get Message Details",
+    description="Retrieve detailed information for a specific message by ID",
+)
 def get_message_detail(message_id: str) -> JSONResponse:
     """Fetch the full detail of a single message by its ID.
     Args:
@@ -320,7 +330,12 @@ def get_message_detail(message_id: str) -> JSONResponse:
         ) from e
 
 
-@app.post("/messages/{message_id}/mark-as-read", tags=["Messages"], summary="Mark Message as Read", description="Mark a specific message as read by its ID")
+@app.post(
+    "/messages/{message_id}/mark-as-read",
+    tags=["Messages"],
+    summary="Mark Message as Read",
+    description="Mark a specific message as read by its ID",
+)
 def mark_message_as_read(message_id: str) -> JSONResponse:
     """Mark a message as read by its ID.
     Args:
@@ -369,7 +384,9 @@ def mark_message_as_read(message_id: str) -> JSONResponse:
         ) from e
 
 
-@app.delete("/messages/{message_id}", tags=["Messages"], summary="Delete Message", description="Permanently delete a message by its ID")
+@app.delete(
+    "/messages/{message_id}", tags=["Messages"], summary="Delete Message", description="Permanently delete a message by its ID"
+)
 def delete_message(message_id: str) -> JSONResponse:
     """Delete a message by its ID.
     Args:

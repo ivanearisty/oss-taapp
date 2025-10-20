@@ -1,10 +1,8 @@
-
 from unittest.mock import Mock
 
 from mail_client_api.message import Message
 
 from mail_client_api.client import Client
-
 
 
 def test_client_get_messages() -> None:
@@ -34,7 +32,7 @@ def test_client_get_messages() -> None:
 
 def test_client_get_message() -> None:
     """Verifies and demonstrates the contract for the `get_message` method."""
-    # ARRANGE   
+    # ARRANGE
     mock_message = Mock(spec=Message)
     mock_message.id = "specific_msg_id"
 
@@ -50,10 +48,8 @@ def test_client_get_message() -> None:
 
 
 def test_client_mark_message_as_read() -> None:
-    """Verifies and demonstrates the contract for the `mark_message_as_read` method.
-
-    """
-   # ARRANGE   
+    """Verifies and demonstrates the contract for the `mark_message_as_read` method."""
+    # ARRANGE
     mock_message = Mock(spec=Message)
     mock_message.id = "specific_msg_id"
 
@@ -67,11 +63,10 @@ def test_client_mark_message_as_read() -> None:
     mock_client.mark_as_read.assert_called_once_with(message_id="specific_msg_id")
     assert message_read
 
-def test_client_delete_message() -> None:
-    """Verifies and demonstrates the contract for the `delete_message` method.
 
-    """
-   # ARRANGE   
+def test_client_delete_message() -> None:
+    """Verifies and demonstrates the contract for the `delete_message` method."""
+    # ARRANGE
     mock_message = Mock(spec=Message)
     mock_message.id = "specific_msg_id"
 
@@ -83,4 +78,4 @@ def test_client_delete_message() -> None:
 
     # ASSERT
     mock_client.delete_message.assert_called_once_with(message_id="specific_msg_id")
-    assert message_deleted  
+    assert message_deleted
