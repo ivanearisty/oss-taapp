@@ -1,7 +1,8 @@
 """Test configuration for mail client service."""
 
+from collections.abc import Callable
 from enum import Enum
-from typing import cast
+from typing import Any, cast
 from unittest.mock import Mock, create_autospec
 
 import pytest
@@ -29,38 +30,53 @@ class HTTPStatus(Enum):
     INTERNAL_SERVER_ERROR = 500
 
 
-def create_mock_message(  # noqa: PLR0913
-    msg_id: str,
-    from_: str,
-    to: str,
-    subject: str,
-    date: str,
-    body: str,
-) -> Mock:
+@pytest.fixture
+def http_status() -> type[HTTPStatus]:
+    """Provide HTTP status codes enum."""
+    return HTTPStatus
+
+
+@pytest.fixture
+def create_mock_message() -> Callable[..., Mock]:
     """Create a mock message object with the given properties."""
-    mock_msg = create_autospec(Message, spec_set=True)
-    mock_msg.id = msg_id
-    mock_msg.from_ = from_
-    mock_msg.to = to
-    mock_msg.subject = subject
-    mock_msg.date = date
-    mock_msg.body = body
-    return cast("Mock", mock_msg)
+
+    def _create_mock_message(  # noqa: PLR0913
+        msg_id: str,
+        from_: str,
+        to: str,
+        subject: str,
+        date: str,
+        body: str,
+    ) -> Mock:
+        """Create a mock message object with the given properties."""
+        mock_msg = create_autospec(Message, spec_set=True)
+        mock_msg.id = msg_id
+        mock_msg.from_ = from_
+        mock_msg.to = to
+        mock_msg.subject = subject
+        mock_msg.date = date
+        mock_msg.body = body
+        return cast("Mock", mock_msg)
+
+    return _create_mock_message
 
 
-# Create mock client once (reused across all tests)
-mock_mail_client = create_autospec(Client, spec_set=True)
+@pytest.fixture
+def mock_mail_client() -> Any:  # noqa: ANN401 # Client
+    """Provide a mock mail client."""
+    return create_autospec(Client, spec_set=True)
 
-# Override the dependency once
-app.dependency_overrides[get_mail_client] = lambda: mock_mail_client
 
-
-# Create the test client once
-client = TestClient(app)
+@pytest.fixture
+def client(mock_mail_client: Mock) -> TestClient:
+    """Provide a test client with mocked dependencies."""
+    # Override the dependency
+    app.dependency_overrides[get_mail_client] = lambda: mock_mail_client
+    return TestClient(app)
 
 
 @pytest.fixture(autouse=True)
-def setup_test() -> None:
+def setup_test(mock_mail_client: Mock) -> None:
     """Reset mock state before each test (but reuse the same mock object)."""
     # Just reset the mock's call history and side effects, don't recreate it
     mock_mail_client.reset_mock()
