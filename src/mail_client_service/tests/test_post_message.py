@@ -1,9 +1,15 @@
 """Unit tests for POST endpoints in the mail client service."""
 
-from .conftest import HTTPStatus, client, mock_mail_client
+from unittest.mock import Mock
+
+from fastapi.testclient import TestClient
 
 
-def test_mark_message_as_read_success() -> None:
+def test_mark_message_as_read_success(
+    client: TestClient,
+    mock_mail_client: Mock,
+    http_status: type,
+) -> None:
     """Test successfully marking a message as read."""
     # Arrange
     message_id = "test_msg_001"
@@ -13,7 +19,7 @@ def test_mark_message_as_read_success() -> None:
     response = client.post(f"/messages/{message_id}/mark-as-read")
 
     # Assert
-    assert HTTPStatus(response.status_code) == HTTPStatus.OK
+    assert http_status(response.status_code) == http_status.OK  # type: ignore[attr-defined]  # pytest fixture
     data = response.json()
     assert data["detail"] == f"Message {message_id} marked as read."
 
@@ -21,7 +27,11 @@ def test_mark_message_as_read_success() -> None:
     mock_mail_client.mark_as_read.assert_called_once_with(message_id)
 
 
-def test_mark_message_as_read_client_exception() -> None:
+def test_mark_message_as_read_client_exception(
+    client: TestClient,
+    mock_mail_client: Mock,
+    http_status: type,
+) -> None:
     """Test when the mail client raises an exception during mark as read."""
     # Arrange
     message_id = "test_msg_002"
@@ -31,7 +41,7 @@ def test_mark_message_as_read_client_exception() -> None:
     response = client.post(f"/messages/{message_id}/mark-as-read")
 
     # Assert
-    assert HTTPStatus(response.status_code) == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert http_status(response.status_code) == http_status.INTERNAL_SERVER_ERROR  # type: ignore[attr-defined]  # pytest fixture
     data = response.json()
     assert data["detail"] == "Failed to mark as read"
 
@@ -39,7 +49,11 @@ def test_mark_message_as_read_client_exception() -> None:
     mock_mail_client.mark_as_read.assert_called_once_with(message_id)
 
 
-def test_mark_message_as_read_nonexistent_message() -> None:
+def test_mark_message_as_read_nonexistent_message(
+    client: TestClient,
+    mock_mail_client: Mock,
+    http_status: type,
+) -> None:
     """Test marking a nonexistent message as read."""
     # Arrange
     message_id = "nonexistent_msg"
@@ -49,7 +63,7 @@ def test_mark_message_as_read_nonexistent_message() -> None:
     response = client.post(f"/messages/{message_id}/mark-as-read")
 
     # Assert
-    assert HTTPStatus(response.status_code) == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert http_status(response.status_code) == http_status.INTERNAL_SERVER_ERROR  # type: ignore[attr-defined]  # pytest fixture
     data = response.json()
     assert data["detail"] == "Message not found"
 
@@ -57,7 +71,10 @@ def test_mark_message_as_read_nonexistent_message() -> None:
     mock_mail_client.mark_as_read.assert_called_once_with(message_id)
 
 
-def test_mark_message_as_read_empty_message_id() -> None:
+def test_mark_message_as_read_empty_message_id(
+    client: TestClient,
+    http_status: type,
+) -> None:
     """Test marking a message as read with empty message ID."""
     # Arrange
     message_id = ""
@@ -66,10 +83,14 @@ def test_mark_message_as_read_empty_message_id() -> None:
     response = client.post(f"/messages/{message_id}/mark-as-read")
 
     # Assert
-    assert HTTPStatus(response.status_code) == HTTPStatus.NOT_FOUND
+    assert http_status(response.status_code) == http_status.NOT_FOUND  # type: ignore[attr-defined]  # pytest fixture
 
 
-def test_mark_message_as_read_with_special_characters() -> None:
+def test_mark_message_as_read_with_special_characters(
+    client: TestClient,
+    mock_mail_client: Mock,
+    http_status: type,
+) -> None:
     """Test marking a message as read with special characters in message ID."""
     # Arrange
     message_id = "msg_with_émoji_🎉"
@@ -79,7 +100,7 @@ def test_mark_message_as_read_with_special_characters() -> None:
     response = client.post(f"/messages/{message_id}/mark-as-read")
 
     # Assert
-    assert HTTPStatus(response.status_code) == HTTPStatus.OK
+    assert http_status(response.status_code) == http_status.OK  # type: ignore[attr-defined]  # pytest fixture
     data = response.json()
     assert data["detail"] == f"Message {message_id} marked as read."
 
@@ -87,7 +108,11 @@ def test_mark_message_as_read_with_special_characters() -> None:
     mock_mail_client.mark_as_read.assert_called_once_with(message_id)
 
 
-def test_mark_message_as_read_very_long_message_id() -> None:
+def test_mark_message_as_read_very_long_message_id(
+    client: TestClient,
+    mock_mail_client: Mock,
+    http_status: type,
+) -> None:
     """Test marking a message as read with very long message ID."""
     # Arrange
     message_id = "a" * 1000  # Very long message ID
@@ -97,7 +122,7 @@ def test_mark_message_as_read_very_long_message_id() -> None:
     response = client.post(f"/messages/{message_id}/mark-as-read")
 
     # Assert
-    assert HTTPStatus(response.status_code) == HTTPStatus.OK
+    assert http_status(response.status_code) == http_status.OK  # type: ignore[attr-defined]  # pytest fixture
     data = response.json()
     assert data["detail"] == f"Message {message_id} marked as read."
 
@@ -105,7 +130,11 @@ def test_mark_message_as_read_very_long_message_id() -> None:
     mock_mail_client.mark_as_read.assert_called_once_with(message_id)
 
 
-def test_mark_message_as_read_authentication_error() -> None:
+def test_mark_message_as_read_authentication_error(
+    client: TestClient,
+    mock_mail_client: Mock,
+    http_status: type,
+) -> None:
     """Test marking a message as read when authentication fails."""
     # Arrange
     message_id = "test_msg_003"
@@ -115,7 +144,7 @@ def test_mark_message_as_read_authentication_error() -> None:
     response = client.post(f"/messages/{message_id}/mark-as-read")
 
     # Assert
-    assert HTTPStatus(response.status_code) == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert http_status(response.status_code) == http_status.INTERNAL_SERVER_ERROR  # type: ignore[attr-defined]  # pytest fixture
     data = response.json()
     assert data["detail"] == "Authentication failed"
 
@@ -123,7 +152,11 @@ def test_mark_message_as_read_authentication_error() -> None:
     mock_mail_client.mark_as_read.assert_called_once_with(message_id)
 
 
-def test_mark_message_as_read_network_error() -> None:
+def test_mark_message_as_read_network_error(
+    client: TestClient,
+    mock_mail_client: Mock,
+    http_status: type,
+) -> None:
     """Test marking a message as read when network error occurs."""
     # Arrange
     message_id = "test_msg_004"
@@ -133,7 +166,7 @@ def test_mark_message_as_read_network_error() -> None:
     response = client.post(f"/messages/{message_id}/mark-as-read")
 
     # Assert
-    assert HTTPStatus(response.status_code) == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert http_status(response.status_code) == http_status.INTERNAL_SERVER_ERROR  # type: ignore[attr-defined]  # pytest fixture
     data = response.json()
     assert data["detail"] == "Network connection failed"
 
@@ -141,7 +174,11 @@ def test_mark_message_as_read_network_error() -> None:
     mock_mail_client.mark_as_read.assert_called_once_with(message_id)
 
 
-def test_mark_message_as_read_value_error() -> None:
+def test_mark_message_as_read_value_error(
+    client: TestClient,
+    mock_mail_client: Mock,
+    http_status: type,
+) -> None:
     """Test marking a message as read when ValueError is raised."""
     # Arrange
     message_id = "test_msg_005"
@@ -151,7 +188,7 @@ def test_mark_message_as_read_value_error() -> None:
     response = client.post(f"/messages/{message_id}/mark-as-read")
 
     # Assert
-    assert HTTPStatus(response.status_code) == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert http_status(response.status_code) == http_status.INTERNAL_SERVER_ERROR  # type: ignore[attr-defined]  # pytest fixture
     data = response.json()
     assert data["detail"] == "Invalid message ID format"
 
@@ -159,7 +196,11 @@ def test_mark_message_as_read_value_error() -> None:
     mock_mail_client.mark_as_read.assert_called_once_with(message_id)
 
 
-def test_mark_message_as_read_with_url_encoded_characters() -> None:
+def test_mark_message_as_read_with_url_encoded_characters(
+    client: TestClient,
+    mock_mail_client: Mock,
+    http_status: type,
+) -> None:
     """Test marking a message as read with URL-encoded characters in message ID."""
     # Arrange
     message_id = "msg@example.com"  # Contains @ which might be URL encoded
@@ -169,7 +210,7 @@ def test_mark_message_as_read_with_url_encoded_characters() -> None:
     response = client.post(f"/messages/{message_id}/mark-as-read")
 
     # Assert
-    assert HTTPStatus(response.status_code) == HTTPStatus.OK
+    assert http_status(response.status_code) == http_status.OK  # type: ignore[attr-defined]  # pytest fixture
     data = response.json()
     assert data["detail"] == f"Message {message_id} marked as read."
 

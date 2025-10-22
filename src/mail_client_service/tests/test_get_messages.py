@@ -1,15 +1,17 @@
 """Unit tests for mail client service API endpoints."""
 
-from .conftest import (
-    LONG_BODY_LEN,
-    HTTPStatus,
-    client,
-    create_mock_message,
-    mock_mail_client,
-)
+from collections.abc import Callable
+from unittest.mock import Mock
+
+from fastapi.testclient import TestClient
 
 
-def test_list_messages_success() -> None:
+def test_list_messages_success(
+    client: TestClient,
+    mock_mail_client: Mock,
+    create_mock_message: Callable[..., Mock],
+    http_status: type,
+) -> None:
     """Test successful retrieval of messages."""
     # Arrange
     NUM_OF_MESSAGES = 3  # noqa: N806
@@ -45,7 +47,7 @@ def test_list_messages_success() -> None:
     response = client.get("/messages")
 
     # Assert
-    assert HTTPStatus(response.status_code) == HTTPStatus.OK
+    assert http_status(response.status_code) == http_status.OK  # type: ignore[attr-defined]  # pytest fixture
     data = response.json()
 
     assert len(data) == NUM_OF_MESSAGES
@@ -63,7 +65,11 @@ def test_list_messages_success() -> None:
     mock_mail_client.get_messages.assert_called_once()
 
 
-def test_list_messages_empty_list() -> None:
+def test_list_messages_empty_list(
+    client: TestClient,
+    mock_mail_client: Mock,
+    http_status: type,
+) -> None:
     """Test when no messages are returned."""
     # Arrange
     mock_mail_client.get_messages.return_value = []
@@ -72,12 +78,17 @@ def test_list_messages_empty_list() -> None:
     response = client.get("/messages")
 
     # Assert
-    assert HTTPStatus(response.status_code) == HTTPStatus.OK
+    assert http_status(response.status_code) == http_status.OK  # type: ignore[attr-defined]  # pytest fixture
     data = response.json()
     assert data == []
 
 
-def test_list_messages_single_message() -> None:
+def test_list_messages_single_message(
+    client: TestClient,
+    mock_mail_client: Mock,
+    create_mock_message: Callable[..., Mock],
+    http_status: type,
+) -> None:
     """Test with a single message."""
     # Arrange
     single_message = create_mock_message(
@@ -94,14 +105,18 @@ def test_list_messages_single_message() -> None:
     response = client.get("/messages")
 
     # Assert
-    assert HTTPStatus(response.status_code) == HTTPStatus.OK
+    assert http_status(response.status_code) == http_status.OK  # type: ignore[attr-defined]  # pytest fixture
     data = response.json()
     assert len(data) == 1
     assert data[0]["id"] == "single_msg"
     assert data[0]["from"] == "single@example.com"
 
 
-def test_list_messages_client_exception() -> None:
+def test_list_messages_client_exception(
+    client: TestClient,
+    mock_mail_client: Mock,
+    http_status: type,
+) -> None:
     """Test when the mail client raises an exception."""
     # Arrange
     mock_mail_client.get_messages.side_effect = Exception(
@@ -112,13 +127,17 @@ def test_list_messages_client_exception() -> None:
     response = client.get("/messages")
 
     # Assert
-    assert HTTPStatus(response.status_code) == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert http_status(response.status_code) == http_status.INTERNAL_SERVER_ERROR  # type: ignore[attr-defined]  # pytest fixture
     data = response.json()
     assert "detail" in data
     assert "Mail client connection failed" in data["detail"]
 
 
-def test_list_messages_client_runtime_error() -> None:
+def test_list_messages_client_runtime_error(
+    client: TestClient,
+    mock_mail_client: Mock,
+    http_status: type,
+) -> None:
     """Test when the mail client raises a RuntimeError."""
     # Arrange
     mock_mail_client.get_messages.side_effect = RuntimeError(
@@ -129,12 +148,16 @@ def test_list_messages_client_runtime_error() -> None:
     response = client.get("/messages")
 
     # Assert
-    assert HTTPStatus(response.status_code) == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert http_status(response.status_code) == http_status.INTERNAL_SERVER_ERROR  # type: ignore[attr-defined]  # pytest fixture
     data = response.json()
     assert data["detail"] == "Authentication failed"
 
 
-def test_list_messages_client_value_error() -> None:
+def test_list_messages_client_value_error(
+    client: TestClient,
+    mock_mail_client: Mock,
+    http_status: type,
+) -> None:
     """Test when the mail client raises a ValueError."""
     # Arrange
     mock_mail_client.get_messages.side_effect = ValueError("Invalid configuration")
@@ -143,12 +166,17 @@ def test_list_messages_client_value_error() -> None:
     response = client.get("/messages")
 
     # Assert
-    assert HTTPStatus(response.status_code) == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert http_status(response.status_code) == http_status.INTERNAL_SERVER_ERROR  # type: ignore[attr-defined]  # pytest fixture
     data = response.json()
     assert data["detail"] == "Invalid configuration"
 
 
-def test_list_messages_with_special_characters() -> None:
+def test_list_messages_with_special_characters(
+    client: TestClient,
+    mock_mail_client: Mock,
+    create_mock_message: Callable[..., Mock],
+    http_status: type,
+) -> None:
     """Test messages with special characters in content."""
     # Arrange
     special_message = create_mock_message(
@@ -165,16 +193,22 @@ def test_list_messages_with_special_characters() -> None:
     response = client.get("/messages")
 
     # Assert
-    assert HTTPStatus(response.status_code) == HTTPStatus.OK
+    assert http_status(response.status_code) == http_status.OK  # type: ignore[attr-defined]  # pytest fixture
     data = response.json()
     assert len(data) == 1
     assert data[0]["subject"] == "Subject with émojis 🎉 and spëcial chars"
     assert "🚀" in data[0]["body"]
 
 
-def test_list_messages_with_long_content() -> None:
+def test_list_messages_with_long_content(
+    client: TestClient,
+    mock_mail_client: Mock,
+    create_mock_message: Callable[..., Mock],
+    http_status: type,
+) -> None:
     """Test messages with very long content."""
     # Arrange
+    LONG_BODY_LEN = 10_000  # noqa: N806
     long_body = "A" * LONG_BODY_LEN
     long_message = create_mock_message(
         "long_msg",
@@ -190,13 +224,18 @@ def test_list_messages_with_long_content() -> None:
     response = client.get("/messages")
 
     # Assert
-    assert HTTPStatus(response.status_code) == HTTPStatus.OK
+    assert http_status(response.status_code) == http_status.OK  # type: ignore[attr-defined]  # pytest fixture
     data = response.json()
     assert len(data) == 1
     assert len(data[0]["body"]) == LONG_BODY_LEN
 
 
-def test_get_message_success() -> None:
+def test_get_message_success(
+    client: TestClient,
+    mock_mail_client: Mock,
+    create_mock_message: Callable[..., Mock],
+    http_status: type,
+) -> None:
     """Test successful retrieval of a single message."""
     # Arrange
     test_message = create_mock_message(
@@ -213,7 +252,7 @@ def test_get_message_success() -> None:
     response = client.get("/messages/test_msg_001")
 
     # Assert
-    assert HTTPStatus(response.status_code) == HTTPStatus.OK
+    assert http_status(response.status_code) == http_status.OK  # type: ignore[attr-defined]  # pytest fixture
     data = response.json()
     assert data["id"] == "test_msg_001"
     assert data["from"] == "sender@example.com"
@@ -226,7 +265,11 @@ def test_get_message_success() -> None:
     mock_mail_client.get_message.assert_called_with("test_msg_001")
 
 
-def test_get_message_not_found() -> None:
+def test_get_message_not_found(
+    client: TestClient,
+    mock_mail_client: Mock,
+    http_status: type,
+) -> None:
     """Test when a message is not found."""
     # Arrange
     mock_mail_client.get_message.side_effect = Exception("Message not found")
@@ -235,7 +278,7 @@ def test_get_message_not_found() -> None:
     response = client.get("/messages/nonexistent_msg")
 
     # Assert
-    assert HTTPStatus(response.status_code) == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert http_status(response.status_code) == http_status.INTERNAL_SERVER_ERROR  # type: ignore[attr-defined]  # pytest fixture
     data = response.json()
     assert data["detail"] == "Message not found"
 
@@ -243,7 +286,11 @@ def test_get_message_not_found() -> None:
     mock_mail_client.get_message.assert_called_with("nonexistent_msg")
 
 
-def test_get_message_client_exception() -> None:
+def test_get_message_client_exception(
+    client: TestClient,
+    mock_mail_client: Mock,
+    http_status: type,
+) -> None:
     """Test when the mail client raises an exception while getting a message."""
     # Arrange
     mock_mail_client.get_message.side_effect = RuntimeError(
@@ -254,6 +301,6 @@ def test_get_message_client_exception() -> None:
     response = client.get("/messages/some_msg_id")
 
     # Assert
-    assert HTTPStatus(response.status_code) == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert http_status(response.status_code) == http_status.INTERNAL_SERVER_ERROR  # type: ignore[attr-defined]  # pytest fixture
     data = response.json()
     assert data["detail"] == "Failed to connect to mail server"
