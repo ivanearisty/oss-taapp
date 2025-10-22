@@ -3,7 +3,7 @@ import pytest
 from mail_client_service_api_client.models.validation_error import ValidationError
 
 
-def test_to_dict_and_from_dict_roundtrip_and_extra_props():
+def test_to_dict_and_from_dict_roundtrip_and_extra_props() -> None:
     v = ValidationError(loc=[1, "field"], msg="must be present", type_="value_error")
     v["extra_num"] = 42
     v["extra_str"] = "z"
@@ -27,7 +27,7 @@ def test_to_dict_and_from_dict_roundtrip_and_extra_props():
     assert set(v2.additional_keys) >= {"extra_num", "extra_str"}
 
 
-def test_item_ops_and_contains_and_additional_keys_behavior():
+def test_item_ops_and_contains_and_additional_keys_behavior() -> None:
     v = ValidationError(loc=[], msg="m", type_="t")
     assert v.additional_keys == []
 
@@ -48,5 +48,4 @@ def test_item_ops_and_contains_and_additional_keys_behavior():
     # KeyError when accessing missing key
     with pytest.raises(KeyError):
         _ = v["missing_key"]
-# filepath: src/mail_client_service_api_client/tests/test_models_validation_error.py
 
