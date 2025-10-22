@@ -1,8 +1,8 @@
-from http import HTTPStatus
-
 import httpx
 import pytest
+
 from typing import Any, cast
+from http import HTTPStatus
 
 from mail_client_service_api_client import errors
 from mail_client_service_api_client.api.messages import get_messages

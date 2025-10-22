@@ -1,8 +1,8 @@
 import asyncio
-from http import HTTPStatus
-
 import httpx
 import pytest
+
+from http import HTTPStatus
 from typing import Any, cast
 
 from mail_client_service_api_client import errors

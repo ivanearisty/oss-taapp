@@ -1,13 +1,11 @@
 import asyncio
-
 import httpx
 import pytest
+
 from httpx import AsyncClient
 from httpx import Client as HttpxClient
-from typing import Any, cast
 
 from mail_client_service_api_client.client import AuthenticatedClient, Client
-from mail_client_service_api_client.client import Client as ApiClient
 
 def test_get_httpx_client_constructs_and_reuses() -> None:
     c = Client(base_url="http://example")
