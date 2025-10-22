@@ -1,14 +1,15 @@
 import asyncio
-import httpx
-import pytest
-
 from http import HTTPStatus
 from typing import Any, cast
 
+import httpx
+import pytest
+
 from mail_client_service_api_client import errors
 from mail_client_service_api_client.api.messages import get_message
-from mail_client_service_api_client.models.http_validation_error import HTTPValidationError
 from mail_client_service_api_client.client import Client as ApiClient
+from mail_client_service_api_client.models.http_validation_error import HTTPValidationError
+
 
 class DummySyncClient:
     def __init__(self, response: httpx.Response, raise_on_unexpected_status: bool = False) -> None:

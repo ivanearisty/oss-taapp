@@ -1,13 +1,14 @@
 import asyncio
 from http import HTTPStatus
+from typing import Any, cast
 
 import httpx
 import pytest
-from typing import Any, cast
 
 from mail_client_service_api_client import errors
 from mail_client_service_api_client.api.authentication import logout
 from mail_client_service_api_client.client import Client as ApiClient
+
 
 class DummySyncClient:
     def __init__(self, response: httpx.Response, raise_on_unexpected_status: bool = False) -> None:
