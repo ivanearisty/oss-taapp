@@ -40,7 +40,7 @@ jobs:
           paths:
             - .
 
-  Job 2: Linting and Formatting Checks
+  # Job 2: Linting and Formatting Checks
   lint:
     docker:
       - image: cimg/python:3.11
@@ -183,7 +183,7 @@ jobs:
             # Run e2e tests that require real Gmail API connectivity
             # These will use environment variables for authentication
             # Note: No coverage tracking for e2e tests - they test end-to-end flows
-            pytest -m "e2e" \
+            uv run pytest tests/e2e \
                    --junitxml=test-results/e2e/junit.xml -v \
                    --no-cov
       - store_test_results:
