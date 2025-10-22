@@ -306,6 +306,32 @@ workflows:
                 - develop
                 - kamen-requierd-fixes
                 - make-real-deletions
+      - integration_test:
+          requires:
+            - circleci_test # Run after CircleCI tests pass
+          context: gmail-client # Context containing Gmail API credentials
+          filters:
+            branches:
+              only:
+                - main
+                - develop
+                - kamen-requierd-fixes
+                - make-real-deletions
+                - temp/testing-circle-e2e
+
+      - e2e_test:
+          requires:
+            - integration_test # Run after integration tests pass
+          context: gmail-client # Context containing Gmail API credentials
+          filters:
+            branches:
+              only:
+                - main
+                - develop
+                - kamen-requierd-fixes
+                - make-real-deletions
+                - temp/testing-circle-e2e
+
 
       # Optional: Report summary after core tests
       - report_summary:
