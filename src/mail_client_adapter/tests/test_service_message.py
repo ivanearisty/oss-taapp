@@ -1,7 +1,7 @@
 """Tests for ServiceMessage class."""
 
 import pytest
-from mail_client_adapter.models import ServiceMessage
+from mail_client_adapter.service_message import ServiceMessage
 
 
 class TestServiceMessage:

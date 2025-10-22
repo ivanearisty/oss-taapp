@@ -1,22 +1,28 @@
 """Mail client adapter package for wrapping auto-generated client."""
 
-from mail_client_service_client import Client
+from .service_client_adapter import (
+    ServiceClientAdapter,
+    get_service_client_impl,
+)
+from .service_client_adapter import (
+    register as _register_service_client,
+)
+from .service_message import (
+    ServiceMessage,
+    get_service_message_impl,
+)
+from .service_message import (
+    register as _register_message,
+)
 
-from .service_client_adapter import ServiceClientAdapter
-
-__all__ = ["ServiceClientAdapter", "create_service_adapter"]
+__all__ = ["ServiceClientAdapter", "ServiceMessage", "get_service_client_impl", "get_service_message_impl", "register"]
 
 
-def create_service_adapter(base_url: str) -> ServiceClientAdapter:
-    """Create a ServiceClientAdapter with the given service configuration.
+def register() -> None:
+    """Register the ServiceClientAdapter and ServiceMessage implementations."""
+    _register_service_client()
+    _register_message()
 
-    Args:
-        base_url: The base URL of the mail service
 
-    Returns:
-        ServiceClientAdapter: Configured adapter instance
-
-    """
-    service_client = Client(base_url=base_url)
-
-    return ServiceClientAdapter(service_client)
+# Dependency Injection happens at import time
+register()

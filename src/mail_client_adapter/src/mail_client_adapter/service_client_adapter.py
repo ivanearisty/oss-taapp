@@ -4,9 +4,10 @@ import logging
 from collections.abc import Iterator
 from typing import cast
 
-from mail_client_api.client import Client
-from mail_client_api.message import Message
+from dotenv import load_dotenv
 
+import mail_client_api
+from mail_client_api import message
 from mail_client_service_client import Client as ServiceClient
 
 from .api import (
@@ -15,10 +16,12 @@ from .api import (
     list_messages_sync,
     mark_as_read_sync,
 )
-from .models import ServiceMessage
+from .service_message import ServiceMessage
+
+load_dotenv()
 
 
-class ServiceClientAdapter(Client):
+class ServiceClientAdapter(mail_client_api.Client):
     """Adapter that wraps the auto-generated service client to implement the Client protocol."""
 
     def __init__(self, service_client: ServiceClient) -> None:
@@ -36,7 +39,7 @@ class ServiceClientAdapter(Client):
         msg = f"Message with ID {message_id} not found"
         raise RuntimeError(msg)
 
-    def get_message(self, message_id: str) -> Message:
+    def get_message(self, message_id: str) -> message.Message:
         """Return a message by its ID.
 
         Args:
@@ -155,7 +158,7 @@ class ServiceClientAdapter(Client):
             self.logger.debug("Error details: %s", e)
             return False
 
-    def get_messages(self, max_results: int = 10) -> Iterator[Message]:
+    def get_messages(self, max_results: int = 10) -> Iterator[message.Message]:
         """Return an iterator of messages from the inbox.
 
         Args:
@@ -201,3 +204,18 @@ class ServiceClientAdapter(Client):
             self.logger.exception("Failed to fetch messages")
             self.logger.debug("Error details: %s", e)
             return
+
+
+def get_service_client_impl(
+    *,
+    interactive: bool = False,  # noqa: ARG001
+    base_url: str = "http://127.0.0.1:8000/",
+) -> mail_client_api.Client:
+    """Return a configured :class:`ServiceClientAdapter` instance."""
+    service_client = ServiceClient(base_url)
+    return ServiceClientAdapter(service_client)
+
+
+def register() -> None:
+    """Register the Gmail client implementation with the mail client API."""
+    mail_client_api.get_client = get_service_client_impl
