@@ -319,7 +319,7 @@ workflows:
                 - kamen-requierd-fixes
                 - make-real-deletions
                 - temp/testing-circle-e2e
-                - hw1
+                - hw1-final-submission
 
       - e2e_test:
           requires:
@@ -333,7 +333,7 @@ workflows:
                 - kamen-requierd-fixes
                 - make-real-deletions
                 - temp/testing-circle-e2e
-                - hw1
+                - hw1-final-submission
 
 
       # Optional: Report summary after core tests
@@ -361,7 +361,7 @@ workflows:
                 - kamen-requierd-fixes
                 - make-real-deletions
                 - temp/testing-circle-e2e
-                - hw1
+                - hw1-final-submission
 
       - lint:
           requires:
@@ -374,7 +374,7 @@ workflows:
                 - kamen-requierd-fixes
                 - make-real-deletions
                 - temp/testing-circle-e2e
-                - hw1
+                - hw1-final-submission
 
       - unit_test:
           requires:
@@ -387,7 +387,7 @@ workflows:
                 - kamen-requierd-fixes
                 - make-real-deletions
                 - temp/testing-circle-e2e
-                - hw1
+                - hw1-final-submission
 
       - circleci_test:
           requires:
@@ -399,7 +399,7 @@ workflows:
                 - develop
                 - kamen-requierd-fixes
                 - make-real-deletions
-                - hw1
+                - hw1-final-submission
 
       - integration_test:
           requires:
@@ -413,7 +413,7 @@ workflows:
                 - kamen-requierd-fixes
                 - make-real-deletions
                 - temp/testing-circle-e2e
-                - hw1
+                - hw1-final-submission
 
       - e2e_test:
           requires:
@@ -427,7 +427,7 @@ workflows:
                 - kamen-requierd-fixes
                 - make-real-deletions
                 - temp/testing-circle-e2e
-                - hw1
+                - hw1-final-submission
 
       - report_summary:
           requires:
@@ -443,4 +443,5 @@ workflows:
                 - kamen-requierd-fixes
                 - make-real-deletions
                 - temp/testing-circle-e2e
-                - hw1
+                - hw1-final-submission
+
