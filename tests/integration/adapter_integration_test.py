@@ -20,6 +20,20 @@ from mail_client_service import get_mail_client
 from mail_client_service_client import Client as ServiceClient
 
 
+@pytest.fixture(autouse=True)
+def setup_adapter_dependency_injection() -> None:
+    """Set up adapter dependency injection for each test in this file."""
+    # Import and register the adapter implementation
+    import mail_client_adapter  # noqa: PLC0415
+
+    mail_client_adapter.register()
+
+    # Also register the service message implementation
+    from mail_client_adapter.service_message import register as register_message  # noqa: PLC0415
+
+    register_message()
+
+
 @dataclass
 class MockServiceContext:
     """Context for running service with mock client."""
@@ -631,7 +645,7 @@ def test_adapter_logging_with_running_service(
     running_service_with_mock_client: MockServiceContext, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test adapter logging with a running service."""
-    import logging  # noqa: PLC0415, I001 # literally only used in this test
+    import logging  # noqa: PLC0415 # literally only used in this test
 
     # Set up logging to capture adapter logs
     caplog.set_level(logging.INFO)
