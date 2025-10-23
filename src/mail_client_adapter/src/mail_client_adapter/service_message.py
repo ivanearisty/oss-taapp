@@ -1,7 +1,5 @@
 """Simple models for API responses."""
 
-from typing import Any
-
 import mail_client_api
 from mail_client_api import message
 
@@ -50,12 +48,13 @@ class ServiceMessage(message.Message):
 
 
 def get_service_message_impl(
-    msg_id: str = "",  # noqa: ARG001
-    raw_data: str = "",  # noqa: ARG001
-    data: dict[str, str] = {},
+    msg_id: str = "",
+    raw_data: str = "",
+    data: dict[str, str] | None = None,
 ) -> mail_client_api.Message:
     """Return an instance of the concrete GmailMessage implementation."""
-
+    if data is None:
+        data = {}
     del msg_id, raw_data
     return ServiceMessage(message_data=data)
 

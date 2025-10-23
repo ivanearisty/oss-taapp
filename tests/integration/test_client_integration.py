@@ -17,6 +17,20 @@ pytestmark = pytest.mark.integration
 logger = logging.getLogger(__name__)
 
 
+@pytest.fixture(autouse=True)
+def setup_gmail_dependency_injection() -> None:
+    """Set up Gmail client dependency injection for each test in this file."""
+    # Import and register the Gmail client implementation
+    import gmail_client_impl
+
+    gmail_client_impl.register()
+
+    # Also register the message implementation
+    from gmail_client_impl.message_impl import register as register_message
+
+    register_message()
+
+
 @pytest.mark.circleci
 @pytest.mark.local_credentials
 def test_get_client_and_authenticate() -> None:

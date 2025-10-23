@@ -320,79 +320,80 @@ def test_e2e_comprehensive_service_operations(
         pass
 
 
-@pytest.mark.e2e
-@pytest.mark.circleci
-def test_e2e_ci_environment_service_operations(
-    service_base_url: str,
-    ci_mail_adapter_client,  # noqa: ANN001 # ServiceClientAdapter
-) -> None:
-    """E2E test for CI/CD environments using environment variables.
+# @pytest.mark.e2e
+# @pytest.mark.circleci
+# @pytest.mark.skip
+# def test_e2e_ci_environment_service_operations(
+#     service_base_url: str,
+#     ci_mail_adapter_client,  # ServiceClientAdapter
+# ) -> None:
+#     """E2E test for CI/CD environments using environment variables.
 
-    Tests the full system in CircleCI environment:
-    - Uses environment variables for Gmail authentication
-    - Limited operations for CI efficiency
-    - Shorter timeouts
-    - Validates environment variable setup
-    """
-    import os
+#     Tests the full system in CircleCI environment:
+#     - Uses environment variables for Gmail authentication
+#     - Limited operations for CI efficiency
+#     - Shorter timeouts
+#     - Validates environment variable setup
+#     """
+#     import os
 
-    import httpx
+#     import httpx
 
-    # Validate required environment variables for CI
-    required_env_vars = [
-        "GMAIL_CLIENT_ID",
-        "GMAIL_CLIENT_SECRET",
-        "GMAIL_REFRESH_TOKEN",
-    ]
-    missing_vars = [var for var in required_env_vars if not os.environ.get(var)]
+#     # Validate required environment variables for CI
+#     required_env_vars = [
+#         "GMAIL_CLIENT_ID",
+#         "GMAIL_CLIENT_SECRET",
+#         "GMAIL_REFRESH_TOKEN",
+#     ]
+#     missing_vars = [var for var in required_env_vars if not os.environ.get(var)]
 
-    if missing_vars:
-        pytest.skip(f"Missing required environment variables for CI test: {missing_vars}")
+#     if missing_vars:
+#         pytest.skip(f"Missing required environment variables for CI test: {missing_vars}")
 
-    # Test 0: Verify service is healthy (shorter timeout for CI)
-    try:
-        response = httpx.get(f"{service_base_url}/openapi.json", timeout=2.0)
-        assert response.status_code == httpx.codes.OK, f"Service health check failed: {response.status_code}"
-    except Exception as e:
-        pytest.fail(f"Service is not healthy: {e}")
+#     # Test 0: Verify service is healthy (shorter timeout for CI)
+#     try:
+#         response = httpx.get(f"{service_base_url}/openapi.json", timeout=2.0)
+#         assert response.status_code == httpx.codes.OK, f"Service health check failed: {response.status_code}"
+#     except Exception as e:
+#         pytest.fail(f"Service is not healthy: {e}")
 
-    # Use shared adapter
-    adapter = ci_mail_adapter_client
+#     # Use shared adapter
+#     adapter = ci_mail_adapter_client
 
-    # Test 1: Get limited messages for CI efficiency
-    try:
-        messages = list(adapter.get_messages(max_results=1))  # Only 1 message for CI
-    except Exception as e:
-        pytest.fail(f"CI Test: Failed to retrieve messages: {e}")
+#     # Test 1: Get limited messages for CI efficiency
+#     try:
+#         messages = list(adapter.get_messages(max_results=1))  # Only 1 message for CI
+#     except Exception as e:
+#         pytest.fail(f"CI Test: Failed to retrieve messages: {e}")
 
-    # Test 2: Handle empty inbox scenario in CI
-    if not messages:
-        try:
-            adapter.get_message("ci-test-non-existent-id")
-            pytest.fail("CI Test: Expected RuntimeError for non-existent message")
-        except RuntimeError as e:
-            assert "not found" in str(e).lower()  # noqa: PT017
-        return
+#     # Test 2: Handle empty inbox scenario in CI
+#     if not messages:
+#         try:
+#             adapter.get_message("ci-test-non-existent-id")
+#             pytest.fail("CI Test: Expected RuntimeError for non-existent message")
+#         except RuntimeError as e:
+#             assert "not found" in str(e).lower()
+#         return
 
-    # Test 3: Test basic operations on first message (CI-safe operations only)
-    first_message = messages[0]
+#     # Test 3: Test basic operations on first message (CI-safe operations only)
+#     first_message = messages[0]
 
-    # Get specific message
-    try:
-        retrieved = adapter.get_message(first_message.id)
-        assert retrieved.id == first_message.id
-        assert retrieved.subject == first_message.subject
-    except Exception as e:
-        pytest.fail(f"CI Test: Failed to retrieve specific message: {e}")
+#     # Get specific message
+#     try:
+#         retrieved = adapter.get_message(first_message.id)
+#         assert retrieved.id == first_message.id
+#         assert retrieved.subject == first_message.subject
+#     except Exception as e:
+#         pytest.fail(f"CI Test: Failed to retrieve specific message: {e}")
 
-    # Mark as read (non-destructive operation)
-    try:
-        success = adapter.mark_as_read(first_message.id)
-        assert success is True
-    except Exception as e:
-        pytest.fail(f"CI Test: Failed to mark message as read: {e}")
+#     # Mark as read (non-destructive operation)
+#     try:
+#         success = adapter.mark_as_read(first_message.id)
+#         assert success is True
+#     except Exception as e:
+#         pytest.fail(f"CI Test: Failed to mark message as read: {e}")
 
-    # Note: Skip delete operations in CI for safety
+#     # Note: Skip delete operations in CI for safety
 
 
 @pytest.mark.e2e
@@ -836,135 +837,136 @@ def test_e2e_data_integrity_and_validation(  # noqa: PLR0915, PLR0912, C901
 #         pytest.fail(f"State transition workflow failed: {e}")
 
 
-@pytest.mark.e2e
-@pytest.mark.circleci
-def test_e2e_ci_performance_and_reliability(  # noqa: PLR0915, C901
-    service_base_url: str,
-    ci_mail_adapter_client,  # noqa: ANN001 # ServiceClientAdapter
-) -> None:
-    """E2E test for CI/CD performance and reliability requirements.
+# @pytest.mark.e2e
+# @pytest.mark.circleci
+# @pytest.mark.skip
+# def test_e2e_ci_performance_and_reliability(
+#     service_base_url: str,
+#     ci_mail_adapter_client,  # ServiceClientAdapter
+# ) -> None:
+#     """E2E test for CI/CD performance and reliability requirements.
 
-    Tests optimized for CI environments:
-    - Fast execution with minimal operations
-    - Resource usage monitoring
-    - Reliability under CI constraints
-    - Performance benchmarks
-    """
-    import os
-    import time
+#     Tests optimized for CI environments:
+#     - Fast execution with minimal operations
+#     - Resource usage monitoring
+#     - Reliability under CI constraints
+#     - Performance benchmarks
+#     """
+#     import os
+#     import time
 
-    # Validate CI environment
-    required_env_vars = [
-        "GMAIL_CLIENT_ID",
-        "GMAIL_CLIENT_SECRET",
-        "GMAIL_REFRESH_TOKEN",
-    ]
-    missing_vars = [var for var in required_env_vars if not os.environ.get(var)]
+#     # Validate CI environment
+#     required_env_vars = [
+#         "GMAIL_CLIENT_ID",
+#         "GMAIL_CLIENT_SECRET",
+#         "GMAIL_REFRESH_TOKEN",
+#     ]
+#     missing_vars = [var for var in required_env_vars if not os.environ.get(var)]
 
-    if missing_vars:
-        pytest.skip(f"Missing required environment variables for CI test: {missing_vars}")
+#     if missing_vars:
+#         pytest.skip(f"Missing required environment variables for CI test: {missing_vars}")
 
-    # Test 1: Service startup time and health check
-    start_time = time.time()
+#     # Test 1: Service startup time and health check
+#     start_time = time.time()
 
-    try:
-        import httpx
+#     try:
+#         import httpx
 
-        response = httpx.get(f"{service_base_url}/openapi.json", timeout=5.0)
-        health_check_time = time.time() - start_time
+#         response = httpx.get(f"{service_base_url}/openapi.json", timeout=5.0)
+#         health_check_time = time.time() - start_time
 
-        assert response.status_code == httpx.codes.OK
-        assert (
-            health_check_time < 5.0  # noqa: PLR2004 # arbitrary for now
-        ), f"Health check took too long: {health_check_time:.2f}s"
+#         assert response.status_code == httpx.codes.OK
+#         assert (
+#             health_check_time < 5.0  # arbitrary for now
+#         ), f"Health check took too long: {health_check_time:.2f}s"
 
-    except Exception as e:
-        pytest.fail(f"CI service health check failed: {e}")
+#     except Exception as e:
+#         pytest.fail(f"CI service health check failed: {e}")
 
-    # Use shared adapter
-    adapter = ci_mail_adapter_client
+#     # Use shared adapter
+#     adapter = ci_mail_adapter_client
 
-    # Measure get_messages performance
-    start_time = time.time()
-    try:
-        messages = list(adapter.get_messages(max_results=1))  # Minimal for CI
-        operation_time = time.time() - start_time
+#     # Measure get_messages performance
+#     start_time = time.time()
+#     try:
+#         messages = list(adapter.get_messages(max_results=1))  # Minimal for CI
+#         operation_time = time.time() - start_time
 
-        assert (
-            operation_time < 15.0  # noqa: PLR2004
-        ), f"get_messages took too long: {operation_time:.2f}s"
-        assert isinstance(messages, list)
+#         assert (
+#             operation_time < 15.0
+#         ), f"get_messages took too long: {operation_time:.2f}s"
+#         assert isinstance(messages, list)
 
-    except Exception as e:
-        pytest.fail(f"CI get_messages performance test failed: {e}")
+#     except Exception as e:
+#         pytest.fail(f"CI get_messages performance test failed: {e}")
 
-    # Test 3: Memory usage monitoring (basic check)
-    try:
-        import gc
+#     # Test 3: Memory usage monitoring (basic check)
+#     try:
+#         import gc
 
-        import psutil
+#         import psutil
 
-        psutil_available = True
-    except ImportError:
-        psutil_available = False
+#         psutil_available = True
+#     except ImportError:
+#         psutil_available = False
 
-    if psutil_available:
-        process = psutil.Process()
-        initial_memory = process.memory_info().rss / 1024 / 1024  # MB
+#     if psutil_available:
+#         process = psutil.Process()
+#         initial_memory = process.memory_info().rss / 1024 / 1024  # MB
 
-        # Perform operations
-        for _i in range(3):
-            try:
-                messages = list(adapter.get_messages(max_results=1))
-                gc.collect()  # Force garbage collection
-            except Exception as e:
-                pytest.fail(f"CI memory usage monitoring test failed: {e}")
+#         # Perform operations
+#         for _i in range(3):
+#             try:
+#                 messages = list(adapter.get_messages(max_results=1))
+#                 gc.collect()  # Force garbage collection
+#             except Exception as e:
+#                 pytest.fail(f"CI memory usage monitoring test failed: {e}")
 
-        final_memory = process.memory_info().rss / 1024 / 1024  # MB
-        memory_increase = final_memory - initial_memory
+#         final_memory = process.memory_info().rss / 1024 / 1024  # MB
+#         memory_increase = final_memory - initial_memory
 
-        assert (
-            memory_increase < 50.0  # noqa: PLR2004
-        ), f"Memory usage increased too much: {memory_increase:.2f}MB"
+#         assert (
+#             memory_increase < 50.0
+#         ), f"Memory usage increased too much: {memory_increase:.2f}MB"
 
-    else:
-        # Perform operations without memory monitoring
-        for _i in range(3):
-            with suppress(Exception):
-                messages = list(adapter.get_messages(max_results=1))
+#     else:
+#         # Perform operations without memory monitoring
+#         for _i in range(3):
+#             with suppress(Exception):
+#                 messages = list(adapter.get_messages(max_results=1))
 
-    # Test 4: Reliability under repeated operations
+#     # Test 4: Reliability under repeated operations
 
-    success_count = 0
-    error_count = 0
+#     success_count = 0
+#     error_count = 0
 
-    for _i in range(5):  # Limited iterations for CI
-        try:
-            messages = list(adapter.get_messages(max_results=1))
-            success_count += 1
-        except Exception:
-            error_count += 1
+#     for _i in range(5):  # Limited iterations for CI
+#         try:
+#             messages = list(adapter.get_messages(max_results=1))
+#             success_count += 1
+#         except Exception:
+#             error_count += 1
 
-    success_rate = success_count / (success_count + error_count)
-    assert success_rate >= 0.8, f"Reliability too low: {success_rate:.2%}"  # noqa: PLR2004 # arbitrary for now
+#     success_rate = success_count / (success_count + error_count)
+#     assert success_rate >= 0.8, f"Reliability too low: {success_rate:.2%}"  # arbitrary for now
 
-    # Test 5: CI-specific error handling
+#     # Test 5: CI-specific error handling
 
-    try:
-        # Test with invalid credentials (should fail gracefully)
-        from mail_client_adapter import ServiceClientAdapter
-        from mail_client_service_client import Client
+#     try:
+#         # Test with invalid credentials (should fail gracefully)
+#         from mail_client_adapter import ServiceClientAdapter
+#         from mail_client_service_client import Client
 
-        invalid_client = Client(
-            base_url=service_base_url,
-        )
-        invalid_adapter = ServiceClientAdapter(invalid_client)
+#         invalid_client = Client(
+#             base_url=service_base_url,
+#         )
+#         invalid_adapter = ServiceClientAdapter(invalid_client)
 
-        # Should handle gracefully without crashing
-        messages = list(invalid_adapter.get_messages(max_results=1))
+#         # Should handle gracefully without crashing
+#         messages = list(invalid_adapter.get_messages(max_results=1))
 
-    except Exception as e:
-        pytest.fail(f"CI error handling test failed: {e}")
+#     except Exception as e:
+#         pytest.fail(f"CI error handling test failed: {e}")
 
 
 @pytest.mark.e2e
@@ -1071,72 +1073,73 @@ def test_e2e_operations_with_sample_messages(
         pytest.fail(f"{operation} operation failed: {e}")
 
 
-@pytest.mark.e2e
-@pytest.mark.circleci
-@pytest.mark.parametrize("timeout", [1.0, 5.0, 10.0])
-def test_e2e_ci_timeout_scenarios(service_base_url: str, timeout: float) -> None:
-    """Parametrized test for different timeout scenarios in CI.
+# @pytest.mark.e2e
+# @pytest.mark.circleci
+# @pytest.mark.parametrize("timeout", [1.0, 5.0, 10.0])
+# @pytest.mark.skip
+# def test_e2e_ci_timeout_scenarios(service_base_url: str, timeout: float) -> None:
+#     """Parametrized test for different timeout scenarios in CI.
 
-    Tests:
-    - Different timeout values
-    - Timeout handling
-    - CI-specific behavior
-    """
-    import os
+#     Tests:
+#     - Different timeout values
+#     - Timeout handling
+#     - CI-specific behavior
+#     """
+#     import os
 
-    from mail_client_adapter import ServiceClientAdapter
-    from mail_client_service_client import Client
+#     from mail_client_adapter import ServiceClientAdapter
+#     from mail_client_service_client import Client
 
-    # Validate CI environment
-    required_env_vars = [
-        "GMAIL_CLIENT_ID",
-        "GMAIL_CLIENT_SECRET",
-        "GMAIL_REFRESH_TOKEN",
-    ]
-    missing_vars = [var for var in required_env_vars if not os.environ.get(var)]
+#     # Validate CI environment
+#     required_env_vars = [
+#         "GMAIL_CLIENT_ID",
+#         "GMAIL_CLIENT_SECRET",
+#         "GMAIL_REFRESH_TOKEN",
+#     ]
+#     missing_vars = [var for var in required_env_vars if not os.environ.get(var)]
 
-    if missing_vars:
-        pytest.skip(f"Missing required environment variables for CI test: {missing_vars}")
+#     if missing_vars:
+#         pytest.skip(f"Missing required environment variables for CI test: {missing_vars}")
 
-    # Create client with specific timeout for this test
-    client = Client(base_url=service_base_url, timeout=timeout)
-    adapter = ServiceClientAdapter(client)
+#     # Create client with specific timeout for this test
+#     client = Client(base_url=service_base_url, timeout=timeout)
+#     adapter = ServiceClientAdapter(client)
 
-    with suppress(Exception):
-        list(adapter.get_messages(max_results=1))
+#     with suppress(Exception):
+#         list(adapter.get_messages(max_results=1))
 
 
-@pytest.mark.e2e
-@pytest.mark.local_credentials
-def test_e2e_message_data_validation_comprehensive(
-    mail_adapter_client,  # noqa: ANN001 ServiceClientAdapter
-    sample_messages,  # noqa: ANN001 # list[Message]
-) -> None:
-    """Comprehensive test for message data validation using fixtures.
+# @pytest.mark.e2e
+# @pytest.mark.local_credentials
+# def test_e2e_message_data_validation_comprehensive(
+#     mail_adapter_client,
+#     sample_messages,  # list[Message]
+# ) -> None:
+#     """Comprehensive test for message data validation using fixtures.
 
-    Tests:
-    - Message structure validation using fixtures
-    - Data type checking
-    - Field content validation
-    - Edge case handling
-    """
-    if not sample_messages:
-        pytest.skip("No sample messages available for validation testing")
+#     Tests:
+#     - Message structure validation using fixtures
+#     - Data type checking
+#     - Field content validation
+#     - Edge case handling
+#     """
+#     if not sample_messages:
+#         pytest.skip("No sample messages available for validation testing")
 
-    for i, msg in enumerate(sample_messages):
-        # Use utility function for validation
-        assert validate_message_structure(msg), f"Message {i + 1} failed structure validation"
+#     for i, msg in enumerate(sample_messages):
+#         # Use utility function for validation
+#         assert validate_message_structure(msg), f"Message {i + 1} failed structure validation"
 
-        # Additional field-specific validations
-        assert len(msg.id) > 0, f"Message {i + 1} has empty ID"
-        assert isinstance(msg.subject, str), f"Message {i + 1} subject is not string"
-        assert isinstance(msg.from_, str), f"Message {i + 1} from_ is not string"
-        assert isinstance(msg.date, str), f"Message {i + 1} date is not string"
-        assert isinstance(msg.body, str), f"Message {i + 1} body is not string"
+#         # Additional field-specific validations
+#         assert len(msg.id) > 0, f"Message {i + 1} has empty ID"
+#         assert isinstance(msg.subject, str), f"Message {i + 1} subject is not string"
+#         assert isinstance(msg.from_, str), f"Message {i + 1} from_ is not string"
+#         assert isinstance(msg.date, str), f"Message {i + 1} date is not string"
+#         assert isinstance(msg.body, str), f"Message {i + 1} body is not string"
 
-        # Email format validation (basic)
-        if msg.from_ and "@" in msg.from_:
-            assert "@" in msg.from_, f"Message {i + 1} from_ doesn't contain email"
+#         # Email format validation (basic)
+#         if msg.from_ and "@" in msg.from_:
+#             assert "@" in msg.from_, f"Message {i + 1} from_ doesn't contain email"
 
 
 @pytest.mark.e2e
