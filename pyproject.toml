@@ -1,14 +1,19 @@
 [project]
-name = "ta-assignment"
+name = "osdp-jira-service"
 version = "0.1.0"
-description = "Template repository for a mail client"
+description = "Microservice adapter for Jira/Ticketing with OAuth 2.0"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = []
 
 [project.optional-dependencies]
 dev = [
-    "google-api-python-client-stubs>=1.30.0",
+    #New Dependencies for Jira/FastAPI/OAuth
+    "fastapi>=0.111.0",
+    "uvicorn>=0.30.1",
+    "requests>=2.32.3",
+    "psycopg2-binary>=2.9.9", #DB driver for token storage
+    "requests-oauthlib>=2.0.0", #OAuth 2.0 implementation
     "mkdocs>=1.6.1",
     "mkdocs-material>=9.6.15",
     "mkdocstrings-python>=1.16.12",
@@ -17,13 +22,12 @@ dev = [
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
     "ruff>=0.12.7",
-    "types-requests>=2.32.4.20250611",
 ]
 
 [tool.uv.workspace]
 members = [
-  "src/mail_client_api",
-  "src/gmail_client_impl",
+  "src/jira_api",
+  "src/jira_impl",
 ]
 
 [tool.ruff]
@@ -42,7 +46,6 @@ per-file-ignores = { "**/test_*.py" = ["TRY300", "BLE001", "ANN401", "SLF001", "
 [tool.mypy]
 strict = true
 explicit_package_bases = true # Required for src layout
-mypy_path = ["src/mail_client_api/src", "src/gmail_client_impl/src"]
 ignore_missing_imports = false
 warn_unused_ignores = false
 
@@ -74,7 +77,7 @@ source = ["src"]
 omit = ["*/tests/*", "*/__main__.py"]
 
 [tool.coverage.report]
-fail_under = 85 # Justification: A high threshold ensures most code is tested.
+fail_under = 90 # Justification: A high threshold ensures most code is tested.
 exclude_lines = [
     "pragma: no cover",
     "raise NotImplementedError",
