@@ -8,6 +8,7 @@ from http import HTTPStatus
 from unittest.mock import Mock
 
 import pytest
+
 from mail_client_service_api_client.models.http_validation_error import HTTPValidationError
 from mail_client_service_api_client.types import Response
 

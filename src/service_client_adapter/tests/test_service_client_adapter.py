@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import Mock
 
 import pytest
+
 from mail_client_api.message import Message
 from mail_client_service_api_client.client import Client
 from mail_client_service_api_client.types import Response

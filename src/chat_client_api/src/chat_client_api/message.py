@@ -87,6 +87,7 @@ def get_message(msg_id: str, raw_data: str) -> ChatMessage:
     """
     raise NotImplementedError
 
+
 def get_channel(channel_id: str, raw_data: dict[str, str]) -> ChatChannel:
     """Return an instance of a channel.
 
@@ -102,4 +103,3 @@ def get_channel(channel_id: str, raw_data: dict[str, str]) -> ChatChannel:
 
     """
     raise NotImplementedError
-
