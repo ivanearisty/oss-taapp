@@ -42,14 +42,16 @@ class DiscordClient(ChatClient):
     """Concrete implementation of the Client abstraction using Discord API."""
 
     DISCORD_API_BASE: ClassVar[str] = "https://discord.com/api/v10"
+    # Use the documented API endpoints which return JSON responses.
     OAUTH2_AUTHORIZE_URL: ClassVar[str] = "https://discord.com/api/oauth2/authorize"
     OAUTH2_TOKEN_URL: ClassVar[str] = "https://discord.com/api/oauth2/token"  # noqa: S105
     DEFAULT_SCOPES: ClassVar[list[str]] = [
         "identify",  # For /users/@me
-        "dm_channels.read",  # For /users/@me/channels
         "messages.read",  # For GET /channels/{id}/messages
-        "send_messages",  # For POST /channels/{id}/messages
+        # "dm_channels.read",  # For GET /users/@me/channels
     ]
+    # Common HTTP status codes used by the implementation
+    NOT_FOUND_STATUS: ClassVar[int] = 404
 
     def __init__(
         self,
@@ -254,3 +256,92 @@ class DiscordClient(ChatClient):
         # The API returns the newly created message object
         new_message_data = response.json()
         return DiscordMessage(new_message_data)
+
+    # Implement abstract ChatClient methods to satisfy the contract
+    def get_message(self, message_id: str) -> ChatMessage:
+        """Locate a message by id by scanning the user's channels.
+
+        This is a best-effort implementation because Discord's REST API
+        requires a channel id to fetch messages. We scan recent messages
+        in each channel until a match is found.
+        """
+        for channel in self.list_channels():
+            try:
+                for msg in self.list_messages(channel_id=channel.channel_id, limit=100):
+                    if getattr(msg, "message_id", getattr(msg, "id", None)) == message_id:
+                        return msg
+            except httpx.HTTPError as exc:
+                # Log per-channel failures so we can diagnose network/API issues
+                chan_id = getattr(channel, "channel_id", "<unknown>")
+                logger.debug(
+                    "Failed to scan channel %s for message %s: %s",
+                    chan_id,
+                    message_id,
+                    exc,
+                )
+                continue
+
+        msg_text = f"Message with id {message_id} not found"
+        raise RuntimeError(msg_text)
+
+    def delete_message(self, message_id: str) -> bool:
+        """Attempt to delete a message by searching channels and calling DELETE.
+
+        Returns True on success, False otherwise.
+        """
+        for channel in self.list_channels():
+            try:
+                url = f"/channels/{channel.channel_id}/messages/{message_id}"
+                resp = self._http_client.delete(url)
+                if resp.status_code in (200, 204):
+                    return True
+                # If 404, continue searching other channels
+                if resp.status_code == self.NOT_FOUND_STATUS:
+                    continue
+                # For other status codes, treat as failure for this channel and continue
+            except httpx.HTTPError as exc:
+                chan_id = getattr(channel, "channel_id", "<unknown>")
+                logger.debug(
+                    "Failed to delete message %s in channel %s: %s",
+                    message_id,
+                    chan_id,
+                    exc,
+                )
+                continue
+        return False
+
+    def mark_as_read(self, message_id: str) -> bool:
+        """Discord does not provide a simple 'mark as read' REST endpoint.
+
+        This method is provided to satisfy the abstract interface and will
+        return False to indicate the operation is not supported.
+        """
+        # Parameter kept to satisfy interface; operation is not supported.
+        _ = message_id
+        return False
+
+    def get_messages(self, max_results: int = 10) -> Iterator[ChatMessage]:
+        """Yield up to `max_results` recent messages from the user's channels.
+
+        This combines messages across channels in arbitrary order (channels
+        are iterated in the order returned by the API).
+        """
+        count = 0
+        for channel in self.list_channels():
+            if count >= max_results:
+                break
+            try:
+                limit_val = min(100, max_results - count)
+                for msg in self.list_messages(channel_id=channel.channel_id, limit=limit_val):
+                    yield msg
+                    count += 1
+                    if count >= max_results:
+                        return
+            except httpx.HTTPError as exc:
+                chan_id = getattr(channel, "channel_id", "<unknown>")
+                logger.debug(
+                    "Failed to fetch messages for channel %s: %s",
+                    chan_id,
+                    exc,
+                )
+                continue

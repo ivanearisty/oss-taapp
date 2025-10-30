@@ -77,6 +77,7 @@ class DiscordMessage(ChatMessage):
         edited = self._raw_data.get("edited_timestamp")
         return str(edited) if edited else None
 
+
 class DiscordChannel(ChatChannel):
     """Discord implementation of Channel."""
 
