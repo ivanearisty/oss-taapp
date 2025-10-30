@@ -54,7 +54,7 @@ async def test_create_get_list_update_comment_delete(seed_token) -> None:  # noq
             httpx.Response(200, json=issue_payload()),  # 1) after create_ticket()
             httpx.Response(200, json=issue_payload()),  # 2) get_ticket() in the test
             httpx.Response(200, json=issue_payload(summary="Renamed", status="In Progress", priority="High")),  # 3) after update
-        ]
+        ],
     )
 
     # update & transitions
@@ -102,7 +102,7 @@ async def test_create_get_list_update_comment_delete(seed_token) -> None:  # noq
                             "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Ship it."}]}],
                         },
                         "author": {"displayName": "Terra"},
-                    }
+                    },
                 ],
             },
         ),

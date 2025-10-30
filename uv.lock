@@ -8,9 +8,9 @@ resolution-markers = [
 
 [manifest]
 members = [
-    "jira-impl",
     "osdp-jira-service",
     "ticket-api",
+    "ticket-client-adapter",
     "ticket-impl",
     "ticket-service",
     "ticket-service-client",
@@ -402,11 +402,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/df/bf/f7da0350254c0ed7c
 wheels = [
     { url = "https://files.pythonhosted.org/packages/62/a1/3d680cbfd5f4b8f15abc1d571870c5fc3e594bb582bc3b64ea099db13e56/jinja2-3.1.6-py3-none-any.whl", hash = "sha256:85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67", size = 134899, upload-time = "2025-03-05T20:05:00.369Z" },
 ]
-
-[[package]]
-name = "jira-impl"
-version = "0.1.0"
-source = { editable = "src/jira_impl" }
 
 [[package]]
 name = "markdown"
@@ -1210,6 +1205,21 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [{ name = "pydantic" }]
+
+[[package]]
+name = "ticket-client-adapter"
+version = "0.1.0"
+source = { editable = "src/ticket_client_adapter" }
+dependencies = [
+    { name = "ticket-api" },
+    { name = "ticket-service-client" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "ticket-api", editable = "src/ticket_api" },
+    { name = "ticket-service-client", editable = "src/ticket_client_generated" },
+]
 
 [[package]]
 name = "ticket-impl"

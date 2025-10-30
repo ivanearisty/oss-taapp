@@ -36,11 +36,15 @@ members = [
   "src/ticket_api",
   "src/ticket_impl",
   "src/ticket_service",
-  "src/ticket_client_generated"
+  "src/ticket_client_generated",
+  "src/ticket_client_adapter",
 ]
+
 [tool.uv.sources]
-ticket-api = { workspace = true }   # <-- map the project name to the workspace
-ticket-impl = { workspace = true }   # optional but nice to have as well
+ticket-api = { workspace = true }
+ticket-impl = { workspace = true }
+ticket-service-client = { workspace = true }  # Add this line
+ticket-client-adapter = { workspace = true }
 
 
 [tool.ruff]

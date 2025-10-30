@@ -49,7 +49,7 @@ def _jira_to_ticket(data: dict[str, Any], user_id: str) -> Ticket:
         "medium": TicketPriority.MEDIUM,
         "high": TicketPriority.HIGH,
         "highest": TicketPriority.CRITICAL,
-    }  # noqa: E501
+    }
     domain_priority = pr_map.get(str(priority_name).lower(), TicketPriority.MEDIUM)
 
     # stable UUID for this user+key; also store mapping (impl never leaks Jira key)
@@ -61,7 +61,7 @@ def _jira_to_ticket(data: dict[str, Any], user_id: str) -> Ticket:
         title=fields.get("summary", ""),
         description=(fields.get("description") or "")
         if isinstance(fields.get("description"), str)
-        else str(fields.get("description") or ""),  # noqa: E501
+        else str(fields.get("description") or ""),
         status=_status_name_to_domain(status_name),
         priority=domain_priority,
         assignee=(fields.get("assignee") or {}).get("displayName"),
