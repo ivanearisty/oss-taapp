@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import httpx
 
@@ -24,7 +24,7 @@ async def get_issue(user_id: str, issue_key: str) -> dict[str, Any]:
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.get(_v3(f"/issue/{issue_key}"), headers=await _headers(user_id))
         r.raise_for_status()
-        return r.json()
+        return cast("dict[str, Any]", r.json())
 
 
 async def delete_issue(user_id: str, issue_key: str) -> bool:
@@ -43,7 +43,7 @@ async def search_issues(user_id: str, jql: str, max_results: int = 50, start_at:
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.post(_v3("/search"), headers=await _headers(user_id), json=payload)
         r.raise_for_status()
-        return r.json()
+        return cast("dict[str, Any]", r.json())
 
 
 async def create_issue(  # noqa: PLR0913
@@ -71,7 +71,7 @@ async def create_issue(  # noqa: PLR0913
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.post(_v3("/issue"), headers=await _headers(user_id), json=payload)
         r.raise_for_status()
-        return r.json()
+        return cast("dict[str, Any]", r.json())
 
 
 async def update_issue_fields(user_id: str, issue_key: str, fields: dict[str, Any]) -> dict[str, Any]:
@@ -80,7 +80,7 @@ async def update_issue_fields(user_id: str, issue_key: str, fields: dict[str, An
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.put(_v3(f"/issue/{issue_key}"), headers=await _headers(user_id), json=payload)
         r.raise_for_status()
-        return r.json()
+        return cast("dict[str, Any]", r.json())
 
 
 async def list_transitions(user_id: str, issue_key: str) -> list[dict[str, Any]]:
@@ -88,7 +88,7 @@ async def list_transitions(user_id: str, issue_key: str) -> list[dict[str, Any]]
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.get(_v3(f"/issue/{issue_key}/transitions"), headers=await _headers(user_id))
         r.raise_for_status()
-        return r.json().get("transitions", [])
+        return cast("list[dict[str, Any]]", cast("dict[str, Any]", r.json()).get("transitions", []))
 
 
 async def do_transition(user_id: str, issue_key: str, transition_id: str) -> None:
@@ -117,7 +117,7 @@ async def add_comment(user_id: str, issue_key: str, content: str) -> dict[str, A
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.post(_v3(f"/issue/{issue_key}/comment"), headers=await _headers(user_id), json=payload)
         r.raise_for_status()
-        return r.json()
+        return cast("dict[str, Any]", r.json())
 
 
 async def get_comments(user_id: str, issue_key: str) -> dict[str, Any]:
@@ -125,7 +125,7 @@ async def get_comments(user_id: str, issue_key: str) -> dict[str, Any]:
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.get(_v3(f"/issue/{issue_key}/comment"), headers=await _headers(user_id))
         r.raise_for_status()
-        return r.json()
+        return cast("dict[str, Any]", r.json())
 
 
 async def find_user_account_id(user_id: str, query: str) -> str | None:
@@ -133,7 +133,7 @@ async def find_user_account_id(user_id: str, query: str) -> str | None:
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.get(_v3("/user/search"), headers=await _headers(user_id), params={"query": query})
         r.raise_for_status()
-        arr = r.json()
+        arr = cast("list[dict[str, Any]]", r.json())
         if arr:
-            return arr[0].get("accountId")
+            return cast("str | None", arr[0].get("accountId"))
         return None

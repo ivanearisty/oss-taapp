@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import cast
 from urllib.parse import urlencode
 
 import httpx
@@ -65,7 +66,7 @@ async def refresh_access_token(user_id: str) -> str:
         r = await client.post(TOKEN_URL, json=data)
         r.raise_for_status()
         payload = r.json()
-    access = payload["access_token"]
+    access = cast("str", payload["access_token"])
     expires_in = int(payload.get("expires_in", 3600))
     update_access(user_id, access, expires_in)
     return access

@@ -360,6 +360,7 @@ async def get_ticket_filters(
     summary="List tickets with filtering",
 )
 async def list_tickets(
+    service: Annotated[TicketServiceAPI, Depends(get_ticket_service)],
     filters: Annotated[TicketFilters, Depends(get_ticket_filters)],
     limit: Annotated[
         int,
@@ -369,7 +370,6 @@ async def list_tickets(
         int,
         Query(ge=0, description="Number of tickets to skip"),
     ] = 0,
-    service: Annotated[TicketServiceAPI, Depends(get_ticket_service)] = None,
 ) -> TicketListResponse:
     """List tickets with optional filtering and pagination.
 

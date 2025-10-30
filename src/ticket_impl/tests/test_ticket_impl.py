@@ -15,7 +15,7 @@ EXPECTED_GET_CALLS = 3  # replace magic number '3'
 
 @pytest.mark.asyncio
 @respx.mock
-async def test_create_get_list_update_comment_delete(seed_token) -> None:  # noqa: ANN001
+async def test_create_get_list_update_comment_delete(seed_token: None) -> None:
     """End-to-end happy-path for TicketImpl using respx mocks."""
     # user lookup
     respx.get(f"{BASE}/user/search").mock(
@@ -33,7 +33,7 @@ async def test_create_get_list_update_comment_delete(seed_token) -> None:  # noq
         description: str = "Created from impl",
         assignee: str = "Terra",
         reporter: str = "Terra",
-    ) -> dict:
+    ) -> dict[str, object]:
         return {
             "id": "10001",
             "key": "OSDP-101",

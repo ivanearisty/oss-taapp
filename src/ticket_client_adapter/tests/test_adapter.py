@@ -22,7 +22,7 @@ def mock_ticket_id() -> UUID:
 
 
 @pytest.fixture
-def mock_ticket_data(mock_ticket_id: UUID) -> dict:
+def mock_ticket_data(mock_ticket_id: UUID) -> dict[str, object]:
     """Fixture providing mock ticket response data."""
     return {
         "id": str(mock_ticket_id),
@@ -40,7 +40,7 @@ def mock_ticket_data(mock_ticket_id: UUID) -> dict:
 
 @pytest.mark.asyncio
 @respx.mock
-async def test_create_ticket(mock_ticket_data: dict) -> None:
+async def test_create_ticket(mock_ticket_data: dict[str, object]) -> None:
     """Test creating a ticket via the adapter."""
     # Mock the HTTP POST request
     route = respx.post(f"{BASE_URL}/api/v1/tickets").mock(
@@ -73,7 +73,7 @@ async def test_create_ticket(mock_ticket_data: dict) -> None:
 
 @pytest.mark.asyncio
 @respx.mock
-async def test_get_ticket(mock_ticket_id: UUID, mock_ticket_data: dict) -> None:
+async def test_get_ticket(mock_ticket_id: UUID, mock_ticket_data: dict[str, object]) -> None:
     """Test retrieving a ticket by ID."""
     respx.get(f"{BASE_URL}/api/v1/tickets/{mock_ticket_id}").mock(
         return_value=httpx.Response(200, json=mock_ticket_data),
@@ -111,7 +111,7 @@ async def test_get_ticket_not_found(mock_ticket_id: UUID) -> None:
 
 @pytest.mark.asyncio
 @respx.mock
-async def test_list_tickets(mock_ticket_data: dict) -> None:
+async def test_list_tickets(mock_ticket_data: dict[str, object]) -> None:
     """Test listing tickets with filters."""
     list_response = {
         "tickets": [mock_ticket_data],
@@ -140,7 +140,7 @@ async def test_list_tickets(mock_ticket_data: dict) -> None:
 
 @pytest.mark.asyncio
 @respx.mock
-async def test_update_ticket(mock_ticket_id: UUID, mock_ticket_data: dict) -> None:
+async def test_update_ticket(mock_ticket_id: UUID, mock_ticket_data: dict[str, object]) -> None:
     """Test updating a ticket."""
     updated_data = {**mock_ticket_data, "title": "Updated Title", "status": "in_progress"}
 
@@ -279,6 +279,3 @@ async def test_context_manager() -> None:
     ) as service:
         assert service is not None
         assert isinstance(service, RemoteTicketService)
-
-    # Client should be closed after exiting context
-    # (httpx.AsyncClient doesn't expose is_closed, so we just verify no errors)
