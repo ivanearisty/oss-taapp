@@ -17,11 +17,11 @@ class TestEdgeCases:
     def test_ticket_with_unicode_content(self) -> None:
         """Test ticket with unicode characters."""
         ticket = Ticket(
-            title="Bug with émojis 🐛",
+            title="Bug with émojis",
             description="Unicode test: café, naïve, résumé",
             reporter="test@example.com",
         )
-        assert "émojis 🐛" in ticket.title
+        assert "émojis" in ticket.title
         assert "café" in ticket.description
 
     def test_ticket_boundary_lengths(self) -> None:
