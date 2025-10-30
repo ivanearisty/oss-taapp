@@ -9,12 +9,12 @@ import logging
 import os
 from collections.abc import Iterator
 from pathlib import Path
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import httpx
-from authlib.integrations.httpx_client import OAuth2Client
-from chat_client_api.client import Client
-from chat_client_api.message import Channel, ChatMessage
+from authlib.integrations.httpx_client import OAuth2Client  # type: ignore[import-untyped]
+from chat_client_api.client import ChatClient
+from chat_client_api.message import ChatChannel, ChatMessage
 
 from discord_client_impl.message_impl import DiscordChannel, DiscordMessage
 
@@ -38,12 +38,12 @@ except ImportError:
                     os.environ[key.strip()] = value.strip()
 
 
-class DiscordClient(Client):
+class DiscordClient(ChatClient):
     """Concrete implementation of the Client abstraction using Discord API."""
 
     DISCORD_API_BASE: ClassVar[str] = "https://discord.com/api/v10"
     OAUTH2_AUTHORIZE_URL: ClassVar[str] = "https://discord.com/api/oauth2/authorize"
-    OAUTH2_TOKEN_URL: ClassVar[str] = "https://discord.com/api/oauth2/token" # noqa: S105
+    OAUTH2_TOKEN_URL: ClassVar[str] = "https://discord.com/api/oauth2/token"  # noqa: S105
     DEFAULT_SCOPES: ClassVar[list[str]] = [
         "identify",  # For /users/@me
         "dm_channels.read",  # For /users/@me/channels
@@ -70,7 +70,8 @@ class DiscordClient(Client):
         self.client_id = client_id or os.environ.get("DISCORD_CLIENT_ID")
         self.client_secret = client_secret or os.environ.get("DISCORD_CLIENT_SECRET")
         self.redirect_uri = redirect_uri or os.environ.get(
-            "DISCORD_REDIRECT_URI", "http://localhost:8000/auth/callback",
+            "DISCORD_REDIRECT_URI",
+            "http://localhost:8000/auth/callback",
         )
         self.access_token = access_token
 
@@ -81,7 +82,8 @@ class DiscordClient(Client):
         )
 
         # This client is for performing the OAuth flow (uses client_id/secret)
-        self._oauth_client: OAuth2Client = OAuth2Client(
+        # Keep as Any to avoid static issues if OAuth2Client is unresolved.
+        self._oauth_client: Any = OAuth2Client(
             client_id=self.client_id,
             client_secret=self.client_secret,
             redirect_uri=self.redirect_uri,
@@ -96,7 +98,9 @@ class DiscordClient(Client):
         self._http_client.headers["Authorization"] = f"Bearer {self.access_token}"
 
     def get_authorization_url(
-        self, scopes: list[str] | None = None, **kwargs: any,
+        self,
+        scopes: list[str] | None = None,
+        **kwargs: Any,
     ) -> str:
         """Get the OAuth2 authorization URL to redirect the user to.
 
@@ -117,7 +121,7 @@ class DiscordClient(Client):
             scope=" ".join(scopes),
             **kwargs,
         )
-        return auth_url
+        return str(auth_url)
 
     def fetch_access_token(self, authorization_code: str) -> str:
         """Exchange an authorization code for an access token.
@@ -135,14 +139,14 @@ class DiscordClient(Client):
             self.OAUTH2_TOKEN_URL,
             grant_type="authorization_code",
             code=authorization_code,
-            redirect_uri=self.redirect_uri,  # Must match the one used for auth URL
+            redirect_uri=self.redirect_uri,
         )
 
-        access_token = token_data["access_token"]
+        access_token = str(token_data["access_token"])
         self._set_token(access_token)
         return access_token
 
-    def get_current_user(self) -> dict:
+    def get_current_user(self) -> dict[str, Any]:
         """Get information about the currently authenticated user.
 
         Requires the 'identify' scope.
@@ -150,12 +154,26 @@ class DiscordClient(Client):
         Returns:
             A dictionary of the user's data from the Discord API.
 
+        Raises:
+            TypeError: If the API response is not in the expected dict format.
+
         """
         response = self._http_client.get("/users/@me")
         response.raise_for_status()  # Raise HTTPError for bad responses
-        return response.json()
 
-    def list_channels(self) -> Iterator[Channel]:
+        json_data = response.json()
+
+        if not isinstance(json_data, dict):
+            err_str = f"API response for /users/@me was not a dict, got {type(json_data)}"
+            raise TypeError(
+                err_str,
+            )
+
+        # Mypy will be satisfied that json_data is a dict.
+        # Since the abstract method returns dict[str, Any], this is compliant.
+        return json_data
+
+    def list_channels(self) -> Iterator[ChatChannel]:
         """List all DMs and Group DMs for the current user.
 
         Requires the 'dm_channels.read' scope.
@@ -172,17 +190,15 @@ class DiscordClient(Client):
                 "Expected a list from /users/@me/channels, got %s",
                 type(channel_data_list),
             )
-            return iter([])  # Return an empty iterator
-        if not isinstance(channel_data_list, list):
-            logger.warning("Expected a list from /users/@me/channels, got %s",
-                           type(channel_data_list))
-            return iter([])  # Return an empty iterator
+            return  # Stop iteration
 
         for channel_data in channel_data_list:
             yield DiscordChannel(channel_data)
 
     def list_messages(
-        self, channel_id: str, limit: int = 50,
+        self,
+        channel_id: str,
+        limit: int = 50,
     ) -> Iterator[ChatMessage]:
         """Get recent messages from a specific channel.
 
@@ -198,15 +214,18 @@ class DiscordClient(Client):
         """
         params = {"limit": min(limit, 100)}  # Enforce Discord's max limit
         response = self._http_client.get(
-            f"/channels/{channel_id}/messages", params=params,
+            f"/channels/{channel_id}/messages",
+            params=params,
         )
         response.raise_for_status()
 
         message_data_list = response.json()
         if not isinstance(message_data_list, list):
-            logger.warning("Expected a list from /channels/.../messages, got %s",
-                           type(message_data_list))
-            return iter([])
+            logger.warning(
+                "Expected a list from /channels/.../messages, got %s",
+                type(message_data_list),
+            )
+            return  # Stop iteration
 
         # Messages are returned newest-first by default
         for message_data in message_data_list:
@@ -227,11 +246,11 @@ class DiscordClient(Client):
         """
         payload = {"content": content}
         response = self._http_client.post(
-            f"/channels/{channel_id}/messages", json=payload,
+            f"/channels/{channel_id}/messages",
+            json=payload,
         )
         response.raise_for_status()
 
         # The API returns the newly created message object
         new_message_data = response.json()
         return DiscordMessage(new_message_data)
-

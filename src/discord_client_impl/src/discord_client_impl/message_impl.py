@@ -27,6 +27,11 @@ class DiscordMessage(ChatMessage):
         return str(self._raw_data.get("id", ""))
 
     @property
+    def message_id(self) -> str:
+        """Compatibility property required by ChatMessage API."""
+        return self.id
+
+    @property
     def channel_id(self) -> str:
         """Return the ID of the channel where the message was sent."""
         return str(self._raw_data.get("channel_id", ""))
@@ -38,6 +43,11 @@ class DiscordMessage(ChatMessage):
         return str(author.get("id", "")) if isinstance(author, dict) else ""
 
     @property
+    def author(self) -> str:
+        """Compatibility property required by ChatMessage API (author id)."""
+        return self.author_id
+
+    @property
     def author_name(self) -> str:
         """Return the display name of the message author."""
         author = self._raw_data.get("author", {})
@@ -45,6 +55,11 @@ class DiscordMessage(ChatMessage):
             # Prefer global_name, fallback to username
             return str(author.get("global_name") or author.get("username", "Unknown"))
         return "Unknown"
+
+    @property
+    def author_username(self) -> str:
+        """Compatibility property required by ChatMessage API (author username)."""
+        return self.author_name
 
     @property
     def content(self) -> str:
@@ -80,6 +95,11 @@ class DiscordChannel(ChatChannel):
         return str(self._raw_data.get("id", ""))
 
     @property
+    def channel_id(self) -> str:
+        """Compatibility property required by ChatChannel API."""
+        return self.id
+
+    @property
     def name(self) -> str:
         """Return the name of the channel."""
         # DM channels may not have a name
@@ -99,31 +119,26 @@ class DiscordChannel(ChatChannel):
         return "Unknown Channel"
 
     @property
-    def channel_type(self) -> str:
-        """Return the type of channel.
+    def channel_name(self) -> str:
+        """Compatibility property required by ChatChannel API."""
+        return self.name
 
-        Discord channel types:
-        0 = GUILD_TEXT
-        1 = DM
-        2 = GUILD_VOICE
-        3 = GROUP_DM
-        4 = GUILD_CATEGORY
-        And more...
+    @property
+    def channel_type(self) -> int:
+        """Return the integer type code of the channel.
 
+        The ChatChannel API expects an int code. Discord returns an integer
+        in the `type` field; we coerce to int and return 0 on error.
         """
-        type_code = self._raw_data.get("type", 0)
-        type_mapping = {
-            0: "text",
-            1: "dm",
-            2: "voice",
-            3: "group_dm",
-            4: "category",
-            5: "announcement",
-            10: "announcement_thread",
-            11: "public_thread",
-            12: "private_thread",
-            13: "stage_voice",
-            15: "forum",
-            16: "media",
-        }
-        return type_mapping.get(int(type_code), f"unknown_{type_code}")
+        try:
+            return int(self._raw_data.get("type", 0))
+        except Exception:
+            return 0
+
+    @property
+    def channel_position(self) -> int:
+        """Return the position of the channel in the guild (or 0 for DMs)."""
+        try:
+            return int(self._raw_data.get("position", 0))
+        except Exception:
+            return 0
