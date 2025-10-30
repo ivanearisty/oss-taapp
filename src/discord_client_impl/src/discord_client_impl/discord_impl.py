@@ -73,7 +73,7 @@ class DiscordClient(ChatClient):
         self.client_secret = client_secret or os.environ.get("DISCORD_CLIENT_SECRET")
         self.redirect_uri = redirect_uri or os.environ.get(
             "DISCORD_REDIRECT_URI",
-            "http://localhost:8000/auth/callback",
+            "http://127.0.0.1:8000/auth/callback",
         )
         self.access_token = access_token
 
@@ -184,7 +184,7 @@ class DiscordClient(ChatClient):
             DiscordChannel: A channel object.
 
         """
-        response = self._http_client.get("/users/@me/channels")
+        response = self._http_client.post("/users/@me/channels")
         response.raise_for_status()
         channel_data_list = response.json()
         if not isinstance(channel_data_list, list):
@@ -200,6 +200,7 @@ class DiscordClient(ChatClient):
     def list_messages(
         self,
         channel_id: str,
+        token: str,
         limit: int = 50,
     ) -> Iterator[ChatMessage]:
         """Get recent messages from a specific channel.
@@ -218,6 +219,9 @@ class DiscordClient(ChatClient):
         response = self._http_client.get(
             f"/channels/{channel_id}/messages",
             params=params,
+            headers={
+                "Authorization": f"Bearer {token}",
+            },
         )
         response.raise_for_status()
 
