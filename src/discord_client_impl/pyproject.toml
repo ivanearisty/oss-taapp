@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "dotenv>=0.9.9",
     "httpx>=0.27.0",
     "authlib>=1.3.0",
     "chat-client-api",
@@ -51,6 +52,15 @@ extend = "../../pyproject.toml"
 
 [tool.ruff.lint]
 ignore = []
+[tool.mypy]
+# Local mypy settings for this package. Keep most checks strict but silence
+# missing stubs for authlib's httpx integration (no published types as of now).
+ignore_missing_imports = false
+explicit_package_bases = true
+
+[tool.mypy."authlib.integrations.httpx_client"]
+ignore_missing_imports = true
+follow_imports = "skip"
 
 [tool.uv.sources]
 chat-client-api = { workspace = true }
