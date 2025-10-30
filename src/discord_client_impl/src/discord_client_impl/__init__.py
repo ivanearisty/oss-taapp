@@ -8,4 +8,3 @@ The implementation supports multiple authentication modes:
     - Local token file (for development)
     - Interactive OAuth flow (for initial setup)
 """
-
