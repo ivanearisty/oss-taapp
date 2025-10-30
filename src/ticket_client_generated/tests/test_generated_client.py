@@ -10,12 +10,12 @@ from ticket_service_client.models import HealthResponse
 @pytest.mark.asyncio
 async def test_health() -> None:
     """Test health endpoint - no authentication required."""
-    print("🏥 Testing Health Endpoint...")
+    print("Testing Health Endpoint...")
     client = Client(base_url="http://localhost:8000")
 
     response = await health_check_health_get.asyncio_detailed(client=client)
 
-    print(f"✅ Status: {response.status_code}")
+    print(f" Status: {response.status_code}")
     assert response.status_code == 200
     assert response.parsed is not None
 
@@ -23,13 +23,13 @@ async def test_health() -> None:
         print(f"   Service: {response.parsed.service}")
         print(f"   Status: {response.parsed.status}")
         print(f"   Version: {response.parsed.version}")
-        print("✅ Health check passed!")
+        print("Health check passed!")
 
 
 @pytest.mark.asyncio
 async def test_client_methods() -> None:
     """Test that client has expected methods."""
-    print("🔧 Testing Client Methods...")
+    print("Testing Client Methods...")
 
     # Test basic initialization
     client = Client(base_url="http://localhost:8000")
@@ -44,7 +44,7 @@ async def test_client_methods() -> None:
     custom_client = client.with_headers({"X-Custom-Header": "test-value"})
     assert custom_client is not None
 
-    print("✅ Client methods validated")
+    print("Client methods validated")
 
 
 # =============================================================================
