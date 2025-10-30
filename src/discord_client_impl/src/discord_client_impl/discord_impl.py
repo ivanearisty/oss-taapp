@@ -100,7 +100,7 @@ class DiscordClient(ChatClient):
     def get_authorization_url(
         self,
         scopes: list[str] | None = None,
-        **kwargs: Any,
+        **kwargs: object,
     ) -> str:
         """Get the OAuth2 authorization URL to redirect the user to.
 

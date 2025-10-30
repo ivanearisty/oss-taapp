@@ -132,7 +132,7 @@ class DiscordChannel(ChatChannel):
         """
         try:
             return int(self._raw_data.get("type", 0))
-        except Exception:
+        except (TypeError, ValueError):
             return 0
 
     @property
@@ -140,5 +140,5 @@ class DiscordChannel(ChatChannel):
         """Return the position of the channel in the guild (or 0 for DMs)."""
         try:
             return int(self._raw_data.get("position", 0))
-        except Exception:
+        except (TypeError, ValueError):
             return 0
