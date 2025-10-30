@@ -5,10 +5,10 @@
 ## Purpose
 
 This adapter sits between your application code and the auto-generated HTTP client, providing:
-- ✅ Clean domain interface (`TicketServiceAPI`)
-- ✅ Location transparency (swap local/remote)
-- ✅ Hides all HTTP/network details
-- ✅ Leverages the type-safe generated client internally
+- Clean domain interface (`TicketServiceAPI`)
+- Location transparency (swap local/remote)
+- Hides all HTTP/network details
+- Leverages the type-safe generated client internally
 
 ## Architecture
 ```
@@ -54,7 +54,7 @@ ticket = await service.create_ticket(...)
 
 ### 3. No HTTP in Your Business Logic
 ```python
-# ✅ Clean domain code
+# Clean domain code
 async def create_bug_report(
     service: TicketServiceAPI,  # Interface, not implementation
     title: str,
@@ -105,7 +105,7 @@ async with RemoteTicketService(
 | **Usage** | `response = await create_ticket.asyncio_detailed(...)` | `ticket = await service.create_ticket(...)` |
 | **Type checking** | `Client` specific | `TicketServiceAPI` polymorphic |
 | **HTTP details** | Exposed (status codes, headers) | Hidden |
-| **Location transparency** | ❌ Always remote | ✅ Swappable |
+| **Location transparency** | Always remote | Swappable |
 | **Mocking** | Mock HTTP calls | Mock interface |
 | **Updates** | Auto-sync from OpenAPI | Manual wrapper update |
 
@@ -139,10 +139,10 @@ All 10 tests pass, covering:
 ## Implementation Note
 
 This adapter **wraps** the auto-generated client (`ticket_service_client`), not direct httpx calls. This means:
-- ✅ Type safety from generated models
-- ✅ Automatic updates when regenerating client
-- ✅ Clean separation of concerns
-- ✅ Best practices: composition over reimplementation
+- Type safety from generated models
+- Automatic updates when regenerating client
+- Clean separation of concerns
+- Best practices: composition over reimplementation
 
 Example internal implementation:
 ```python
@@ -158,5 +158,3 @@ async def create_ticket(self, title, description, reporter, ...) -> Ticket:
     # 3. Convert back to domain model
     return self._to_domain_ticket(response.parsed)
 ```
-
-Clean interface outside, generated client inside! 🎯
