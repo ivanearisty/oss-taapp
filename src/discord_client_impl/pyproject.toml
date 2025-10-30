@@ -53,4 +53,4 @@ extend = "../../pyproject.toml"
 ignore = []
 
 [tool.uv.sources]
-mail-client-api = { workspace = true }
+chat-client-api = { workspace = true }
