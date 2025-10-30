@@ -29,6 +29,7 @@ dev = [
     "ruff>=0.12.7",
     "respx>=0.21",
     "anyio>=4",
+    "types-python-dateutil>=2.9.0",
 ]
 
 [tool.uv.workspace]
@@ -43,9 +44,8 @@ members = [
 [tool.uv.sources]
 ticket-api = { workspace = true }
 ticket-impl = { workspace = true }
-ticket-service-client = { workspace = true }  # Add this line
+ticket-service-client = { workspace = true }
 ticket-client-adapter = { workspace = true }
-
 
 [tool.ruff]
 line-length = 130 # high for top level due to tests
@@ -63,16 +63,28 @@ per-file-ignores = { "**/test_*.py" = ["TRY300", "BLE001", "ANN401", "SLF001", "
 [tool.mypy]
 strict = true
 explicit_package_bases = true # Required for src layout
-mypy_path = [".", "src", "src/ticket_api/src", "src/ticket_service/src"]
+mypy_path = [
+    ".",
+    "src",
+    "src/ticket_api/src",
+    "src/ticket_impl/src",
+    "src/ticket_service/src",
+    "src/ticket_client_adapter/src",
+]
 ignore_missing_imports = false
 warn_unused_ignores = false
 namespace_packages = true
+exclude = [
+    "src/ticket_client_generated/",  # Exclude auto-generated code from strict checking
+]
 
 # Allow untyped imports for specific modules
 [[tool.mypy.overrides]]
 module = [
     "google.*",
     "googleapiclient.*",
+    "ticket_service_client",
+    "ticket_service_client.*",
 ]
 ignore_missing_imports = true
 
@@ -81,10 +93,26 @@ asyncio_mode = "auto"
 pythonpath = [
     ".", 
     "src",
-    "src/ticket_api/src"
+    "src/ticket_api/src",
+    "src/ticket_impl/src",
+    "src/ticket_service/src",
+    "src/ticket_client_adapter/src",
+    "src/ticket_client_generated",
 ]
-testpaths = ["tests", "src/*/tests"]
-addopts = ["--cov", "--cov-report=term-missing", "--import-mode=importlib"]
+testpaths = [
+    "tests",
+    "src/*/tests",
+    "src/ticket_client_adapter/tests",
+    "src/ticket_client_generated/tests",
+]
+addopts = [
+    "--cov",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-fail-under=90",
+    "--import-mode=importlib",
+    "-v",
+]
 markers = [
     "unit: marks tests as unit tests (fast, isolated)",
     "integration: marks tests as integration tests (medium speed, real dependencies)",
@@ -95,15 +123,23 @@ markers = [
 
 [tool.coverage.run]
 source = ["src"]
-omit = ["*/tests/*", "*/__main__.py"]
+omit = [
+    "*/tests/*",
+    "*/__main__.py",
+    "*/ticket_client_generated/*",  # Exclude auto-generated client from coverage
+]
 
 [tool.coverage.report]
-fail_under = 90 # Justification: A high threshold ensures most code is tested.
+fail_under = 90 # Require 90% test coverage
 exclude_lines = [
     "pragma: no cover",
     "raise NotImplementedError",
     "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "@abstractmethod",
+    "@abc.abstractmethod",
 ]
+show_missing = true
 
 [dependency-groups]
 dev = [

@@ -693,6 +693,7 @@ dev = [
     { name = "requests-oauthlib" },
     { name = "respx" },
     { name = "ruff" },
+    { name = "types-python-dateutil" },
     { name = "uvicorn" },
 ]
 
@@ -721,6 +722,7 @@ requires-dist = [
     { name = "respx", marker = "extra == 'dev'", specifier = ">=0.21" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.12.7" },
     { name = "sqlalchemy", specifier = ">=2.0" },
+    { name = "types-python-dateutil", marker = "extra == 'dev'", specifier = ">=2.9.0" },
     { name = "uvicorn", marker = "extra == 'dev'", specifier = ">=0.30.1" },
 ]
 provides-extras = ["dev"]
