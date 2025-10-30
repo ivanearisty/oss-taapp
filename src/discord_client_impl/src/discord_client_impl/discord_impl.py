@@ -43,7 +43,7 @@ class DiscordClient(Client):
 
     DISCORD_API_BASE: ClassVar[str] = "https://discord.com/api/v10"
     OAUTH2_AUTHORIZE_URL: ClassVar[str] = "https://discord.com/api/oauth2/authorize"
-    OAUTH2_TOKEN_URL: ClassVar[str] = "https://discord.com/api/oauth2/token"
+    OAUTH2_TOKEN_URL: ClassVar[str] = "https://discord.com/api/oauth2/token" # noqa: S105
     DEFAULT_SCOPES: ClassVar[list[str]] = [
         "identify",  # For /users/@me
         "dm_channels.read",  # For /users/@me/channels
@@ -70,7 +70,7 @@ class DiscordClient(Client):
         self.client_id = client_id or os.environ.get("DISCORD_CLIENT_ID")
         self.client_secret = client_secret or os.environ.get("DISCORD_CLIENT_SECRET")
         self.redirect_uri = redirect_uri or os.environ.get(
-            "DISCORD_REDIRECT_URI", "http://localhost:8000/auth/callback"
+            "DISCORD_REDIRECT_URI", "http://localhost:8000/auth/callback",
         )
         self.access_token = access_token
 
