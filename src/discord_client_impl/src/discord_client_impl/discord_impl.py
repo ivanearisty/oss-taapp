@@ -184,7 +184,7 @@ class DiscordClient(ChatClient):
             DiscordChannel: A channel object.
 
         """
-        response = self._http_client.get("/users/@me/channels")
+        response = self._http_client.post("/users/@me/channels")
         response.raise_for_status()
         channel_data_list = response.json()
         if not isinstance(channel_data_list, list):
