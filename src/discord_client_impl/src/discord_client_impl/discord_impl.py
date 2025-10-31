@@ -210,6 +210,7 @@ class DiscordClient(ChatClient):
         Args:
             channel_id: The ID of the channel to fetch messages from.
             limit: The number of messages to retrieve (max 100).
+            token: The OAuth2 access token to use for authorization.
 
         Yields:
             DiscordMessage: A message object.
@@ -224,7 +225,7 @@ class DiscordClient(ChatClient):
             },
         )
         response.raise_for_status()
-    
+
         message_data_list = response.json()
         if not isinstance(message_data_list, list):
             logger.warning(
