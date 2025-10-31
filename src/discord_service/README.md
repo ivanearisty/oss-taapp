@@ -36,7 +36,7 @@ source .venv/bin/activate
 pip install -e src/chat_client_api -e src/discord_client_impl -e src/discord_service
 
 # Run the service
-uvicorn discord_service.main:app --reload --host 127.0.0.1 --port 8001
+uvicorn discord_service.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 Environment variables
@@ -70,7 +70,7 @@ Example flows
 - Get authorization URL:
 
 ```bash
-curl "http://127.0.0.1:8001/login"
+curl "http://127.0.0.1:8000/login"
 ```
 
 - After authorizing, Discord will redirect to your `DISCORD_REDIRECT_URI` (which should map to `/auth/callback` in this service). The callback exchanges the code and the service returns the access token in the response body and sets a secure-ish cookie for subsequent requests.
@@ -78,7 +78,7 @@ curl "http://127.0.0.1:8001/login"
 - List channels (after auth):
 
 ```bash
-curl http://127.0.0.1:8001/channels
+curl http://127.0.0.1:8000/channels
 ```
 
 Testing
