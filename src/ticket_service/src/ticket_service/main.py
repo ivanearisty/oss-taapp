@@ -12,13 +12,11 @@ from http import HTTPStatus
 from typing import Annotated, NamedTuple
 from uuid import UUID, uuid4
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Query, status
+from fastapi import Cookie, Depends, FastAPI, Header, HTTPException, Query, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from ticket_api import TicketServiceAPI, TicketStatus
 from ticket_impl import TicketImpl
-
-# Import the actual OAuth functions from ticket_impl
 from ticket_impl.oauth import build_authorize_url, exchange_code_for_tokens
 from ticket_impl.storage import clear_user_tokens, get_user_tokens
 
@@ -43,7 +41,6 @@ logger = logging.getLogger("ticket_service")
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Application lifespan events."""
     logger.info("Starting %s v%s", app.title, app.version)
-    # Add database startup connections/shutdowns
     yield
     logger.info("Shutting down %s", app.title)
 
@@ -58,52 +55,68 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Configure CORS for local development
+# Configure CORS - allow credentials for cookies
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:8000"],
-    allow_credentials=True,
+    allow_origins=["http://localhost:3000", "http://localhost:8000", "http://127.0.0.1:8000"],
+    allow_credentials=True,  # Important for cookies!
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Store OAuth state tokens temporarily (in production, use Redis/database)
-# Maps state -> user_id for the callback
 _oauth_state_store: dict[str, str] = {}
 
+# ============================================================================
+# DEPENDENCIES - Cookie-based authentication (hidden from Swagger)
+# ============================================================================
 
-# ============================================================================
-# DEPENDENCIES
-# ============================================================================
+
+async def get_session_user_id(
+    session_user_id: Annotated[str | None, Cookie(alias="user_id", include_in_schema=False)] = None,
+) -> str | None:
+    """Extract user_id from cookie without showing in API docs."""
+    return session_user_id
 
 
 async def get_user_id(
-    x_user_id: Annotated[str, Header(..., description="User ID for authentication")],
+    session_user_id: Annotated[str | None, Depends(get_session_user_id)] = None,
+    x_user_id: Annotated[
+        str | None,
+        Header(
+            description="User ID for authentication (fallback)",
+            include_in_schema=False,
+        ),
+    ] = None,
 ) -> str:
-    """Extract user ID from X-User-ID header.
+    """Extract user ID from cookie (preferred) or X-User-ID header (fallback).
 
-    The ticket_impl handles OAuth token storage per user_id.
-    Clients should obtain user_id through the OAuth flow in ticket_impl.
+    Priority:
+    1. Cookie (automatic from browser/Swagger)
+    2. X-User-ID header (for programmatic access)
+    3. test- prefix users (for testing)
     """
-    if not x_user_id:
+    # Try cookie first (automatic session)
+    user_id = session_user_id or x_user_id
+
+    if not user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing X-User-ID header",
+            detail="Not authenticated. Please login at /api/v1/auth/login",
         )
 
     # Allow test users to bypass OAuth for testing/development
-    if x_user_id.startswith("test-"):
-        return x_user_id
+    if user_id.startswith("test-"):
+        return user_id
 
     # Verify user has valid OAuth tokens
-    tokens = get_user_tokens(x_user_id)
+    tokens = get_user_tokens(user_id)
     if not tokens:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not authenticated. Please complete OAuth flow at /api/v1/auth/login",
+            detail="Session expired or invalid. Please login again at /api/v1/auth/login",
         )
 
-    return x_user_id
+    return user_id
 
 
 async def get_project_key(
@@ -122,16 +135,12 @@ async def get_ticket_service(
     user_id: Annotated[str, Depends(get_user_id)],
     project_key: Annotated[str, Depends(get_project_key)],
 ) -> TicketServiceAPI:
-    """Provide the concrete TicketImpl instance.
-
-    This dependency creates a TicketImpl configured for the authenticated user
-    and their specified Jira project.
-    """
+    """Provide the concrete TicketImpl instance."""
     return TicketImpl(user_id=user_id, project_key=project_key)
 
 
 # ============================================================================
-# OAUTH 2.0 AUTHENTICATION ENDPOINTS
+# OAUTH ENDPOINTS - Cookie-based session management
 # ============================================================================
 
 
@@ -142,21 +151,11 @@ async def get_ticket_service(
     response_class=RedirectResponse,
 )
 async def oauth_login() -> RedirectResponse:
-    """Start the OAuth 2.0 authorization flow with Jira.
-
-    This endpoint redirects the user to Jira's authorization page.
-    After the user grants access, Jira will redirect back to the callback endpoint.
-    """
-    # Generate unique user_id and CSRF protection state
+    """Start the OAuth 2.0 authorization flow with Jira."""
     user_id = str(uuid4())
     state = secrets.token_urlsafe(32)
-
-    # Store mapping of state -> user_id for callback verification
     _oauth_state_store[state] = user_id
-
-    # Get authorization URL from ticket_impl's oauth module
     auth_url = build_authorize_url(state=state)
-
     return RedirectResponse(url=auth_url, status_code=status.HTTP_302_FOUND)
 
 
@@ -166,42 +165,42 @@ async def oauth_login() -> RedirectResponse:
     summary="OAuth 2.0 callback endpoint",
 )
 async def oauth_callback(
+    response: Response,
     code: Annotated[str, Query(..., description="Authorization code from Jira")],
     state: Annotated[str, Query(..., description="State for CSRF protection")],
 ) -> dict[str, str]:
-    """Handle the OAuth 2.0 callback from Jira.
-
-    This endpoint receives the authorization code, exchanges it for tokens,
-    and stores them for the user. Returns the user_id to use in subsequent requests.
-    """
-    # Verify state to prevent CSRF attacks
+    """Handle OAuth callback and set session cookie."""
     if state not in _oauth_state_store:
         raise HTTPException(
             status_code=HTTPStatus.BAD_REQUEST,
             detail="Invalid or expired state parameter",
         )
 
-    # Get the user_id associated with this state
-    user_id = _oauth_state_store[state]
-
-    # Remove state from store
-    del _oauth_state_store[state]
+    user_id = _oauth_state_store.pop(state)
 
     try:
-        # Exchange code for tokens using ticket_impl's oauth module
-        # This function stores the tokens internally
         await exchange_code_for_tokens(user_id=user_id, code=code)
     except Exception as e:
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             detail=f"OAuth callback failed: {e!s}",
         ) from e
-    else:
-        return {
-            "message": "Authentication successful",
-            "user_id": user_id,
-            "instructions": f"Use 'X-User-ID: {user_id}' header in subsequent API requests",
-        }
+
+    # Set HTTP-only cookie with user_id
+    response.set_cookie(
+        key="user_id",
+        value=user_id,
+        httponly=True,
+        secure=False,  # Set to True in production with HTTPS
+        samesite="lax",
+        max_age=86400 * 30,  # 30 days
+    )
+
+    return {
+        "message": "Authentication successful",
+        "user_id": user_id,
+        "instructions": "Session cookie set. You can now make API requests without User-ID header.",
+    }
 
 
 @app.get(
@@ -210,24 +209,37 @@ async def oauth_callback(
     summary="Check authentication status",
 )
 async def auth_status(
-    user_id: Annotated[str, Query(..., description="User ID to check")],
+    session_user_id: Annotated[str | None, Depends(get_session_user_id)] = None,
 ) -> dict[str, bool | str]:
-    """Check if a user has valid OAuth tokens stored.
+    """Check if the current session is authenticated.
 
-    Returns whether the user is authenticated and when tokens expire.
+    No parameters needed - automatically checks session cookie.
     """
-    tokens = get_user_tokens(user_id)
+    if not session_user_id:
+        return {
+            "authenticated": False,
+            "message": "Not authenticated. Please login at /api/v1/auth/login",
+        }
 
+    # Check if session has valid tokens
+    if session_user_id.startswith("test-"):
+        return {
+            "authenticated": True,
+            "user_id": session_user_id,
+            "message": "Test user session active",
+        }
+
+    tokens = get_user_tokens(session_user_id)
     if not tokens:
         return {
             "authenticated": False,
-            "message": "User not authenticated. Please visit /api/v1/auth/login",
+            "message": "Session expired. Please login again at /api/v1/auth/login",
         }
 
     return {
         "authenticated": True,
-        "user_id": user_id,
-        "message": "User has valid tokens",
+        "user_id": session_user_id,
+        "message": "Session is valid",
     }
 
 
@@ -235,55 +247,56 @@ async def auth_status(
     "/api/v1/auth/logout",
     tags=["authentication"],
     summary="Logout and revoke tokens",
-    status_code=HTTPStatus.NO_CONTENT,
+    status_code=HTTPStatus.OK,
 )
 async def logout(
-    user_id: Annotated[str, Query(..., description="User ID to logout")],
-) -> None:
-    """Logout the user by clearing their stored OAuth tokens.
+    response: Response,
+    session_user_id: Annotated[str | None, Depends(get_session_user_id)] = None,
+) -> dict[str, str]:
+    """Logout by clearing session cookie and stored tokens.
 
-    After logout, the user will need to complete the OAuth flow again.
+    No parameters needed - automatically uses session cookie.
     """
-    clear_user_tokens(user_id)
+    if not session_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated. Nothing to logout.",
+        )
+
+    # Clear tokens from database
+    clear_user_tokens(session_user_id)
+    response.delete_cookie(key="user_id")
+
+    return {
+        "message": "Successfully logged out",
+        "user_id": session_user_id,
+    }
 
 
 # ============================================================================
-# HEALTH CHECK ENDPOINT
+# HEALTH CHECK
 # ============================================================================
 
 
-@app.get(
-    "/health",
-    tags=["health"],
-    summary="Health check",
-)
+@app.get("/health", tags=["health"], summary="Health check")
 async def health_check() -> HealthResponse:
     """Verify that the service is running and responsive."""
-    return HealthResponse(
-        status="healthy",
-        service="ticket_service",
-        version="0.1.0",
-    )
+    return HealthResponse(status="healthy", service="ticket_service", version="0.1.0")
 
 
 # ============================================================================
-# TICKET ENDPOINTS
+# TICKET ENDPOINTS - All use cookie-based authentication automatically
 # ============================================================================
 
 
-@app.post(
-    "/api/v1/tickets",
-    status_code=status.HTTP_201_CREATED,
-    tags=["tickets"],
-    summary="Create a new ticket",
-)
+@app.post("/api/v1/tickets", status_code=status.HTTP_201_CREATED, tags=["tickets"])
 async def create_ticket(
     request: TicketCreateRequest,
     service: Annotated[TicketServiceAPI, Depends(get_ticket_service)],
 ) -> TicketResponse:
-    """Create a new ticket in Jira.
+    """Create a new ticket.
 
-    Requires X-User-ID and X-Project-Key headers.
+    Authentication is automatic via session cookie. Only X-Project-Key header is required.
     """
     try:
         ticket = await service.create_ticket(
@@ -295,10 +308,7 @@ async def create_ticket(
         )
         return TicketResponse.model_validate(ticket)
     except ValueError as e:
-        raise HTTPException(
-            status_code=HTTPStatus.BAD_REQUEST,
-            detail=str(e),
-        ) from e
+        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,

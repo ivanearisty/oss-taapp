@@ -30,6 +30,7 @@ dev = [
     "respx>=0.21",
     "anyio>=4",
     "types-python-dateutil>=2.9.0",
+    "python-dotenv>=1.0.0"
 ]
 
 [tool.uv.workspace]
