@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import base64
 import json
+import logging
+import re
 from typing import cast
 from urllib.parse import urlencode
 
@@ -12,10 +14,19 @@ import httpx
 from .config import settings
 from .storage import Token, get_tokens, is_expired, update_access, upsert_tokens
 
+logger = logging.getLogger(__name__)
+
 AUTH_BASE = "https://auth.atlassian.com"
 TOKEN_URL = f"{AUTH_BASE}/oauth/token"
 SCOPE = "read:jira-user read:jira-work write:jira-work offline_access"
 AUDIENCE = "api.atlassian.com"
+
+# HTTP status codes
+HTTP_OK = 200
+# JWT parts count
+JWT_PARTS = 3
+# Base64 padding value
+BASE64_PADDING = 4
 
 
 def extract_cloud_id_from_token(access_token: str) -> str | None:
@@ -26,38 +37,39 @@ def extract_cloud_id_from_token(access_token: str) -> str | None:
     try:
         # JWT format: header.payload.signature
         parts = access_token.split(".")
-        if len(parts) != 3:
+        if len(parts) != JWT_PARTS:
             return None
 
         # Decode the payload (add padding if needed)
         payload = parts[1]
-        padding = 4 - len(payload) % 4
-        if padding != 4:
+        padding = BASE64_PADDING - len(payload) % BASE64_PADDING
+        if padding != BASE64_PADDING:
             payload += "=" * padding
 
         decoded = base64.urlsafe_b64decode(payload)
         claims = json.loads(decoded)
 
         # Try multiple possible cloud_id field names
-        cloud_id = (
+        cloud_id: str | None = (
             claims.get("https://api.atlassian.com/site/cloud_id")
             or claims.get("cloud_id")
             or claims.get("cloudId")
             or claims.get("sid")  # Sometimes it's stored as 'sid'
         )
 
+        if cloud_id:
+            return cloud_id
+
         # If still not found, check the 'scope' field which may contain site references
-        if not cloud_id and "scope" in claims:
-            scope = claims["scope"]
-            # Extract cloud ID from scope string like "site:xxx cloud:xxx"
-            import re
+        if "scope" not in claims:
+            return None
 
-            match = re.search(r"site:([a-f0-9\-]+)", scope)
-            if match:
-                cloud_id = match.group(1)
-
-        return cloud_id
-    except Exception:
+        scope = claims["scope"]
+        # Extract cloud ID from scope string like "site:xxx cloud:xxx"
+        match = re.search(r"site:([a-f0-9\-]+)", scope)
+        return match.group(1) if match else None
+    except (ValueError, KeyError, json.JSONDecodeError) as e:
+        logger.debug("Failed to extract cloud ID from token: %s", e)
         return None
 
 
@@ -155,14 +167,14 @@ async def fetch_project_key_from_api(access_token: str, cloud_id: str) -> str | 
                         headers=headers,
                         params={"maxResults": 1} if "search" in api_url else {},
                     )
-                    if r.status_code == 200:
+                    if r.status_code == HTTP_OK:
                         projects = r.json()
                         # Handle both array and dict responses
                         if isinstance(projects, list) and projects:
                             first_project = projects[0]
                             project_key = first_project.get("key")
                             if project_key:
-                                return project_key
+                                return cast("str", project_key)
                         elif isinstance(projects, dict):
                             # If it's wrapped in a dict, check common field names
                             values = projects.get("values", projects.get("projects", []))
@@ -170,12 +182,14 @@ async def fetch_project_key_from_api(access_token: str, cloud_id: str) -> str | 
                                 first_project = values[0]
                                 project_key = first_project.get("key")
                                 if project_key:
-                                    return project_key
-                except Exception:
+                                    return cast("str", project_key)
+                except httpx.RequestError as e:
+                    logger.debug("Failed to fetch projects from %s: %s", api_url, e)
                     continue
 
             return None
-    except Exception:
+    except httpx.RequestError as e:
+        logger.debug("Failed to fetch project key from API: %s", e)
         return None
 
 
@@ -192,30 +206,28 @@ async def fetch_cloud_id_from_api(access_token: str) -> str | None:
 
             # Primary endpoint: /oauth/token/accessible-resources
             # Returns: [{"id": "cloud-id", "name": "Site name", "url": "...", ...}, ...]
-            try:
-                r = await client.get(
-                    "https://api.atlassian.com/oauth/token/accessible-resources",
-                    headers=headers,
-                )
-                if r.status_code == 200:
-                    resources = r.json()
+            r = await client.get(
+                "https://api.atlassian.com/oauth/token/accessible-resources",
+                headers=headers,
+            )
+            if r.status_code == HTTP_OK:
+                resources = r.json()
 
-                    # Response should be a list of accessible resources
-                    if isinstance(resources, list) and resources:
-                        # Return the first resource's ID (cloud ID)
-                        # Usually there's only one, but Atlassian accounts can have multiple
-                        for resource in resources:
-                            cloud_id = resource.get("id")
-                            if cloud_id:
-                                return cloud_id
-                    # Fallback: if it's a dict (shouldn't happen but just in case)
-                    elif isinstance(resources, dict):
-                        cloud_id = resources.get("id")
+                # Response should be a list of accessible resources
+                if isinstance(resources, list) and resources:
+                    # Return the first resource's ID (cloud ID)
+                    # Usually there's only one, but Atlassian accounts can have multiple
+                    for resource in resources:
+                        cloud_id = resource.get("id")
                         if cloud_id:
-                            return cloud_id
-            except Exception:
-                pass
+                            return cast("str", cloud_id)
+                # Fallback: if it's a dict (shouldn't happen but just in case)
+                elif isinstance(resources, dict):
+                    cloud_id = resources.get("id")
+                    if cloud_id:
+                        return cast("str", cloud_id)
 
             return None
-    except Exception:
+    except httpx.RequestError as e:
+        logger.debug("Failed to fetch cloud ID from API: %s", e)
         return None

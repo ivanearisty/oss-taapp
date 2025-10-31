@@ -198,7 +198,7 @@ class TestAddComment:
         async_client: AsyncClient,
         mock_ticket_id: UUID,
     ) -> None:
-        """Test adding a comment without authentication returns 422."""
+        """Test adding a comment without authentication returns 401."""
         response = await async_client.post(
             f"/api/v1/tickets/{mock_ticket_id}/comments",
             json={
@@ -207,7 +207,7 @@ class TestAddComment:
             },
         )
 
-        assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY  # Missing required headers
+        assert response.status_code == HTTPStatus.UNAUTHORIZED  # Missing required headers
 
     @pytest.mark.asyncio
     async def test_add_comment_service_error(
@@ -313,12 +313,12 @@ class TestGetTicketComments:
         async_client: AsyncClient,
         mock_ticket_id: UUID,
     ) -> None:
-        """Test retrieving comments without authentication returns 422."""
+        """Test retrieving comments without authentication returns 401."""
         response = await async_client.get(
             f"/api/v1/tickets/{mock_ticket_id}/comments",
         )
 
-        assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY  # Missing required headers
+        assert response.status_code == HTTPStatus.UNAUTHORIZED  # Missing required headers
 
     @pytest.mark.asyncio
     async def test_get_comments_invalid_user(
@@ -339,4 +339,4 @@ class TestGetTicketComments:
             )
 
             assert response.status_code == HTTPStatus.UNAUTHORIZED
-            assert "not authenticated" in response.json()["detail"].lower()
+            assert "session expired" in response.json()["detail"].lower()

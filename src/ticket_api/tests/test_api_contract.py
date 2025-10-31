@@ -286,7 +286,10 @@ class TestTicketServiceAPI:
                 return False
 
             async def add_comment(
-                self, ticket_id: UUID, author: str, content: str,
+                self,
+                ticket_id: UUID,
+                author: str,
+                content: str,
             ) -> Comment | None:
                 return None
 

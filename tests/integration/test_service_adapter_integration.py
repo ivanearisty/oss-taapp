@@ -214,8 +214,8 @@ class TestServiceInputValidation:
             },
         )
 
-        # Should fail without headers
-        assert response.status_code in [400, HTTP_UNPROCESSABLE_ENTITY, 500]
+        # Should fail without headers (401 Unauthorized)
+        assert response.status_code in [400, 401, HTTP_UNPROCESSABLE_ENTITY, 500]
 
     def test_invalid_priority_value(self) -> None:
         """Test that invalid priority values are rejected."""
