@@ -29,6 +29,7 @@ from fastapi.responses import JSONResponse, Response
 
 import discord_client_impl  # noqa: F401
 from discord_client_impl.discord_impl import DiscordClient
+from fastapi.responses import RedirectResponse
 
 app = FastAPI(
     title="Discord Client Service API",
@@ -118,7 +119,7 @@ def login(scopes: str | None = Query(None, description="Optional space-separated
             url = temp_client.get_authorization_url(scopes=scope_list)
         else:
             url = temp_client.get_authorization_url()
-        return JSONResponse(status_code=status.HTTP_200_OK, content={"authorization_url": url, "status": "success"})
+        return RedirectResponse(url=url, status_code=status.HTTP_302_FOUND)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -150,10 +151,7 @@ def auth_callback(code: str | None = Query(None, description="Authorization code
         # access token and the middleware can rehydrate the client. In production
         # you should use a server-side session store and avoid storing raw tokens
         # in cookies.
-        resp = JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={"message": "Authentication successful", "access_token": token, "status": "success"},
-        )
+        resp = RedirectResponse(url="/user", status_code=status.HTTP_302_FOUND)
         resp.set_cookie("discord_access_token", token, httponly=True, samesite="lax")
         return resp
     except Exception as e:
