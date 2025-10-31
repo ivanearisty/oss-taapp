@@ -45,6 +45,9 @@ ignore = [
 ]
 per-file-ignores = { "**/test_*.py" = ["TRY300", "BLE001", "ANN401", "SLF001", "E501", "S105", "ARG001", "ARG002", "S106", "INP001", "PLC0415"] }
 
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["Depends", "fastapi.Depends", "fastapi.params.Depends"]
+
 [tool.mypy]
 strict = true
 explicit_package_bases = true # Required for src layout

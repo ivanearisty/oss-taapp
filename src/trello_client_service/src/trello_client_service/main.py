@@ -1,10 +1,10 @@
 """FastAPI service for Trello client operations."""
 
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, List, Optional
+from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Query
-from fastapi.responses import RedirectResponse
 from trello_client_api import (
     TrelloAPIError,
     TrelloAuthenticationError,
@@ -19,7 +19,7 @@ from trello_client_impl import TrelloClientImpl, TrelloOAuthHandler, UserCredent
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:  # noqa: ARG001
     """Handle application startup and shutdown."""
     # Startup
     yield
@@ -34,22 +34,23 @@ app = FastAPI(
 )
 
 
-def get_trello_client(user_id: Optional[str] = Query(None)) -> TrelloClient:
+def get_trello_client(user_id: str | None = Query(None)) -> TrelloClient:
     """Dependency to get Trello client instance.
-    
+
     Args:
         user_id: User ID for authentication
-        
+
     Returns:
         TrelloClient: Configured client instance
-        
+
     Raises:
         HTTPException: If client creation fails
+
     """
     try:
         return TrelloClientImpl.from_env(user_id=user_id)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create client: {e}")
+    except ValueError as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create client: {e}") from e
 
 
 @app.get("/health")
@@ -60,295 +61,296 @@ async def health_check() -> dict[str, str]:
 
 # OAuth endpoints
 @app.get("/auth/login")
-async def login(user_id: Optional[str] = Query(None)) -> dict[str, str]:
+async def login(user_id: Annotated[str | None, Query()] = None) -> dict[str, str]:
     """Start OAuth login flow.
-    
+
     Args:
         user_id: Optional user ID, will generate if not provided
-        
+
     Returns:
         dict: Authorization URL and user ID
+
     """
     try:
         oauth_handler = TrelloOAuthHandler.from_env()
-        
+
         if not user_id:
             user_id = UserCredential.generate_user_id()
-            
+
         auth_url = oauth_handler.get_authorization_url(user_id)
-        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Login failed: {e}") from e
+    else:
         return {
             "authorization_url": auth_url,
             "user_id": user_id,
         }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Login failed: {e}")
 
 
 @app.get("/auth/callback")
 async def auth_callback(
-    token: str = Query(..., description="OAuth token from Trello"),
-    user_id: str = Query(..., description="User ID from login flow"),
+    token: Annotated[str, Query(description="OAuth token from Trello")] = ...,
+    user_id: Annotated[str, Query(description="User ID from login flow")] = ...,
 ) -> dict[str, str]:
     """Handle OAuth callback.
-    
+
     Args:
         token: OAuth token from Trello
         user_id: User ID from login flow
-        
+
     Returns:
         dict: Success message
+
     """
     try:
         oauth_handler = TrelloOAuthHandler.from_env()
         client = TrelloClientImpl.from_env()
-        
+
         # Exchange token for credentials
         access_token, token_secret = await oauth_handler.exchange_token(token)
-        
+
         # Store credentials
         await client.store_credentials(user_id, access_token, token_secret)
-        
-        return {"message": "Authentication successful", "user_id": user_id}
-        
     except TrelloAuthenticationError as e:
-        raise HTTPException(status_code=401, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Callback failed: {e}")
+        raise HTTPException(status_code=401, detail=str(e)) from None
+    else:
+        return {"message": "Authentication successful", "user_id": user_id}
 
 
 # User endpoints
-@app.get("/users/me", response_model=TrelloUser)
+@app.get("/users/me")
 async def get_current_user(
-    client: TrelloClient = Depends(get_trello_client),
+    client: Annotated[TrelloClient, Depends(get_trello_client)],
 ) -> TrelloUser:
     """Get current authenticated user."""
     try:
         return await client.get_current_user()
     except TrelloAuthenticationError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        raise HTTPException(status_code=401, detail=str(e)) from None
     except TrelloAPIError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from None
 
 
 # Board endpoints
-@app.get("/boards", response_model=List[TrelloBoard])
+@app.get("/boards")
 async def get_boards(
-    client: TrelloClient = Depends(get_trello_client),
-) -> List[TrelloBoard]:
+    client: Annotated[TrelloClient, Depends(get_trello_client)],
+) -> list[TrelloBoard]:
     """Get all boards accessible to the current user."""
     try:
         return await client.get_boards()
     except TrelloAuthenticationError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        raise HTTPException(status_code=401, detail=str(e)) from None
     except TrelloAPIError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from None
 
 
-@app.get("/boards/{board_id}", response_model=TrelloBoard)
+@app.get("/boards/{board_id}")
 async def get_board(
     board_id: str,
-    client: TrelloClient = Depends(get_trello_client),
+    client: Annotated[TrelloClient, Depends(get_trello_client)],
 ) -> TrelloBoard:
     """Get a specific board by ID."""
     try:
         return await client.get_board(board_id)
     except TrelloNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from None
     except TrelloAuthenticationError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        raise HTTPException(status_code=401, detail=str(e)) from None
     except TrelloAPIError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from None
 
 
-@app.post("/boards", response_model=TrelloBoard)
+@app.post("/boards")
 async def create_board(
+    client: Annotated[TrelloClient, Depends(get_trello_client)],
     name: str,
-    description: Optional[str] = None,
-    client: TrelloClient = Depends(get_trello_client),
+    description: str | None = None,
 ) -> TrelloBoard:
     """Create a new board."""
     try:
         return await client.create_board(name, description)
     except TrelloAuthenticationError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        raise HTTPException(status_code=401, detail=str(e)) from None
     except TrelloAPIError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from None
 
 
-@app.put("/boards/{board_id}", response_model=TrelloBoard)
+@app.put("/boards/{board_id}")
 async def update_board(
+    client: Annotated[TrelloClient, Depends(get_trello_client)],
     board_id: str,
-    name: Optional[str] = None,
-    description: Optional[str] = None,
-    client: TrelloClient = Depends(get_trello_client),
+    name: str | None = None,
+    description: str | None = None,
 ) -> TrelloBoard:
     """Update an existing board."""
     try:
         return await client.update_board(board_id, name, description)
     except TrelloNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from None
     except TrelloAuthenticationError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        raise HTTPException(status_code=401, detail=str(e)) from None
     except TrelloAPIError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from None
 
 
 @app.delete("/boards/{board_id}")
 async def delete_board(
     board_id: str,
-    client: TrelloClient = Depends(get_trello_client),
+    client: Annotated[TrelloClient, Depends(get_trello_client)],
 ) -> dict[str, bool]:
     """Delete a board."""
     try:
         success = await client.delete_board(board_id)
-        return {"success": success}
     except TrelloNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from None
     except TrelloAuthenticationError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        raise HTTPException(status_code=401, detail=str(e)) from None
     except TrelloAPIError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from None
+    else:
+        return {"success": success}
 
 
 # List endpoints
-@app.get("/boards/{board_id}/lists", response_model=List[TrelloList])
+@app.get("/boards/{board_id}/lists")
 async def get_lists(
     board_id: str,
-    client: TrelloClient = Depends(get_trello_client),
-) -> List[TrelloList]:
+    client: Annotated[TrelloClient, Depends(get_trello_client)],
+) -> list[TrelloList]:
     """Get all lists in a board."""
     try:
         return await client.get_lists(board_id)
     except TrelloNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from None
     except TrelloAuthenticationError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        raise HTTPException(status_code=401, detail=str(e)) from None
     except TrelloAPIError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from None
 
 
-@app.post("/boards/{board_id}/lists", response_model=TrelloList)
+@app.post("/boards/{board_id}/lists")
 async def create_list(
     board_id: str,
     name: str,
-    client: TrelloClient = Depends(get_trello_client),
+    client: Annotated[TrelloClient, Depends(get_trello_client)],
 ) -> TrelloList:
     """Create a new list in a board."""
     try:
         return await client.create_list(board_id, name)
     except TrelloNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from None
     except TrelloAuthenticationError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        raise HTTPException(status_code=401, detail=str(e)) from None
     except TrelloAPIError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from None
 
 
-@app.put("/lists/{list_id}", response_model=TrelloList)
+@app.put("/lists/{list_id}")
 async def update_list(
+    client: Annotated[TrelloClient, Depends(get_trello_client)],
     list_id: str,
-    name: Optional[str] = None,
-    client: TrelloClient = Depends(get_trello_client),
+    name: str | None = None,
 ) -> TrelloList:
     """Update an existing list."""
     try:
         return await client.update_list(list_id, name)
     except TrelloNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from None
     except TrelloAuthenticationError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        raise HTTPException(status_code=401, detail=str(e)) from None
     except TrelloAPIError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from None
 
 
 # Card endpoints
-@app.get("/lists/{list_id}/cards", response_model=List[TrelloCard])
+@app.get("/lists/{list_id}/cards")
 async def get_cards(
     list_id: str,
-    client: TrelloClient = Depends(get_trello_client),
-) -> List[TrelloCard]:
+    client: Annotated[TrelloClient, Depends(get_trello_client)],
+) -> list[TrelloCard]:
     """Get all cards in a list."""
     try:
         return await client.get_cards(list_id)
     except TrelloNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from None
     except TrelloAuthenticationError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        raise HTTPException(status_code=401, detail=str(e)) from None
     except TrelloAPIError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from None
 
 
-@app.get("/cards/{card_id}", response_model=TrelloCard)
+@app.get("/cards/{card_id}")
 async def get_card(
     card_id: str,
-    client: TrelloClient = Depends(get_trello_client),
+    client: Annotated[TrelloClient, Depends(get_trello_client)],
 ) -> TrelloCard:
     """Get a specific card by ID."""
     try:
         return await client.get_card(card_id)
     except TrelloNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from None
     except TrelloAuthenticationError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        raise HTTPException(status_code=401, detail=str(e)) from None
     except TrelloAPIError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from None
 
 
-@app.post("/lists/{list_id}/cards", response_model=TrelloCard)
+@app.post("/lists/{list_id}/cards")
 async def create_card(
+    client: Annotated[TrelloClient, Depends(get_trello_client)],
     list_id: str,
     name: str,
-    description: Optional[str] = None,
-    client: TrelloClient = Depends(get_trello_client),
+    description: str | None = None,
 ) -> TrelloCard:
     """Create a new card in a list."""
     try:
         return await client.create_card(list_id, name, description)
     except TrelloNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from None
     except TrelloAuthenticationError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        raise HTTPException(status_code=401, detail=str(e)) from None
     except TrelloAPIError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from None
 
 
-@app.put("/cards/{card_id}", response_model=TrelloCard)
+@app.put("/cards/{card_id}")
 async def update_card(
+    client: Annotated[TrelloClient, Depends(get_trello_client)],
     card_id: str,
-    name: Optional[str] = None,
-    description: Optional[str] = None,
-    list_id: Optional[str] = None,
-    client: TrelloClient = Depends(get_trello_client),
+    name: str | None = None,
+    description: str | None = None,
+    list_id: str | None = None,
 ) -> TrelloCard:
     """Update an existing card."""
     try:
         return await client.update_card(card_id, name, description, list_id)
     except TrelloNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from None
     except TrelloAuthenticationError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        raise HTTPException(status_code=401, detail=str(e)) from None
     except TrelloAPIError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from None
 
 
 @app.delete("/cards/{card_id}")
 async def delete_card(
     card_id: str,
-    client: TrelloClient = Depends(get_trello_client),
+    client: Annotated[TrelloClient, Depends(get_trello_client)],
 ) -> dict[str, bool]:
     """Delete a card."""
     try:
         success = await client.delete_card(card_id)
-        return {"success": success}
     except TrelloNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from None
     except TrelloAuthenticationError as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        raise HTTPException(status_code=401, detail=str(e)) from None
     except TrelloAPIError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from None
+    else:
+        return {"success": success}
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8000)

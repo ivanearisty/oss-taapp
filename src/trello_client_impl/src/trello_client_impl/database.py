@@ -3,35 +3,35 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
-from typing import Optional
+from datetime import UTC, datetime
 
 
 class UserCredential:
     """Database model for storing user OAuth credentials."""
-    
+
     def __init__(
         self,
         user_id: str,
         access_token: str,
         token_secret: str,
-        created_at: Optional[datetime] = None,
-        updated_at: Optional[datetime] = None,
+        created_at: datetime | None = None,
+        updated_at: datetime | None = None,
     ) -> None:
         """Initialize UserCredential.
-        
+
         Args:
             user_id: Unique identifier for the user
             access_token: OAuth access token
             token_secret: OAuth token secret
             created_at: When the credential was created
             updated_at: When the credential was last updated
+
         """
         self.user_id = user_id
         self.access_token = access_token
         self.token_secret = token_secret
-        self.created_at = created_at or datetime.utcnow()
-        self.updated_at = updated_at or datetime.utcnow()
+        self.created_at = created_at or datetime.now(UTC)
+        self.updated_at = updated_at or datetime.now(UTC)
 
     @classmethod
     def generate_user_id(cls) -> str:

@@ -10,13 +10,13 @@ from .exceptions import (
 from .models import TrelloBoard, TrelloCard, TrelloList, TrelloUser
 
 __all__ = [
-    "TrelloClient",
-    "TrelloBoard",
-    "TrelloCard", 
-    "TrelloList",
-    "TrelloUser",
-    "TrelloError",
     "TrelloAPIError",
     "TrelloAuthenticationError",
+    "TrelloBoard",
+    "TrelloCard",
+    "TrelloClient",
+    "TrelloError",
+    "TrelloList",
     "TrelloNotFoundError",
+    "TrelloUser",
 ]

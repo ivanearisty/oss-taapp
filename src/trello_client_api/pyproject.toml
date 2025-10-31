@@ -42,10 +42,4 @@ warn_unreachable = true
 strict_equality = true
 
 [tool.ruff]
-target-version = "py311"
-line-length = 88
-select = ["E", "W", "F", "I", "N", "D", "UP", "YTT", "ANN", "S", "BLE", "FBT", "B", "A", "COM", "C4", "DTZ", "T10", "DJ", "EM", "EXE", "FA", "ISC", "ICN", "G", "INP", "PIE", "T20", "PYI", "PT", "Q", "RSE", "RET", "SLF", "SLOT", "SIM", "TID", "TCH", "INT", "ARG", "PTH", "ERA", "PD", "PGH", "PL", "TRY", "FLY", "NPY", "AIR", "PERF", "FURB", "LOG", "RUF"]
-ignore = ["D203", "D213", "ANN101", "ANN102"]
-
-[tool.ruff.pydocstyle]
-convention = "google"
+extend = "../../pyproject.toml"

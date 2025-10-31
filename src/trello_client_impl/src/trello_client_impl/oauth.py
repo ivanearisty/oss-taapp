@@ -4,17 +4,15 @@ from __future__ import annotations
 
 import os
 import urllib.parse
-from typing import Optional, Tuple
+from http import HTTPStatus
 
 import aiohttp
 from trello_client_api import TrelloAuthenticationError
 
-from .database import UserCredential
-
 
 class TrelloOAuthHandler:
     """Handles OAuth 2.0 flow for Trello API authentication."""
-    
+
     def __init__(
         self,
         api_key: str,
@@ -22,25 +20,27 @@ class TrelloOAuthHandler:
         redirect_uri: str,
     ) -> None:
         """Initialize OAuth handler.
-        
+
         Args:
             api_key: Trello API key
             api_secret: Trello API secret
             redirect_uri: OAuth callback URL
+
         """
         self.api_key = api_key
         self.api_secret = api_secret
         self.redirect_uri = redirect_uri
         self.base_url = "https://trello.com/1"
-        
+
     def get_authorization_url(self, user_id: str) -> str:
         """Get the authorization URL for OAuth flow.
-        
+
         Args:
             user_id: Unique identifier for the user
-            
+
         Returns:
             str: Authorization URL to redirect user to
+
         """
         params = {
             "key": self.api_key,
@@ -50,60 +50,67 @@ class TrelloOAuthHandler:
             "scope": "read,write",
             "return_url": f"{self.redirect_uri}?user_id={user_id}",
         }
-        
+
         query_string = urllib.parse.urlencode(params)
         return f"https://trello.com/1/authorize?{query_string}"
-    
-    async def exchange_token(self, token: str) -> Tuple[str, str]:
+
+    async def exchange_token(self, token: str) -> tuple[str, str]:
         """Exchange authorization token for access credentials.
-        
+
         Args:
             token: Authorization token from callback
-            
+
         Returns:
             Tuple[str, str]: Access token and token secret
-            
+
         Raises:
             TrelloAuthenticationError: If token exchange fails
+
         """
         # For Trello, the token from the callback IS the access token
         # Trello uses a simpler OAuth 1.0a-like flow
         if not token:
-            raise TrelloAuthenticationError("No token provided")
-            
+            msg = "No token provided"
+            raise TrelloAuthenticationError(msg)
+
         # Validate the token by making a test API call
         async with aiohttp.ClientSession() as session:
             test_url = f"{self.base_url}/members/me"
             params = {"key": self.api_key, "token": token}
-            
+
             async with session.get(test_url, params=params) as response:
-                if response.status != 200:
+                if response.status != HTTPStatus.OK:
+                    msg = f"Token validation failed: {response.status}"
                     raise TrelloAuthenticationError(
-                        f"Token validation failed: {response.status}"
+                        msg,
                     )
-        
+
         # For Trello, we use the token as both access_token and token_secret
         return token, token
-    
+
     @classmethod
     def from_env(cls) -> TrelloOAuthHandler:
         """Create OAuth handler from environment variables.
-        
+
         Returns:
             TrelloOAuthHandler: Configured OAuth handler
-            
+
         Raises:
             ValueError: If required environment variables are missing
+
         """
         api_key = os.getenv("TRELLO_API_KEY")
         api_secret = os.getenv("TRELLO_API_SECRET")
         redirect_uri = os.getenv("REDIRECT_URI")
-        
+
         if not api_key:
-            raise ValueError("TRELLO_API_KEY environment variable is required")
+            msg = "TRELLO_API_KEY environment variable is required"
+            raise ValueError(msg)
         if not api_secret:
-            raise ValueError("TRELLO_API_SECRET environment variable is required")
+            msg = "TRELLO_API_SECRET environment variable is required"
+            raise ValueError(msg)
         if not redirect_uri:
-            raise ValueError("REDIRECT_URI environment variable is required")
-            
+            msg = "REDIRECT_URI environment variable is required"
+            raise ValueError(msg)
+
         return cls(api_key, api_secret, redirect_uri)
