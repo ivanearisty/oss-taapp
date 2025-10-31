@@ -119,7 +119,8 @@ def login(scopes: str | None = Query(None, description="Optional space-separated
             url = temp_client.get_authorization_url(scopes=scope_list)
         else:
             url = temp_client.get_authorization_url()
-        return RedirectResponse(url=url, status_code=status.HTTP_302_FOUND)
+        # Redirect the user's browser to the authorization URL
+        return Response(status_code=status.HTTP_302_FOUND, headers={"Location": url})
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -222,10 +223,12 @@ def list_channels() -> JSONResponse:
 
 
 @app.get("/channels/{channel_id}/messages", tags=["Messages"], summary="List messages in a channel")
-def list_channel_messages(channel_id: str, limit: int = Query(50, ge=1, le=100)) -> JSONResponse:
-    try:
-        messages = list(app.state.client.list_messages(channel_id=channel_id, limit=limit))
-        serialized = [serialize_message(m) for m in messages]
+def list_channel_messages(request: Request, channel_id: str, limit: int = Query(50, ge=1, le=100),) -> JSONResponse:
+    try:    
+        token = request.cookies.get("discord_access_token")
+        
+        messages = list(app.state.client.list_messages(channel_id=channel_id, token=token ,limit=limit))
+        serialized = [serialize_message(m) for m in messages]   
         return JSONResponse(status_code=status.HTTP_200_OK, content={"messages": serialized, "status": "success"})
     except Exception as e:
         raise HTTPException(
