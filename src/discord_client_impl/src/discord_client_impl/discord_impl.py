@@ -73,7 +73,7 @@ class DiscordClient(ChatClient):
         self.client_secret = client_secret or os.environ.get("DISCORD_CLIENT_SECRET")
         self.redirect_uri = redirect_uri or os.environ.get(
             "DISCORD_REDIRECT_URI",
-            "http://localhost:8000/auth/callback",
+            "http://127.0.0.1:8000/auth/callback",
         )
         self.access_token = access_token
 
