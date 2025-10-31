@@ -1,6 +1,6 @@
 from http import HTTPStatus
 from types import SimpleNamespace
-
+import pytest
 from fastapi.testclient import TestClient
 
 from discord_service import main
@@ -9,11 +9,11 @@ from discord_service import main
 client = TestClient(main.app)
 
 
-def make_msg(id="m1", channel_id="c1", author="a", content="hi", ts="t"):
+def make_msg(id: str = "m1", channel_id: str = "c1", author: str = "a", content: str = "hi", ts: str = "t") -> SimpleNamespace:
     return SimpleNamespace(message_id=id, id=id, channel_id=channel_id, author=author, author_username=author, content=content, timestamp=ts)
 
 
-def make_channel(id="c1", name="chan", type_=1, pos=0):
+def make_channel(id: str = "c1", name: str = "chan", type_: int = 1, pos: int = 0) -> SimpleNamespace:
     return SimpleNamespace(channel_id=id, id=id, channel_name=name, name=name, channel_type=type_, channel_position=pos)
 
 
@@ -23,7 +23,7 @@ def test_root_returns_welcome() -> None:
     assert r.json()["message"].startswith("Welcome")
 
 
-def test_login_redirects_with_scopes(monkeypatch) -> None:
+def test_login_redirects_with_scopes(monkeypatch: pytest.MonkeyPatch) -> None:
     # stub DiscordClient.get_authorization_url
     monkeypatch.setattr("discord_service.main.DiscordClient", lambda *args, **kwargs: SimpleNamespace(get_authorization_url=lambda scopes=None: "https://auth"))
     r = client.get("/login?scopes=read%20write", follow_redirects=False)
@@ -71,11 +71,11 @@ def test_list_channels_serialization() -> None:
     assert r.json()["channels"][0]["id"] == "c1"
 
 
-def test_list_channel_messages_and_rehydrate(monkeypatch) -> None:
+def test_list_channel_messages_and_rehydrate(monkeypatch: pytest.MonkeyPatch) -> None:
     # no client initially, cookie triggers rehydrate
     main.app.state.client = None
     # mock DiscordClient constructor to return client with list_messages
-    def fake_ctor(access_token=None):
+    def fake_ctor(access_token: str | None = None) -> SimpleNamespace:
         return SimpleNamespace(list_messages=lambda channel_id, token=None, limit=50: [make_msg("m1", channel_id)])
     monkeypatch.setattr("discord_service.main.DiscordClient", fake_ctor)
     r = client.get("/channels/c1/messages", cookies={"discord_access_token": "tok"})
@@ -107,7 +107,7 @@ def test_get_message_by_id_found_and_not_found() -> None:
     assert r3.status_code == HTTPStatus.NOT_FOUND
 
 
-def test_delete_message_various_responses(monkeypatch) -> None:
+def test_delete_message_various_responses() -> None:
     # no _http_client -> 501
     main.app.state.client = SimpleNamespace()
     r = client.delete("/channels/c1/messages/m1")
@@ -115,7 +115,7 @@ def test_delete_message_various_responses(monkeypatch) -> None:
 
     # successful delete (204)
     class FakeHTTP:
-        def delete(self, path):
+        def delete(self, path: str) -> SimpleNamespace:
             return SimpleNamespace(status_code=204, text="")
     main.app.state.client = SimpleNamespace(_http_client=FakeHTTP())
     r2 = client.delete("/channels/c1/messages/m1")
@@ -123,7 +123,7 @@ def test_delete_message_various_responses(monkeypatch) -> None:
 
     # forbidden
     class ForbiddenHTTP:
-        def delete(self, path):
+        def delete(self, path: str) -> SimpleNamespace:
             return SimpleNamespace(status_code=403, text="forbidden")
     main.app.state.client = SimpleNamespace(_http_client=ForbiddenHTTP())
     r3 = client.delete("/channels/c1/messages/m1")
@@ -131,7 +131,7 @@ def test_delete_message_various_responses(monkeypatch) -> None:
 
     # not found
     class NotFoundHTTP:
-        def delete(self, path):
+        def delete(self, path: str) -> SimpleNamespace:
             return SimpleNamespace(status_code=404, text="nf")
     main.app.state.client = SimpleNamespace(_http_client=NotFoundHTTP())
     r4 = client.delete("/channels/c1/messages/m1")
@@ -139,7 +139,7 @@ def test_delete_message_various_responses(monkeypatch) -> None:
 
     # other error -> 500
     class OtherHTTP:
-        def delete(self, path):
+        def delete(self, path: str) -> SimpleNamespace:
             return SimpleNamespace(status_code=500, text="err")
     main.app.state.client = SimpleNamespace(_http_client=OtherHTTP())
     r5 = client.delete("/channels/c1/messages/m1")
