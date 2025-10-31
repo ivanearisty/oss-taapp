@@ -1,3 +1,4 @@
+"""Tests for the chat_client_api message abstraction."""
 from unittest.mock import Mock
 
 from chat_client_api.message import ChatMessage

@@ -1,10 +1,6 @@
-import asyncio
 from http import HTTPStatus
 from types import SimpleNamespace
-from unittest.mock import Mock
 
-import httpx
-import pytest
 from fastapi.testclient import TestClient
 
 from discord_service import main
