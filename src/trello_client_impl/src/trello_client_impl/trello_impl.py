@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-import os
-from datetime import UTC, datetime
 from http import HTTPStatus
 from typing import Any
 
 import aiohttp
-import asyncpg
 from trello_client_api import (
     TrelloAPIError,
     TrelloAuthenticationError,
@@ -20,7 +17,6 @@ from trello_client_api import (
     TrelloUser,
 )
 
-from .database import CREATE_CREDENTIALS_TABLE
 from .oauth import TrelloOAuthHandler
 
 
@@ -29,88 +25,19 @@ class TrelloClientImpl(TrelloClient):
 
     def __init__(
         self,
-        db_url: str,
+        token: str,
         oauth_handler: TrelloOAuthHandler | None = None,
-        user_id: str | None = None,
     ) -> None:
         """Initialize Trello client implementation.
 
         Args:
-            db_url: PostgreSQL database connection URL
+            token: Trello API token
             oauth_handler: OAuth handler for authentication
-            user_id: User ID for credential lookup
-
         """
-        self.db_url = db_url
+        self.token = token
         self.oauth_handler = oauth_handler or TrelloOAuthHandler.from_env()
-        self.user_id = user_id
-        self._db_pool: asyncpg.Pool | None = None
         self.base_url = "https://api.trello.com/1"
 
-    async def _ensure_db_pool(self) -> asyncpg.Pool:
-        """Ensure database connection pool is initialized."""
-        if self._db_pool is None:
-            self._db_pool = await asyncpg.create_pool(self.db_url)
-            # Create tables if they don't exist
-            async with self._db_pool.acquire() as conn:
-                await conn.execute(CREATE_CREDENTIALS_TABLE)
-        return self._db_pool
-
-    async def _get_credentials(self) -> tuple[str, str]:
-        """Get user credentials from database.
-
-        Returns:
-            Tuple[str, str]: Access token and token secret
-
-        Raises:
-            TrelloAuthenticationError: If no credentials found
-
-        """
-        if not self.user_id:
-            msg = "No user ID provided"
-            raise TrelloAuthenticationError(msg)
-
-        pool = await self._ensure_db_pool()
-        async with pool.acquire() as conn:
-            row = await conn.fetchrow(
-                "SELECT access_token, token_secret FROM user_credentials WHERE user_id = $1",
-                self.user_id,
-            )
-
-            if not row:
-                msg = f"No credentials found for user {self.user_id}"
-                raise TrelloAuthenticationError(msg)
-
-            return row["access_token"], row["token_secret"]
-
-    async def store_credentials(
-        self,
-        user_id: str,
-        access_token: str,
-        token_secret: str,
-    ) -> None:
-        """Store user credentials in database.
-
-        Args:
-            user_id: User identifier
-            access_token: OAuth access token
-            token_secret: OAuth token secret
-
-        """
-        pool = await self._ensure_db_pool()
-        async with pool.acquire() as conn:
-            await conn.execute(
-                """
-                INSERT INTO user_credentials (user_id, access_token, token_secret, updated_at)
-                VALUES ($1, $2, $3, $4)
-                ON CONFLICT (user_id)
-                DO UPDATE SET
-                    access_token = EXCLUDED.access_token,
-                    token_secret = EXCLUDED.token_secret,
-                    updated_at = EXCLUDED.updated_at
-                """,
-                user_id, access_token, token_secret, datetime.now(UTC),
-            )
 
     async def _make_request(
         self,
@@ -135,7 +62,8 @@ class TrelloClientImpl(TrelloClient):
             TrelloAuthenticationError: If authentication fails
 
         """
-        access_token, _ = await self._get_credentials()
+        if not self.token:
+            raise TrelloAuthenticationError("No token provided")
 
         url = f"{self.base_url}/{endpoint.lstrip('/')}"
 
@@ -144,7 +72,7 @@ class TrelloClientImpl(TrelloClient):
             params = {}
         params.update({
             "key": self.oauth_handler.api_key,
-            "token": access_token,
+            "token": self.token,
         })
 
         async with aiohttp.ClientSession() as session:
@@ -401,24 +329,17 @@ class TrelloClientImpl(TrelloClient):
         return True
 
     async def close(self) -> None:
-        """Close database connections."""
-        if self._db_pool:
-            await self._db_pool.close()
+        """Close client (no-op)."""
+        pass
 
     @classmethod
-    def from_env(cls, user_id: str | None = None) -> TrelloClientImpl:
-        """Create client from environment variables.
+    def from_env(cls, token: str) -> "TrelloClientImpl":
+        """Create client from environment variables and token.
 
         Args:
-            user_id: User ID for credential lookup
+            token: Trello API token
 
         Returns:
             TrelloClientImpl: Configured client instance
-
         """
-        db_url = os.getenv("DATABASE_URL")
-        if not db_url:
-            msg = "DATABASE_URL environment variable is required"
-            raise ValueError(msg)
-
-        return cls(db_url=db_url, user_id=user_id)
+        return cls(token=token)

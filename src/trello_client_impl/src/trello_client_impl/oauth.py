@@ -32,11 +32,8 @@ class TrelloOAuthHandler:
         self.redirect_uri = redirect_uri
         self.base_url = "https://trello.com/1"
 
-    def get_authorization_url(self, user_id: str) -> str:
+    def get_authorization_url(self) -> str:
         """Get the authorization URL for OAuth flow.
-
-        Args:
-            user_id: Unique identifier for the user
 
         Returns:
             str: Authorization URL to redirect user to
@@ -48,20 +45,20 @@ class TrelloOAuthHandler:
             "expiration": "never",
             "response_type": "token",
             "scope": "read,write",
-            "return_url": f"{self.redirect_uri}?user_id={user_id}",
+            "return_url": self.redirect_uri,
         }
 
         query_string = urllib.parse.urlencode(params)
         return f"https://trello.com/1/authorize?{query_string}"
 
-    async def exchange_token(self, token: str) -> tuple[str, str]:
+    async def exchange_token(self, token: str) -> str:
         """Exchange authorization token for access credentials.
 
         Args:
             token: Authorization token from callback
 
         Returns:
-            Tuple[str, str]: Access token and token secret
+            str: Access token
 
         Raises:
             TrelloAuthenticationError: If token exchange fails
@@ -86,7 +83,7 @@ class TrelloOAuthHandler:
                     )
 
         # For Trello, we use the token as both access_token and token_secret
-        return token, token
+        return token
 
     @classmethod
     def from_env(cls) -> TrelloOAuthHandler:

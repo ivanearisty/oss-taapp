@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import Body, Depends, FastAPI, HTTPException, Request, Response
 from trello_client_api import (
     TrelloAPIError,
     TrelloAuthenticationError,
@@ -15,7 +15,7 @@ from trello_client_api import (
     TrelloNotFoundError,
     TrelloUser,
 )
-from trello_client_impl import TrelloClientImpl, TrelloOAuthHandler, UserCredential
+from trello_client_impl import TrelloClientImpl, TrelloOAuthHandler
 
 
 @asynccontextmanager
@@ -34,23 +34,21 @@ app = FastAPI(
 )
 
 
-def get_trello_client(user_id: str | None = Query(None)) -> TrelloClient:
-    """Dependency to get Trello client instance.
-
-    Args:
-        user_id: User ID for authentication
-
-    Returns:
-        TrelloClient: Configured client instance
-
-    Raises:
-        HTTPException: If client creation fails
-
-    """
-    try:
-        return TrelloClientImpl.from_env(user_id=user_id)
-    except ValueError as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create client: {e}") from e
+def get_trello_client(request: Request) -> TrelloClient:
+    """Dependency to get Trello client instance from cookie or Authorization header."""
+    token = None
+    # Prefer Authorization header (Bearer)
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.lower().startswith("bearer "):
+        token = auth_header[7:]
+    elif "trello_token" in request.cookies:
+        token = request.cookies["trello_token"]
+    else:
+        # Try query param for backward compatibility
+        token = request.query_params.get("token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Missing Trello token")
+    return TrelloClientImpl.from_env(token=token)
 
 
 @app.get("/health")
@@ -61,60 +59,47 @@ async def health_check() -> dict[str, str]:
 
 # OAuth endpoints
 @app.get("/auth/login")
-async def login(user_id: Annotated[str | None, Query()] = None) -> dict[str, str]:
+async def login() -> dict[str, str]:
     """Start OAuth login flow.
 
-    Args:
-        user_id: Optional user ID, will generate if not provided
-
     Returns:
-        dict: Authorization URL and user ID
+        dict: Authorization URL
 
     """
     try:
         oauth_handler = TrelloOAuthHandler.from_env()
-
-        if not user_id:
-            user_id = UserCredential.generate_user_id()
-
-        auth_url = oauth_handler.get_authorization_url(user_id)
+        auth_url = oauth_handler.get_authorization_url()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Login failed: {e}") from e
     else:
         return {
             "authorization_url": auth_url,
-            "user_id": user_id,
         }
-
-
-@app.get("/auth/callback")
+# Change /auth/callback to POST and accept token in body
+@app.post("/auth/callback")
 async def auth_callback(
-    token: Annotated[str, Query(description="OAuth token from Trello")] = ...,
-    user_id: Annotated[str, Query(description="User ID from login flow")] = ...,
+    response: Response,
+    token: Annotated[str, Body(embed=True)],
 ) -> dict[str, str]:
-    """Handle OAuth callback.
+    """Handle OAuth callback via POST from JS page.
 
     Args:
+        response: FastAPI response object
         token: OAuth token from Trello
-        user_id: User ID from login flow
 
     Returns:
-        dict: Success message
+        dict: Success message and token
 
     """
     try:
         oauth_handler = TrelloOAuthHandler.from_env()
-        client = TrelloClientImpl.from_env()
-
         # Exchange token for credentials
-        access_token, token_secret = await oauth_handler.exchange_token(token)
-
-        # Store credentials
-        await client.store_credentials(user_id, access_token, token_secret)
+        access_token = await oauth_handler.exchange_token(token)
+        # Set token in cookie
+        response.set_cookie(key="trello_token", value=access_token, httponly=True, secure=True)
     except TrelloAuthenticationError as e:
         raise HTTPException(status_code=401, detail=str(e)) from None
-    else:
-        return {"message": "Authentication successful", "user_id": user_id}
+    return {"message": "Authentication successful", "token": access_token}
 
 
 # User endpoints
