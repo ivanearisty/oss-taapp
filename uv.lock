@@ -16,6 +16,7 @@ members = [
     "trello-client-api",
     "trello-client-impl",
     "trello-client-service",
+    "trello-generated-client",
 ]
 
 [[package]]
@@ -2161,6 +2162,23 @@ requires-dist = [
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.24.0" },
 ]
 provides-extras = ["test"]
+
+[[package]]
+name = "trello-generated-client"
+version = "0.1.0"
+source = { editable = "src/trello_generated_client" }
+dependencies = [
+    { name = "attrs" },
+    { name = "httpx" },
+    { name = "python-dateutil" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "attrs", specifier = ">=22.2.0" },
+    { name = "httpx", specifier = ">=0.23.0,<0.29.0" },
+    { name = "python-dateutil", specifier = ">=2.8.0,<3" },
+]
 
 [[package]]
 name = "typer"
