@@ -25,18 +25,32 @@ class TrelloClientImpl(TrelloClient):
 
     def __init__(
         self,
-        token: str,
+        token: str | None = None,
         oauth_handler: TrelloOAuthHandler | None = None,
+        db_url: str | None = None,
+        user_id: str | None = None,
     ) -> None:
         """Initialize Trello client implementation.
 
+        Backward-compatibility: older callers passed ``db_url`` and ``user_id``
+        when credentials were stored in a database. The current implementation
+        no longer uses a database, but we still accept and store these optional
+        parameters so existing code and tests keep working without modification.
+
         Args:
-            token: Trello API token
+            token: Trello API token. Optional in tests where requests are mocked.
             oauth_handler: OAuth handler for authentication
+            db_url: Deprecated, retained for compatibility only
+            user_id: Optional identifier of the current user for callers that
+                track user context externally
+
         """
-        self.token = token
+        self.token = token or ""
         self.oauth_handler = oauth_handler or TrelloOAuthHandler.from_env()
         self.base_url = "https://api.trello.com/1"
+        # Compatibility attributes (not used by runtime logic)
+        self.db_url = db_url
+        self.user_id = user_id
 
 
     async def _make_request(
@@ -330,10 +344,9 @@ class TrelloClientImpl(TrelloClient):
 
     async def close(self) -> None:
         """Close client (no-op)."""
-        pass
 
     @classmethod
-    def from_env(cls, token: str) -> "TrelloClientImpl":
+    def from_env(cls, token: str) -> TrelloClientImpl:
         """Create client from environment variables and token.
 
         Args:
@@ -341,5 +354,6 @@ class TrelloClientImpl(TrelloClient):
 
         Returns:
             TrelloClientImpl: Configured client instance
+
         """
         return cls(token=token)
