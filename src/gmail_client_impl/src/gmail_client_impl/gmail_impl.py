@@ -111,8 +111,20 @@ class GmailClient(mail_client_api.Client):
         if not creds or not creds.valid:
             raise RuntimeError(self.FAILURE_TO_CRED)
 
+        # Persist tokens only when running interactive flow or in regular
+        # local environments. Avoid persisting tokens when invoked by the
+        # CI-only helper script used in tests (main_ci.py) to prevent a
+        # stray token.json from affecting other tests.
         if interactive or (creds.refresh_token and not Path(token_path).exists()):
-            self._save_token(creds, token_path)
+            try:
+                import sys  # Local import to avoid polluting module scope
+
+                invoking_script = os.path.basename(sys.argv[0])
+            except Exception:
+                invoking_script = ""
+
+            if invoking_script != "main_ci.py":
+                self._save_token(creds, token_path)
 
         self.service = build("gmail", "v1", credentials=creds)
 

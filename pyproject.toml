@@ -15,15 +15,24 @@ dev = [
     "mypy>=1.17.0",
     "pymdown-extensions>=10.16.1",
     "pytest>=8.4.1",
+    "pytest-asyncio>=1.2.0",
     "pytest-cov>=6.2.1",
     "ruff>=0.12.7",
     "types-requests>=2.32.4.20250611",
+    "openapi-python-client>=0.26.2",
 ]
 
 [tool.uv.workspace]
 members = [
   "src/mail_client_api",
   "src/gmail_client_impl",
+  "src/mail_client_adapter",
+  "src/mail_client_service",
+  "src/trello_client_api",
+  "src/trello_client_impl", 
+  "src/trello_client_service",
+  "src/trello_client_adapter",
+  "src/trello_generated_client",
 ]
 
 [tool.ruff]
@@ -39,10 +48,13 @@ ignore = [
 ]
 per-file-ignores = { "**/test_*.py" = ["TRY300", "BLE001", "ANN401", "SLF001", "E501", "S105", "ARG001", "ARG002", "S106", "INP001", "PLC0415"] }
 
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["Depends", "fastapi.Depends", "fastapi.params.Depends"]
+
 [tool.mypy]
 strict = true
 explicit_package_bases = true # Required for src layout
-mypy_path = ["src/mail_client_api/src", "src/gmail_client_impl/src"]
+mypy_path = ["src/mail_client_api/src", "src/gmail_client_impl/src", "src/trello_client_api/src", "src/trello_client_impl/src", "src/trello_client_service/src", "src/trello_client_adapter/src"]
 ignore_missing_imports = false
 warn_unused_ignores = false
 
@@ -51,6 +63,8 @@ warn_unused_ignores = false
 module = [
     "google.*",
     "googleapiclient.*",
+    "mail_client_adapter.*",
+    "mail_client_service.*",
 ]
 ignore_missing_imports = true
 
@@ -61,6 +75,7 @@ pythonpath = [
 ]
 testpaths = ["tests", "src/*/tests"]
 addopts = ["--cov", "--cov-report=term-missing", "--import-mode=importlib"]
+asyncio_mode = "auto"
 markers = [
     "unit: marks tests as unit tests (fast, isolated)",
     "integration: marks tests as integration tests (medium speed, real dependencies)",

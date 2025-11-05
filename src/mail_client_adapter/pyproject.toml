@@ -1,0 +1,32 @@
+[project]
+name = "mail-client-adapter"
+version = "0.1.0"
+description = "Adapter for mail_client_api.Client to proxy calls to mail_client_service."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "requests>=2.31.0",
+    "mail-client-api",
+    "mail-client-service-client",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0.0",
+    "pytest-mock>=3.10.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = [".", "src"]
+testpaths = ["tests", "src"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+extend = "../../pyproject.toml"
+
+[tool.uv.sources]
+mail-client-api = { workspace = true } 
+mail-client-service-client = { path = "../mail_client_service/mail_client_service_client" }
