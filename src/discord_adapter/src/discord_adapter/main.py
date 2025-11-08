@@ -4,7 +4,9 @@ This adapter implements the `chat_client_api.ChatClient` interface so it can be
 swapped in for the local `discord_client_impl.DiscordClient`.
 """
 
+import contextlib
 import json
+import webbrowser
 from collections.abc import Iterator
 from http import HTTPStatus
 from typing import Any
@@ -23,6 +25,10 @@ from discord_client_service_api_client.api.messages import (
 from discord_client_service_api_client.api.user import get_current_user, get_users
 from discord_client_service_api_client.client import AuthenticatedClient, Client
 from discord_client_service_api_client.models.http_validation_error import HTTPValidationError
+
+# HTTP status range for redirects (inclusive lower, exclusive upper)
+REDIRECT_STATUS_MIN = 300
+REDIRECT_STATUS_MAX = 400
 
 
 class DiscordAdapter(ChatClient):
@@ -45,12 +51,43 @@ class DiscordAdapter(ChatClient):
             self.set_token(token)
 
     # Convenience: call the service /login endpoint which returns an authorization URL
-    def login(self, scopes: str | None = None) -> HTTPStatus:
-        """Call the service /login endpoint and return the HTTP status.
+    def login(self, scopes: str | None = None, *, follow: bool = False) -> str | HTTPStatus:
+        """Call the service /login endpoint and return an authorization URL or HTTP status.
 
-        `scopes` is passed through to the service login endpoint.
+        If the service responds with a redirect (3xx) the `Location` header
+        value is returned. If the service returns a JSON object containing a
+        URL (e.g. `url`, `authorization_url`) that string will be returned.
+
+        If `follow=True` and an authorization URL is discovered the adapter
+        will attempt to open the user's default browser to that URL. The URL
+        is still returned to the caller so they can take further action.
+
+        If no URL can be located the method falls back to returning the raw
+        HTTP status code to preserve backwards compatibility.
         """
         resp = login.sync_detailed(client=self.Client, scopes=scopes)
+
+        # If the service returned a redirect, the Location header contains the URL
+        if REDIRECT_STATUS_MIN <= resp.status_code < REDIRECT_STATUS_MAX:
+            location = resp.headers.get("Location")
+            if location:
+                if follow:
+                    with contextlib.suppress(Exception):
+                        webbrowser.open(location)
+                return location
+
+        # Some implementations may return the authorization URL in the JSON body
+        parsed = resp.parsed
+        if isinstance(parsed, dict):
+            for key in ("url", "authorization_url", "auth_url", "authorizationUrl", "location"):
+                val = parsed.get(key)
+                if isinstance(val, str) and val:
+                    if follow:
+                        with contextlib.suppress(Exception):
+                            webbrowser.open(val)
+                    return val
+
+        # Fall back to status code for compatibility
         return resp.status_code
 
     def set_token(self, token: str) -> None:
