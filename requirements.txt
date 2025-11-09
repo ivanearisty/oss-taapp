@@ -14,6 +14,7 @@ sqlalchemy>=2.0
 requests>=2.32.3
 psycopg2-binary>=2.9.9
 requests-oauthlib>=2.0.0
+python-dotenv>=1.0.0
 
 # Workspace packages (will be installed from source)
 # ticket-api, ticket-impl, ticket-service, ticket-client-adapter
