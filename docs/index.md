@@ -29,7 +29,7 @@ This project follows these key architectural principles:
 
 ## Getting Started
 
-1. **Read the [DESIGN.md](../DESIGN.md)** to understand the service architecture
+1. **Read the [Architecture Guide](architecture.md)** to understand the service architecture
 2. **Browse API References** for specific package documentation
 3. **Check [testing guide](testing.md)** for test strategy and examples
 4. **Review integration tests** for usage examples

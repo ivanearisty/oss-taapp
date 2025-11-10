@@ -37,28 +37,17 @@ theme:
     repo: fontawesome/brands/github
 
 nav:
-  - Home:
-    - 'Overview': 'index.md'
-    - 'Quick Start': 'index.md#quick-start'
-    - 'Usage Examples': 'index.md#usage-examples'
-  
-  - Architecture:
-    - 'System Design': 'architecture.md'
-    - 'Components': 'architecture.md#components'
-    - 'Data Flow': 'architecture.md#data-flow'
-    - 'Design Patterns': 'architecture.md#design-patterns'
-    - 'Security': 'architecture.md#security-architecture'
-  
-  - Development:
-    - 'Testing Strategy': 'testing.md'
-    - 'CI/CD Setup': 'circleci-setup.md'
+  - Home: 'index.md'
+  - Components: 'component.md'
+  - Testing: 'testing.md'
+  - CI/CD: 'circleci-setup.md'
   
   - API Reference:
-    - 'ticket_api (Foundation)': 'api/ticket_api.md'
-    - 'ticket_impl (Jira Integration)': 'api/ticket_impl.md'
-    - 'ticket_service (REST API)': 'api/ticket_service.md'
-    - 'ticket_client_generated (HTTP Client)': 'api/ticket_client_generated.md'
-    - 'ticket_client_adapter (Remote Adapter)': 'api/ticket_client_adapter.md'
+    - 'ticket_api': 'api/ticket_api.md'
+    - 'ticket_impl': 'api/ticket_impl.md'
+    - 'ticket_service': 'api/ticket_service.md'
+    - 'ticket_client_generated': 'api/ticket_client_generated.md'
+    - 'ticket_client_adapter': 'api/ticket_client_adapter.md'
 
 markdown_extensions:
   - pymdownx.highlight:
