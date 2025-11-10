@@ -16,6 +16,7 @@ from authlib.integrations.httpx_client import OAuth2Client  # type: ignore[impor
 from chat_client_api.client import ChatClient
 from chat_client_api.message import ChatChannel, ChatMessage
 
+import chat_client_api
 from discord_client_impl.message_impl import DiscordChannel, DiscordMessage
 
 logger = logging.getLogger(__name__)
@@ -262,7 +263,7 @@ class DiscordClient(ChatClient):
         """
         try:
             for msg in self.get_messages(channel_id=channel_id, limit=100):
-                if getattr(msg, "message_id", getattr(msg, "id", None)) == message_id:
+                if msg.message_id == message_id:
                     return msg
         except httpx.HTTPError as exc:
             # Log per-channel failures so we can diagnose network/API issues
@@ -339,3 +340,13 @@ class DiscordClient(ChatClient):
                 exc,
             )
             return DiscordChannel({})
+
+
+def get_chat_client_impl(*, access_token: str) -> chat_client_api.Client:
+    """Return a configured :class:`DiscordClient` instance."""
+    return DiscordClient(access_token = access_token)
+
+
+def register() -> None:
+    """Register the Gmail client implementation with the mail client API."""
+    chat_client_api.get_client = get_chat_client_impl
