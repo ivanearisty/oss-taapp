@@ -22,14 +22,14 @@ Environment variables expected (or set in DiscordClient constructor):
 Run with: uvicorn discord_service.main:app --reload
 """
 
-from typing import Callable, Awaitable
+from typing import Callable, Awaitable, Any
 
 from fastapi import FastAPI, HTTPException, Query, Request, status
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse, Response, RedirectResponse
 
 import discord_client_impl  # noqa: F401
 from discord_client_impl.discord_impl import DiscordClient
-from fastapi.responses import RedirectResponse
+from discord_client_impl.message_impl import DiscordMessage, DiscordChannel
 
 app = FastAPI(
     title="Discord Client Service API",
@@ -93,7 +93,7 @@ def root() -> dict[str, str]:
 
 
 @app.get("/login", tags=["Authentication"], summary="Get OAuth2 Authorization URL")
-def login(scopes: str | None = Query(None, description="Optional space-separated scopes override")) -> JSONResponse:
+def login(scopes: str | None = Query(None, description="Optional space-separated scopes override")) -> Response:
     """Return the authorization URL the user should visit to authorize the application.
 
     The DiscordClient reads client_id/secret from environment by default. We instantiate
@@ -131,7 +131,7 @@ def login(scopes: str | None = Query(None, description="Optional space-separated
 
 
 @app.get("/auth/callback", tags=["Authentication"], summary="OAuth2 callback to exchange code for token")
-def auth_callback(code: str | None = Query(None, description="Authorization code from provider")) -> JSONResponse:
+def auth_callback(code: str | None = Query(None, description="Authorization code from provider")) -> RedirectResponse:
     """Exchange the authorization code for an access token and store an authenticated client in app state."""
     if code is None:
         raise HTTPException(
@@ -140,7 +140,7 @@ def auth_callback(code: str | None = Query(None, description="Authorization code
         )
 
     if hasattr(app.state, "client") and app.state.client is not None:
-        return JSONResponse(status_code=status.HTTP_200_OK, content={"message": "Already authenticated", "status": "success"})
+        return RedirectResponse(url="/user", status_code=status.HTTP_302_FOUND)
 
     try:
         app.state.auth_in_progress = True
@@ -176,7 +176,7 @@ def logout() -> JSONResponse:
     return resp
 
 
-def serialize_message(msg) -> dict:
+def serialize_message(msg: DiscordMessage) -> dict[str,str]:
     # ChatMessage implementations provide properties defined by chat_client_api.message
     return {
         "id": getattr(msg, "message_id", getattr(msg, "id", "")),
@@ -187,8 +187,7 @@ def serialize_message(msg) -> dict:
         "timestamp": getattr(msg, "timestamp", ""),
     }
 
-
-def serialize_channel(ch) -> dict:
+def serialize_channel(ch: DiscordChannel) -> dict[str,Any]:
     return {
         "id": getattr(ch, "channel_id", getattr(ch, "id", "")),
         "name": getattr(ch, "channel_name", getattr(ch, "name", "")),
@@ -196,6 +195,11 @@ def serialize_channel(ch) -> dict:
         "position": getattr(ch, "channel_position", None),
     }
 
+def serialize_users(user: dict[str,str]) -> dict[str,str]:
+    return {
+        "id": user.get("id", ""),
+        "username": user.get("username", ""),
+    }
 
 @app.get("/user", tags=["User"], summary="Get current user info")
 def get_current_user() -> JSONResponse:
@@ -209,25 +213,10 @@ def get_current_user() -> JSONResponse:
         )
 
 
-@app.get("/channels", tags=["Channels"], summary="List channels")
-def list_channels() -> JSONResponse:
-    try:
-        channels = list(app.state.client.list_channels())
-        serialized = [serialize_channel(ch) for ch in channels]
-        return JSONResponse(status_code=status.HTTP_200_OK, content={"channels": serialized, "status": "success"})
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"error": "Failed to list channels", "message": str(e), "status": "error"},
-        )
-
-
 @app.get("/channels/{channel_id}/messages", tags=["Messages"], summary="List messages in a channel")
-def list_channel_messages(request: Request, channel_id: str, limit: int = Query(50, ge=1, le=100),) -> JSONResponse:
+def list_channel_messages(channel_id: str, limit: int = Query(50, ge=1, le=100),) -> JSONResponse:
     try:    
-        token = request.cookies.get("discord_access_token")
-        
-        messages = list(app.state.client.list_messages(channel_id=channel_id, token=token ,limit=limit))
+        messages = list(app.state.client.get_messages(channel_id=channel_id ,limit=limit))
         serialized = [serialize_message(m) for m in messages]   
         return JSONResponse(status_code=status.HTTP_200_OK, content={"messages": serialized, "status": "success"})
     except Exception as e:
@@ -237,10 +226,10 @@ def list_channel_messages(request: Request, channel_id: str, limit: int = Query(
         )
 
 
-@app.post("/channels/{channel_id}/messages", tags=["Messages"], summary="Send a message to a channel")
-def send_message(channel_id: str, content: str = Query(..., description="Message content")) -> JSONResponse:
+@app.post("/message/{recipient_id}", tags=["Messages"], summary="Send a message to a channel")
+def send_message(recipient_id: str, content: str = Query(..., description="Message content")) -> JSONResponse:
     try:
-        new_msg = app.state.client.send_message(channel_id=channel_id, content=content)
+        new_msg = app.state.client.send_message(recipient_id=recipient_id, content=content)
         return JSONResponse(
             status_code=status.HTTP_201_CREATED, content={"message": serialize_message(new_msg), "status": "success"}
         )
@@ -252,13 +241,13 @@ def send_message(channel_id: str, content: str = Query(..., description="Message
 
 
 @app.get(
-    "/messages/{message_id}",
+    "/channels/{channel_id}/messages/{message_id}",
     tags=["Messages"],
     summary="Get message by id",
     description="Requires `channel_id` query parameter to scope the search",
 )
-def get_message_by_id(
-    message_id: str, channel_id: str | None = Query(None, description="Channel id to search in")
+def get_message(
+    message_id: str, channel_id: str 
 ) -> JSONResponse:
     if channel_id is None:
         raise HTTPException(
@@ -272,7 +261,7 @@ def get_message_by_id(
 
     try:
         # Discord doesn't provide a single GET-by-id in this implementation, so list recent messages and find match
-        for m in app.state.client.list_messages(channel_id=channel_id, limit=100):
+        for m in app.state.client.get_messages(channel_id=channel_id, limit=100):
             if getattr(m, "message_id", getattr(m, "id", None)) == message_id:
                 return JSONResponse(
                     status_code=status.HTTP_200_OK, content={"message": serialize_message(m), "status": "success"}
@@ -338,3 +327,24 @@ def delete_message(channel_id: str, message_id: str) -> JSONResponse:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"error": "Failed to delete message", "message": str(e), "status": "error"},
         )
+
+@app.get("/serverusers/{guild_id}", tags=["User"], summary="Retrieves channel info")
+def get_users(guild_id: str) -> JSONResponse:
+    try:    
+        users = app.state.client.get_users(guild_id = guild_id)
+        user_list = [serialize_users(u['user']) for u in users]
+        return JSONResponse(status_code=status.HTTP_200_OK, content={"users": user_list , "status": "success"})
+    except Exception as e:
+        raise HTTPException( 
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": "Failed to get channel", "message": str(e), "status": "error"})
+
+@app.get("/channels/{channel_id}", tags=["Channel"], summary="Retrieves channel info")
+def get_channel(channel_id: str) -> JSONResponse:
+    try:    
+        channel = app.state.client.get_channel(channel_id=channel_id)
+        return JSONResponse(status_code=status.HTTP_200_OK, content={"channel_info": serialize_channel(channel) , "status": "success"})
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": "Failed to get channel", "message": str(e), "status": "error"})
