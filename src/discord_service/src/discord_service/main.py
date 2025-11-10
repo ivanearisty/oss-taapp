@@ -237,7 +237,7 @@ def list_channel_messages(channel_id: str, limit: int = Query(50, ge=1, le=100),
         )
 
 
-@app.post("/message/{recipient_id}", tags=["Messages"], summary="Send a message to a channel")
+@app.post("/message/{recipient_id}", tags=["Messages"], summary="Send a message to a user")
 def send_message(recipient_id: str, content: str = Query(..., description="Message content")) -> JSONResponse:
     try:
         new_msg = app.state.client.send_message(recipient_id=recipient_id, content=content)
@@ -249,7 +249,6 @@ def send_message(recipient_id: str, content: str = Query(..., description="Messa
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"error": "Failed to send message", "message": str(e), "status": "error"},
         )
-
 
 @app.get(
     "/channels/{channel_id}/messages/{message_id}",
