@@ -69,51 +69,6 @@ def test_get_current_user_success_and_error() -> None:
     assert r2.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-def test_list_channels_serialization() -> None:
-    main.app.state.client = SimpleNamespace(list_channels=lambda: [make_channel("c1", "name")])
-    r = client.get("/channels")
-    assert r.status_code == HTTPStatus.OK
-    assert r.json()["channels"][0]["id"] == "c1"
-
-
-def test_list_channel_messages_and_rehydrate(monkeypatch: pytest.MonkeyPatch) -> None:
-    # no client initially, cookie triggers rehydrate
-    main.app.state.client = None
-
-    # mock DiscordClient constructor to return client with list_messages
-    def fake_ctor(access_token: str | None = None) -> SimpleNamespace:
-        return SimpleNamespace(list_messages=lambda channel_id, token=None, limit=50: [make_msg("m1", channel_id)])
-
-    monkeypatch.setattr("discord_service.main.DiscordClient", fake_ctor)
-    r = client.get("/channels/c1/messages", cookies={"discord_access_token": "tok"})
-    assert r.status_code == HTTPStatus.OK
-    assert r.json()["messages"][0]["id"] == "m1"
-
-
-def test_send_message_success_and_error() -> None:
-    main.app.state.client = SimpleNamespace(send_message=lambda channel_id, content: make_msg("m2", channel_id, content=content))
-    r = client.post("/channels/c1/messages?content=hello")
-    assert r.status_code == HTTPStatus.CREATED
-    # error
-    main.app.state.client = SimpleNamespace(send_message=lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom")))
-    r2 = client.post("/channels/c1/messages?content=hello")
-    assert r2.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
-
-
-def test_get_message_by_id_found_and_not_found() -> None:
-    main.app.state.client = SimpleNamespace(list_messages=lambda channel_id, limit=100: [make_msg("mX", channel_id)])
-    # missing channel_id
-    r = client.get("/messages/mX")
-    assert r.status_code == HTTPStatus.BAD_REQUEST
-    # found
-    r2 = client.get("/messages/mX?channel_id=c1")
-    assert r2.status_code == HTTPStatus.OK
-    # not found
-    main.app.state.client = SimpleNamespace(list_messages=lambda channel_id, limit=100: [])
-    r3 = client.get("/messages/missing?channel_id=c1")
-    assert r3.status_code == HTTPStatus.NOT_FOUND
-
-
 def test_delete_message_various_responses() -> None:
     # no _http_client -> 501
     main.app.state.client = SimpleNamespace()

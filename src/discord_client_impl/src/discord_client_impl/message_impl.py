@@ -149,11 +149,11 @@ class DiscordChannel(ChatChannel):
 
 
 def get_chat_message_impl(msg_id: str, raw_data: str) -> message.ChatMessage:
-    """Return an instance of the concrete GmailMessage implementation."""
+    """Return an instance of the concrete DiscordMessage implementation."""
     return DiscordMessage(msg_id=msg_id, raw_data=raw_data)
 
 
 def register() -> None:
-    """Register the Gmail message implementation with the message abstraction."""
+    """Register the Discord message implementation with the message abstraction."""
     message.get_message = get_chat_message_impl
     chat_client_api.get_message = get_chat_message_impl

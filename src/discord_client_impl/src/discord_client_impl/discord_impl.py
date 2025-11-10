@@ -342,11 +342,11 @@ class DiscordClient(ChatClient):
             return DiscordChannel({})
 
 
-def get_chat_client_impl(*, access_token: str) -> chat_client_api.Client:
+def get_chat_client_impl(*, access_token: str) -> chat_client_api.ChatClient:
     """Return a configured :class:`DiscordClient` instance."""
     return DiscordClient(access_token = access_token)
 
 
 def register() -> None:
-    """Register the Gmail client implementation with the mail client API."""
+    """Register the Gmail client implementation with the chat client API."""
     chat_client_api.get_client = get_chat_client_impl
