@@ -23,18 +23,24 @@ Highlights
 
 Quick start (development)
 
-1. Activate your virtualenv (if you use one):
+1. Install Dependencies:
 
 ```bash
-source .venv/bin/activate
+uv sync --all-packages --extra dev
 ```
 
-2a — Recommended: install the local packages editable into your venv (from repo root):
+2. Activate the virtual envoirnment:
 
 ```bash
-# Install the local workspace packages in editable mode
-pip install -e src/chat_client_api -e src/discord_client_impl -e src/discord_service
+# macOS / Linux
+source .venv/bin/activate
+# Windows (PowerShell)
+.venv\Scripts\Activate.ps1
+```
 
+3. Run the Service
+
+```bash
 # Run the service
 uvicorn discord_service.main:app --reload --host 127.0.0.1 --port 8000
 ```
@@ -45,25 +51,34 @@ Set these for the OAuth flow (or add to a `.env` file):
 
 - `DISCORD_CLIENT_ID` — Discord application client id
 - `DISCORD_CLIENT_SECRET` — Discord application client secret
+- `DISCORD_REDIRECT_URI` — Optional Discord redirect URI (used for prod)
 
 API endpoints (summary)
 
 - GET `/` — Welcome message
-- GET `/login` — Return authorization URL (open in browser to authorize)
-- GET `/auth/callback?code=...` — Exchange code for access token and store authenticated client in memory
-- GET `/logout` — Clear stored client
-- GET `/user` — Get current authenticated user's data
-- GET `/channels` — List DM/group DM channels
+- GET `/health` — Health check (returns {"status": "ok"})
+- GET `/login` — Return OAuth2 authorization URL (redirect users to Discord to authorize)
+- GET `/auth/callback?code=...` — OAuth2 callback: exchange code for an access token, store a lightweight authenticated client in memory and set an HttpOnly cookie, then redirect to `/user`
+- GET `/logout` — Clear the in-memory client and delete the `discord_access_token` cookie
+- GET `/user` — Get the current authenticated user's data
+- GET `/channels/{channel_id}` — Retrieve channel information
 - GET `/channels/{channel_id}/messages?limit=50` — List recent messages in a channel (limit 1-100)
-- POST `/channels/{channel_id}/messages?content=...` — Send a message to a channel
-- GET `/messages/{message_id}?channel_id=...` — Find a message by id in a channel (scans recent messages)
-- DELETE `/channels/{channel_id}/messages/{message_id}` — Delete a message (permissions required)
+- POST `/message/{recipient_id}?content=...` — Send a message to a recipient/channel (note: path is `/message/{recipient_id}` in the service)
+- GET `/channels/{channel_id}/messages/{message_id}` — Get a single message by id (this implementation scans recent messages in the channel)
+- DELETE `/channels/{channel_id}/messages/{message_id}` — Delete a message (may require proper scopes/permissions)
+- GET `/serverusers/{guild_id}` — List users in a guild (server)
 
 Notes about behavior and limitations
 
 - The service stores the authenticated client on the FastAPI `app.state` for the running process. This is fine for local testing but not production-ready for multi-worker deployments.
 - Discord's API and token types govern what you can do: deleting messages or reading certain channels may require the correct OAuth scopes or bot permissions.
 - `GET /messages/{id}` requires `channel_id` because this implementation does not provide a single-message GET; it scans recent messages in the specified channel.
+
+Notes about routing differences and behavior
+
+- The send-message endpoint in the running service is exposed as `POST /message/{recipient_id}` (not `/channels/{channel_id}/messages`) — the README previously referenced a different path. The service accepts `content` as a query parameter.
+- The service stores an authenticated client on `app.state` and sets an HttpOnly cookie named `discord_access_token` for browser flows. This is suitable for local testing but not for production/multi-worker deployments.
+- Some operations (deleting messages, reading specific channels) depend on OAuth scopes and token type; permissions may limit what the service can do.
 
 Example flows
 
@@ -80,7 +95,3 @@ curl "http://127.0.0.1:8000/login"
 ```bash
 curl http://127.0.0.1:8000/channels
 ```
-
-Testing
-
-- You can write a small integration test using FastAPI's TestClient that imports `discord_service.main:app` and asserts `GET /` returns 200. This test won't hit Discord.
