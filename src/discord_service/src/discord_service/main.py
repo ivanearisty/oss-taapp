@@ -19,7 +19,6 @@ Environment variables expected (or set in DiscordClient constructor):
 - DISCORD_CLIENT_SECRET
 - DISCORD_REDIRECT_URI
 
-Run with: uvicorn discord_service.main:app --reload
 """
 
 from typing import Callable, Awaitable, Any
@@ -45,7 +44,7 @@ async def auth_middleware(request: Request, call_next: Callable[[Request], Await
     Public routes: root, /login, /auth/callback, /logout, and docs/OpenAPI.
     Protected routes require `app.state.client` to be set.
     """
-    public_paths = {"/", "/login", "/auth/callback", "/logout", "/openapi.json", "/docs", "/redoc"}
+    public_paths = {"/", "/login", "/auth/callback", "/logout", "/openapi.json", "/docs", "/redoc", "/health"}
 
     if request.url.path in public_paths or request.url.path.startswith("/docs") or request.url.path.startswith("/openapi"):
         return await call_next(request)
@@ -90,6 +89,18 @@ async def auth_middleware(request: Request, call_next: Callable[[Request], Await
 @app.get("/", tags=["General"])
 def root() -> dict[str, str]:
     return {"message": "Welcome to Discord Client Service!"}
+
+
+@app.get("/health", tags=["General"], summary="Health check")
+def health() -> JSONResponse:
+    """Very small health endpoint for external uptime checks.
+
+    Returns 200 with JSON {"status": "ok"} so load balancers or uptime monitors
+    can verify the service process is responding.
+    """
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"status": "ok"})
+
+
 
 
 @app.get("/login", tags=["Authentication"], summary="Get OAuth2 Authorization URL")
@@ -232,7 +243,7 @@ def list_channel_messages(
         )
 
 
-@app.post("/message/{recipient_id}", tags=["Messages"], summary="Send a message to a channel")
+@app.post("/message/{recipient_id}", tags=["Messages"], summary="Send a message to a user")
 def send_message(recipient_id: str, content: str = Query(..., description="Message content")) -> JSONResponse:
     try:
         new_msg = app.state.client.send_message(recipient_id=recipient_id, content=content)
@@ -244,7 +255,6 @@ def send_message(recipient_id: str, content: str = Query(..., description="Messa
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"error": "Failed to send message", "message": str(e), "status": "error"},
         )
-
 
 @app.get(
     "/channels/{channel_id}/messages/{message_id}",
