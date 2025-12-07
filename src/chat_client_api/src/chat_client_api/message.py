@@ -15,13 +15,13 @@ class ChatMessage(ABC):
     @property
     @abstractmethod
     def author(self) -> str:
-        """Return the sender's info ."""
+        """Return the sender's ID ."""
         raise NotImplementedError
 
     @property
     @abstractmethod
     def author_username(self) -> str:
-        """Return the sender's info ."""
+        """Return the sender's user name ."""
         raise NotImplementedError
 
     @property
@@ -34,6 +34,12 @@ class ChatMessage(ABC):
     @abstractmethod
     def timestamp(self) -> str:
         """Return the date the message was sent."""
+        raise NotImplementedError
+    
+    @property
+    @abstractmethod
+    def edited_timestamp(self) -> str | None:
+        """Return the date the message was last edited, or None if never edited."""
         raise NotImplementedError
 
     @property
