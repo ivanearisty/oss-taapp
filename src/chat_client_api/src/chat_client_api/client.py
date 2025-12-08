@@ -20,12 +20,12 @@ class ChatClient(ABC):
     def get_channel(self, channel_id: str) -> ChatChannel:
         """Retrieve a specific channel by its unique identifier."""
         raise NotImplementedError
-    
+
     @abstractmethod
     def get_message(self, channel_id: str, message_id: str) -> ChatMessage:
         """Return a message by its ID."""
         raise NotImplementedError
-    
+
     @abstractmethod
     def send_message(self, channel_id: str, content: str) -> ChatMessage:
         """Send a new message with the given content to the specified channel and return the created message object."""

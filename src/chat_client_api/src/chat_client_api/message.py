@@ -35,7 +35,7 @@ class ChatMessage(ABC):
     def timestamp(self) -> str:
         """Return the date the message was sent."""
         raise NotImplementedError
-    
+
     @property
     @abstractmethod
     def edited_timestamp(self) -> str | None:
