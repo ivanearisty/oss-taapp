@@ -64,6 +64,7 @@ async def test_create_get_list_transition_comment_delete(seed_token: None) -> No
         ],
     )
 
+
 @pytest.mark.asyncio
 async def test_create_ticket_with_service_error(seed_token: None) -> None:
     """Test that create_ticket raises ServiceError on HTTP errors."""
@@ -448,6 +449,7 @@ async def test_transition_status_all_states(seed_token: None) -> None:
         ticket = await svc.transition_status(ticket_id, status)
         assert ticket.status == status
 
+
 @pytest.mark.asyncio
 @respx.mock
 async def test_status_name_to_domain_various_formats(seed_token: None) -> None:
@@ -546,6 +548,7 @@ async def test_create_ticket_reporter_lookup_fails(seed_token: None) -> None:
         reporter="nonexistent@example.com",
     )
     assert ticket.title == "Test"
+
 
 @pytest.mark.asyncio
 @respx.mock
