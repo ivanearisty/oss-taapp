@@ -134,6 +134,8 @@ class TicketInterface(ABC):
         ticket_id: str,
         status: TicketStatus | None = None,
         title: str | None = None,
+        description: str | None = None,
+        assignee: str | None = None,
     ) -> Ticket:
         """Update a ticket's details.
 
@@ -141,6 +143,8 @@ class TicketInterface(ABC):
             ticket_id: Unique identifier of the ticket to update
             status: New status (optional)
             title: New title (optional)
+            description: New description (optional)
+            assignee: New assignee (optional)
 
         Returns:
             The updated Ticket instance

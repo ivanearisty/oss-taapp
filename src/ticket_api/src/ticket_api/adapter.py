@@ -253,6 +253,8 @@ class StandardizedTicketAdapter(TicketInterface):
         ticket_id: str,
         status: SharedTicketStatus | None = None,
         title: str | None = None,
+        description: str | None = None,
+        assignee: str | None = None,
     ) -> Ticket:
         """Update a ticket's details.
 
@@ -260,6 +262,8 @@ class StandardizedTicketAdapter(TicketInterface):
             ticket_id: Unique identifier of the ticket to update
             status: New status (optional)
             title: New title (optional)
+            description: New description (optional)
+            assignee: New assignee (optional)
 
         Returns:
             The updated Ticket instance
@@ -285,6 +289,8 @@ class StandardizedTicketAdapter(TicketInterface):
                 ticket_id=uuid,
                 status=internal_status,
                 title=title,
+                description=description,
+                assignee=assignee,
             ),
         )
 

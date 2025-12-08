@@ -419,6 +419,8 @@ class TestStandardizedTicketAdapter:
             ticket_id=sample_internal_ticket.id,
             status=InternalTicketStatus.IN_PROGRESS,
             title=None,
+            description=None,
+            assignee=None,
         )  # type: ignore[attr-defined]
         assert isinstance(result, SimpleTicket)
         assert result.status == SharedTicketStatus.IN_PROGRESS
@@ -445,6 +447,8 @@ class TestStandardizedTicketAdapter:
             ticket_id=sample_internal_ticket.id,
             status=None,
             title="Updated Title",
+            description=None,
+            assignee=None,
         )  # type: ignore[attr-defined]
         assert result.title == "Updated Title"
 
@@ -474,6 +478,8 @@ class TestStandardizedTicketAdapter:
             ticket_id=sample_internal_ticket.id,
             status=InternalTicketStatus.CLOSED,
             title="New Title",
+            description=None,
+            assignee=None,
         )  # type: ignore[attr-defined]
         assert result.status == SharedTicketStatus.CLOSED
         assert result.title == "New Title"
