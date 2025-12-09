@@ -28,7 +28,7 @@ class ChatClient(ABC):
 
     @abstractmethod
     def send_message(self, channel_id: str, content: str) -> ChatMessage:
-        """Send a new message with the given content to the specified channel and return the created message object."""
+        """Send new message with the given content to a channel, return created message object."""
         raise NotImplementedError
 
     @abstractmethod
