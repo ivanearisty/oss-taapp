@@ -9,3 +9,6 @@ dependencies = []
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.ruff]
+exclude = ["**/example_*.py", "example_integration.py"]

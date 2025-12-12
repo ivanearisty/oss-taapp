@@ -26,11 +26,11 @@ class TicketAPI(ABC):
     """Abstract ticket API interface."""
 
     @abstractmethod
-    async def create_card(self, list_id: str, name: str, description: str | None = None) -> Any:
+    async def create_card(self, list_id: str, name: str, description: str | None = None) -> Any:  # noqa: ANN401
         """Create a new ticket card."""
 
     @abstractmethod
-    async def get_card(self, card_id: str) -> Any:
+    async def get_card(self, card_id: str) -> Any:  # noqa: ANN401
         """Get a ticket card by ID."""
 
     @abstractmethod
@@ -40,7 +40,7 @@ class TicketAPI(ABC):
         name: str | None = None,
         description: str | None = None,
         list_id: str | None = None,
-    ) -> Any:
+    ) -> Any:  # noqa: ANN401
         """Update a ticket card."""
 
     @abstractmethod
@@ -93,7 +93,7 @@ class ChatTicketIntegration:
         self._command_patterns = {
             "create": re.compile(r"^!create\s+(.+?)(?:\s+--desc\s+(.+))?$", re.IGNORECASE | re.DOTALL),
             "update": re.compile(
-                r"^!update\s+(\S+)(?:\s+--name\s+(.+?))?(?:\s+--desc\s+(.+?))?(?:\s+--list\s+(\S+))?$", re.IGNORECASE | re.DOTALL
+                r"^!update\s+(\S+)(?:\s+--name\s+(.+?))?(?:\s+--desc\s+(.+?))?(?:\s+--list\s+(\S+))?$", re.IGNORECASE | re.DOTALL,
             ),
             "delete": re.compile(r"^!delete\s+(\S+)$", re.IGNORECASE),
             "get": re.compile(r"^!get\s+(\S+)$", re.IGNORECASE),
@@ -139,7 +139,7 @@ class ChatTicketIntegration:
         except Exception:
             logger.exception("Error polling messages")
 
-    def _get_message_id(self, message: Any) -> str:
+    def _get_message_id(self, message: Any) -> str:  # noqa: ANN401
         """Extract message ID from message object."""
         if hasattr(message, "id"):
             return message.id
@@ -147,7 +147,7 @@ class ChatTicketIntegration:
             return message.get("id", str(id(message)))
         return str(id(message))
 
-    def _get_message_content(self, message: Any) -> str:
+    def _get_message_content(self, message: Any) -> str:  # noqa: ANN401
         """Extract content from message object."""
         if hasattr(message, "content"):
             return message.content
@@ -157,7 +157,7 @@ class ChatTicketIntegration:
             return message.get("content", message.get("body", ""))
         return str(message)
 
-    async def _process_command(self, content: str, message: Any) -> None:
+    async def _process_command(self, content: str, _message: Any) -> None:  # noqa: ANN401
         """Process a command from message content."""
         content = content.strip()
 
@@ -173,7 +173,7 @@ class ChatTicketIntegration:
                 return
 
     async def _handle_create(self, groups: tuple[str, ...]) -> None:
-        """Handle create command: !create <name> [--desc <description>]"""
+        """Handle create command: !create <name> [--desc <description>]."""
         name = groups[0].strip()
         description = groups[1].strip() if len(groups) > 1 and groups[1] else None
 
@@ -188,8 +188,8 @@ class ChatTicketIntegration:
         card = await self.ticket_api.create_card(list_id, name, description)
         logger.info("Created card: %s", card)
 
-    async def _handle_update(self, groups: tuple[str, ...]) -> None:
-        """Handle update command: !update <card_id> [--name <name>] [--desc <description>] [--list <list_id>]"""
+    async def _handle_update(self, groups: tuple[str, ...]) -> None:  # noqa: PLR2004
+        """Handle update command: !update <card_id> [--name <name>] [--desc <description>] [--list <list_id>]."""
         card_id = groups[0].strip()
         name = groups[1].strip() if len(groups) > 1 and groups[1] else None
         description = groups[2].strip() if len(groups) > 2 and groups[2] else None
@@ -199,21 +199,21 @@ class ChatTicketIntegration:
         logger.info("Updated card: %s", card)
 
     async def _handle_delete(self, groups: tuple[str, ...]) -> None:
-        """Handle delete command: !delete <card_id>"""
+        """Handle delete command: !delete <card_id>."""
         card_id = groups[0].strip()
 
         result = await self.ticket_api.delete_card(card_id)
         logger.info("Deleted card %s: %s", card_id, result)
 
     async def _handle_get(self, groups: tuple[str, ...]) -> None:
-        """Handle get command: !get <card_id>"""
+        """Handle get command: !get <card_id>."""
         card_id = groups[0].strip()
 
         card = await self.ticket_api.get_card(card_id)
         logger.info("Retrieved card: %s", card)
 
     async def _handle_list(self, groups: tuple[str, ...]) -> None:
-        """Handle list command: !list [<list_id>]"""
+        """Handle list command: !list [<list_id>]."""
         list_id = groups[0].strip() if groups and groups[0] else None
 
         if list_id:

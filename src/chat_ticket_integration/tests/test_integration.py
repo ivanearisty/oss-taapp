@@ -6,15 +6,15 @@ import asyncio
 from typing import Any
 
 import pytest
-from chat_ticket_integration.integration import ChatAPI, TicketAPI
 
 from chat_ticket_integration import ChatTicketIntegration
+from chat_ticket_integration.integration import ChatAPI, TicketAPI
 
 
 class MockChatAPI(ChatAPI):
     """Mock chat API for testing."""
 
-    def __init__(self) -> None:
+    def __init__(self) -> None:  # noqa: D107
         self.messages: list[dict[str, Any]] = []
 
     def get_messages(self, channel_id: str, max_results: int = 10) -> list[dict[str, Any]]:
@@ -29,7 +29,7 @@ class MockChatAPI(ChatAPI):
 class MockTicketAPI(TicketAPI):
     """Mock ticket API for testing."""
 
-    def __init__(self) -> None:
+    def __init__(self) -> None:  # noqa: D107
         self.cards: dict[str, dict[str, Any]] = {}
         self.lists: dict[str, dict[str, Any]] = {
             "list1": {"id": "list1", "name": "To Do", "board_id": "board1"},
@@ -47,7 +47,8 @@ class MockTicketAPI(TicketAPI):
     async def get_card(self, card_id: str) -> dict[str, Any]:
         """Get a mock card."""
         if card_id not in self.cards:
-            raise ValueError(f"Card {card_id} not found")
+            msg = f"Card {card_id} not found"
+            raise ValueError(msg)
         return self.cards[card_id]
 
     async def update_card(
@@ -59,7 +60,8 @@ class MockTicketAPI(TicketAPI):
     ) -> dict[str, Any]:
         """Update a mock card."""
         if card_id not in self.cards:
-            raise ValueError(f"Card {card_id} not found")
+            msg = f"Card {card_id} not found"
+            raise ValueError(msg)
 
         card = self.cards[card_id]
         if name is not None:
@@ -106,7 +108,7 @@ async def test_create_card_command() -> None:
     await integration._poll_and_process()
 
     assert len(ticket_api.cards) == 1
-    card = list(ticket_api.cards.values())[0]
+    card = next(iter(ticket_api.cards.values()))
     assert card["name"] == "Test Card"
     assert card["description"] is None
 
@@ -130,7 +132,7 @@ async def test_create_card_with_description() -> None:
     await integration._poll_and_process()
 
     assert len(ticket_api.cards) == 1
-    card = list(ticket_api.cards.values())[0]
+    card = next(iter(ticket_api.cards.values()))
     assert card["name"] == "Test Card"
     assert card["description"] == "This is a test description"
 
@@ -377,10 +379,9 @@ async def test_start_stop() -> None:
     integration.stop()
 
     # Wait for task to complete
-    try:
+    import contextlib
+    with contextlib.suppress(TimeoutError):
         await asyncio.wait_for(task, timeout=1.0)
-    except TimeoutError:
-        pass
 
 
 @pytest.mark.asyncio
@@ -399,11 +400,11 @@ async def test_message_with_object_attributes() -> None:
 
     # Create a message with attributes
     class Message:
-        def __init__(self, id: str, content: str):
-            self.id = id
+        def __init__(self, msg_id: str, content: str) -> None:
+            self.id = msg_id
             self.content = content
 
-    msg = Message("msg1", "!create Test Card")
+    msg = Message(msg_id="msg1", content="!create Test Card")
     chat_api.messages = [msg]
 
     await integration._poll_and_process()
